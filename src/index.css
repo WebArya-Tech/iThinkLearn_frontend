@@ -1,0 +1,164 @@
+@import "tailwindcss";
+
+/* Custom Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.6s ease-out forwards;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.4s ease-out forwards;
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #3b82f6, #1e40af);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #2563eb, #1e3a8a);
+}
+
+/* Border width utility */
+.border-3 {
+  border-width: 3px;
+}
+
+/* ===== Blog Module - Semantic Color Tokens ===== */
+.text-text-primary   { color: #111827; }
+.text-text-secondary { color: #374151; }
+.text-text-tertiary  { color: #9ca3af; }
+.bg-bg-primary    { background-color: #ffffff; }
+.bg-bg-secondary  { background-color: #f9fafb; }
+.bg-bg-card       { background-color: #ffffff; }
+.bg-bg-tertiary   { background-color: #f3f4f6; }
+.border-border-primary   { border-color: #e5e7eb; }
+.border-border-secondary { border-color: #f3f4f6; }
+
+/* Blog clean input */
+.input-clean {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  color: #111827;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.input-clean:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Blog rich-text content */
+.blog-content { line-height: 1.8; color: #374151; }
+.blog-content h1, .blog-content h2, .blog-content h3,
+.blog-content h4, .blog-content h5, .blog-content h6 {
+  font-weight: 700; color: #111827; margin: 1.5rem 0 0.75rem;
+}
+.blog-content h1 { font-size: 1.75rem; }
+.blog-content h2 { font-size: 1.4rem; }
+.blog-content h3 { font-size: 1.2rem; }
+.blog-content p  { margin-bottom: 1rem; }
+.blog-content ul, .blog-content ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+.blog-content li { margin-bottom: 0.25rem; }
+.blog-content a  { color: #2563eb; text-decoration: underline; }
+.blog-content img { max-width: 100%; border-radius: 0.5rem; margin: 1rem 0; }
+.blog-content blockquote {
+  border-left: 4px solid #e5e7eb; padding-left: 1rem;
+  color: #6b7280; font-style: italic; margin: 1rem 0;
+}
+.blog-content code { background: #f1f5f9; padding: 0.15rem 0.4rem; border-radius: 0.3rem; font-size: 0.85em; }
+.blog-content pre  { background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin-bottom: 1rem; }
+.blog-content pre code { background: none; padding: 0; font-size: 0.875rem; }
+
+/* Blog button utilities */
+.btn-primary {
+  display: inline-flex; align-items: center;
+  background-color: #1e3a8a; color: #ffffff;
+  padding: 0.6rem 1.4rem; border-radius: 0.5rem;
+  font-size: 0.9rem; font-weight: 600;
+  transition: background-color 0.15s, transform 0.1s;
+  border: none; cursor: pointer;
+}
+.btn-primary:hover { background-color: #1e40af; transform: translateY(-1px); }
+
+.btn-secondary {
+  display: inline-flex; align-items: center;
+  background-color: #ffffff; color: #1e3a8a;
+  padding: 0.6rem 1.4rem; border-radius: 0.5rem;
+  font-size: 0.9rem; font-weight: 600;
+  border: 1.5px solid #c7d2fe;
+  transition: background-color 0.15s, border-color 0.15s;
+  cursor: pointer;
+}
+.btn-secondary:hover { background-color: #eff6ff; border-color: #818cf8; }
+
+.btn-outline {
+  display: inline-flex; align-items: center;
+  background-color: transparent; color: #374151;
+  padding: 0.6rem 1.4rem; border-radius: 0.5rem;
+  font-size: 0.9rem; font-weight: 600;
+  border: 1.5px solid #d1d5db;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+  cursor: pointer;
+}
+.btn-outline:hover { background-color: #f9fafb; border-color: #9ca3af; color: #111827; }
+
+/* Blog image fallback */
+.blog-img-fallback {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 2rem; background-color: #f3f4f6;
+  border-radius: 0.5rem; color: #9ca3af; gap: 0.5rem; font-size: 0.875rem;
+}
