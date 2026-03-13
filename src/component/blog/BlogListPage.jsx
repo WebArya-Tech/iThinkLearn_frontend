@@ -60,32 +60,32 @@ export const BlogListPage = () => {
     const years = archive.map(a => a.year);
     const monthsForYear = year ? archive.find(a => a.year === Number(year))?.months?.map(m => m.month) || [] : [];
     return (
-        <div className="max-w-6xl mx-auto px-6 py-16">
-            <h1 className="text-3xl font-bold text-text-primary mb-6">All Blogs</h1>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-16">
+            <h1 className="text-2xl sm:text-3xl font-bold text-text-primary mb-5">All Blogs</h1>
             {/* Search & Filters */}
-            <div className="bg-bg-secondary border border-border-primary rounded-xl p-5 mb-8 transition-colors duration-200">
-                <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-3">
+            <div className="bg-bg-secondary border border-border-primary rounded-xl p-4 sm:p-5 mb-6 sm:mb-8 transition-colors duration-200">
+                <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
                     <div className="flex-1 relative">
-                        <Search className="absolute left-3 top-3.5 w-4 h-4 text-text-tertiary" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary pointer-events-none" />
                         <input type="text" placeholder="Search blogs by title or content..." value={search}
-                            onChange={(e) => setSearch(e.target.value)} className="input-clean w-full pl-10" />
+                            onChange={(e) => setSearch(e.target.value)} className="input-clean" style={{ paddingLeft: '2.25rem' }} />
                     </div>
-                    <Button type="submit">Search</Button>
+                    <Button type="submit" className="w-full sm:w-auto">Search</Button>
                 </form>
-                <div className="flex flex-wrap items-center gap-3 mt-4">
-                    {/* Sort buttons */}
-                    <div className="flex items-center gap-2">
-                        <Filter className="w-4 h-4 text-text-tertiary" />
+                <div className="flex flex-col gap-3 mt-4">
+                    {/* Sort buttons — scrollable on mobile */}
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                        <Filter className="w-4 h-4 text-text-tertiary shrink-0" />
                         {['recent', 'popular', 'oldest', 'most_commented'].map((s) => (
                             <button key={s} onClick={() => handleSortChange(s)}
-                                className={`px-3 py-1.5 rounded-lg text-sm transition-all ${sort === s ? 'bg-text-primary text-bg-primary' : 'bg-bg-card border border-border-primary text-text-secondary hover:border-text-tertiary'}`}>
+                                className={`px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all ${sort === s ? 'bg-text-primary text-bg-primary' : 'bg-bg-card border border-border-primary text-text-secondary hover:border-text-tertiary'}`}>
                                 {s.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}
                             </button>
                         ))}
                     </div>
                     {/* Year/Month filter */}
-                    <div className="flex items-center gap-2 ml-auto">
-                        <Calendar className="w-4 h-4 text-text-tertiary" />
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Calendar className="w-4 h-4 text-text-tertiary shrink-0" />
                         <select value={year} onChange={(e) => handleYearMonthChange(e.target.value, '')}
                             className="bg-bg-card border border-border-primary rounded-lg px-2 py-1.5 text-sm text-text-primary focus:outline-none cursor-pointer">
                             <option value="">All Years</option>
@@ -101,7 +101,7 @@ export const BlogListPage = () => {
                             </select>
                         )}
                         {(search || year || month || sort !== 'recent') && (
-                            <button onClick={clearFilters} className="text-xs text-red-500 hover:text-red-600 underline ml-2">Clear all</button>
+                            <button onClick={clearFilters} className="text-xs text-red-500 hover:text-red-600 underline">Clear all</button>
                         )}
                     </div>
                 </div>

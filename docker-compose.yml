@@ -1,0 +1,9 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ithinklearn-frontend
+    ports:
+      - "8010:80"
+    restart: unless-stopped
