@@ -280,10 +280,7 @@ export default function Home() {
               📱 WhatsApp: +91 819 746 6607
             </a>
           </div>
-          <div className="mt-6 md:mt-8 text-blue-100 space-y-2">
-            <p className="text-base sm:text-lg">📞 Call: +91 819 746 6607</p>
-            <p className="text-base sm:text-lg">📧 Email:   ithinklearn@ixpoe.com</p>
-          </div>
+         
         </div>
       </section>
       {/* Teaching Philosophy Section */}
@@ -553,15 +550,15 @@ export default function Home() {
       </section>
 
       {/*   iThinkLearn Promise Section */}
-      <section className="py-12 bg-linear-to-r from-blue-900 via-blue-800 to-indigo-900 text-white">
+      <section className="py-10 bg-linear-to-r from-blue-900 via-blue-800 to-indigo-900 text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-5xl md:text-6xl font-bold mb-6 animate-fade-in-up">
             The   iThinkLearn Promise
           </h2>
-          <p className="text-3xl md:text-4xl font-bold mb-8 leading-relaxed text-yellow-300">
+          <p className="text-3xl md:text-4xl font-bold mb-4 leading-relaxed text-yellow-300">
             "Every student matters. Every student grows."
           </p>
-          <p className="text-xl mb-12 text-blue-100 max-w-3xl mx-auto">
+          <p className="text-xl mb-4 text-blue-100 max-w-3xl mx-auto">
             We are committed to delivering real improvement, disciplined study habits, and strong foundations that last beyond school and into your career.
           </p>
           <div className="flex gap-4 flex-wrap justify-center">

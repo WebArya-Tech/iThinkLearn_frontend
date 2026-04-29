@@ -1,308 +1,293 @@
 import React, { useState, useEffect } from 'react'
-// import { courseApi } from '../../api/courseApi' // API file not created - using mock data
 import { useAuth } from '../../context/AuthContext'
+import Pagination from '../ui/Pagination'
+import toast from 'react-hot-toast'
+
+const ITEMS_PER_PAGE = 4
+
+const AVAILABLE_CLASSES = [
+  { id: 1, subject: 'UG Mathematics', level: 'Undergraduate', schedule: 'Mon, Wed, Fri – 6:00 PM IST', instructor: 'Ms. Neha Aggarwal' },
+  { id: 2, subject: 'UG Physics', level: 'Undergraduate', schedule: 'Tue, Thu – 5:30 PM IST', instructor: 'Mr. Arvind' },
+  { id: 3, subject: 'UG Chemistry', level: 'Undergraduate', schedule: 'Mon, Wed, Fri – 4:30 PM IST', instructor: 'B. Aishwarya' },
+  { id: 4, subject: 'Computer Science Fundamentals', level: 'Undergraduate', schedule: 'Tue, Thu, Sat – 7:00 PM IST', instructor: 'Mr. Ashwin Jain' },
+  { id: 5, subject: 'GRE Preparation', level: 'Post-Graduate', schedule: 'Sat, Sun – 6:00 PM IST', instructor: 'Ms. Ramya Rajamani' },
+  { id: 6, subject: 'CFA Level I', level: 'Professional', schedule: 'Thu, Sat – 8:00 PM IST', instructor: 'Financial Expert' },
+  { id: 7, subject: 'GMAT Coaching', level: 'Post-Graduate', schedule: 'Tue, Thu, Sat – 8:30 PM IST', instructor: 'Expert Coach' },
+  { id: 8, subject: 'Engineering Mathematics', level: 'Undergraduate', schedule: 'Mon, Wed – 6:30 PM IST', instructor: 'Mr. Ram G. Mohan' },
+]
+
+const EMOJI_MAP = { 'Mathematics': '📐', 'Physics': '⚡', 'Chemistry': '🧪', 'Computer Science': '💻', 'GRE': '📝', 'CFA': '💼', 'GMAT': '🎯', 'Engineering': '⚙️' }
+const getEmoji = (subject) => { for (const [k, v] of Object.entries(EMOJI_MAP)) { if (subject.includes(k)) return v } return '📚' }
+
+const MOCK_COURSES = [
+  { id: 1, subject: 'UG Mathematics', level: 'Undergraduate', instructor: 'Ms. Neha Aggarwal', progress: 75, totalClasses: 40, completedClasses: 30, nextClass: 'Today, 6:00 PM', status: 'active' },
+  { id: 2, subject: 'UG Physics', level: 'Undergraduate', instructor: 'Mr. Arvind', progress: 60, totalClasses: 35, completedClasses: 21, nextClass: 'Tomorrow, 5:30 PM', status: 'active' },
+  { id: 3, subject: 'UG Chemistry', level: 'Undergraduate', instructor: 'B. Aishwarya', progress: 85, totalClasses: 30, completedClasses: 25, nextClass: 'Jan 22, 5:00 PM', status: 'active' },
+  { id: 4, subject: 'Computer Science Fundamentals', level: 'Undergraduate', instructor: 'Mr. Ashwin Jain', progress: 45, totalClasses: 38, completedClasses: 17, nextClass: 'Jan 23, 7:00 PM', status: 'active' },
+  { id: 5, subject: 'GRE Preparation', level: 'Post-Graduate', instructor: 'Ms. Ramya Rajamani', progress: 100, totalClasses: 25, completedClasses: 25, nextClass: 'Completed', status: 'completed' },
+]
 
 export default function MyCourses() {
   const { user } = useAuth()
+  const [courses, setCourses] = useState([])
   const [filter, setFilter] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
-  const [courses, setCourses] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [enrollingId, setEnrollingId] = useState(null)
-  const [showMaterialsId, setShowMaterialsId] = useState(null)
-  const itemsPerPage = 5
+
+  // Enroll modal state
+  const [showEnrollModal, setShowEnrollModal] = useState(false)
+  const [selectedSubject, setSelectedSubject] = useState('')
+  const [enrollMessage, setEnrollMessage] = useState('')
+  const [enrollName, setEnrollName] = useState(user?.fullName || '')
+  const [enrollEmail, setEnrollEmail] = useState(user?.email || '')
+
+  // Course details modal state
+  const [detailCourse, setDetailCourse] = useState(null)
 
   useEffect(() => {
-    fetchCourses()
+    setLoading(true)
+    const saved = JSON.parse(localStorage.getItem('icfy_my_courses') || 'null')
+    setCourses(saved && saved.length > 0 ? saved : MOCK_COURSES)
+    setLoading(false)
   }, [])
 
-  const fetchCourses = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      // API file not created - using mock data directly
-      try {
-        // const response = await courseApi.getStudentCourses()
-        // setCourses(response.data.courses || response.data)
-        throw new Error('API not implemented')
-      } catch (apiError) {
-        // Fallback to mock data if API is not available
-        console.log('Using mock data (API not available)')
-        setCourses([
-          {
-            id: 1,
-            title: 'Undergraduate Mathematics - Calculus',
-            tutor: 'Ms. Ramya Rajamani',
-            progress: 75,
-            totalClasses: 40,
-            completedClasses: 30,
-            upcomingClass: 'Today, 4:00 PM',
-            status: 'active',
-            image: '📐',
-            category: 'Mathematics'
-          },
-          {
-            id: 2,
-            title: 'Physics - Mechanics & Electromagnetism',
-            tutor: 'Mr. Ram G. Mohan',
-            progress: 60,
-            totalClasses: 35,
-            completedClasses: 21,
-            upcomingClass: 'Tomorrow, 3:00 PM',
-            status: 'active',
-            image: '⚡',
-            category: 'Physics'
-          },
-          {
-            id: 3,
-            title: 'Organic Chemistry',
-            tutor: 'B. Aishwarya',
-            progress: 85,
-            totalClasses: 30,
-            completedClasses: 25,
-            upcomingClass: 'Jan 22, 5:00 PM',
-            status: 'active',
-            image: '🧪',
-            category: 'Chemistry'
-          },
-          {
-            id: 4,
-            title: 'Computer Science - Data Structures',
-            tutor: 'Mr. Ashwin Jain',
-            progress: 45,
-            totalClasses: 38,
-            completedClasses: 17,
-            upcomingClass: 'Jan 23, 2:00 PM',
-            status: 'active',
-            image: '💻',
-            category: 'Computer Science'
-          },
-          {
-            id: 5,
-            title: 'Statistics & Probability',
-            tutor: 'Ms. Ramya Rajamani',
-            progress: 100,
-            totalClasses: 25,
-            completedClasses: 25,
-            upcomingClass: 'Completed',
-            status: 'completed',
-            image: '📊',
-            category: 'Mathematics'
-          }
-        ])
-      }
-    } catch (err) {
-      console.error('Error fetching courses:', err)
-      setError('Failed to load courses')
-    } finally {
-      setLoading(false)
-    }
+  const saveCourses = (updated) => {
+    setCourses(updated)
+    localStorage.setItem('icfy_my_courses', JSON.stringify(updated))
   }
 
-  const handleEnrollCourse = async (courseId) => {
-    try {
-      setEnrollingId(courseId)
-      await courseApi.enrollCourse(courseId)
-      // Refresh courses after enrollment
-      await fetchCourses()
-    } catch (err) {
-      console.error('Error enrolling course:', err)
-      setError('Failed to enroll in course')
-    } finally {
-      setEnrollingId(null)
-    }
+  const handleEnrollSubmit = (e) => {
+    e.preventDefault()
+    if (!selectedSubject) { toast.error('Please select a class.'); return }
+    if (courses.find(c => c.subject === selectedSubject)) { toast.error('Already enrolled in this class.'); return }
+    const cls = AVAILABLE_CLASSES.find(c => c.subject === selectedSubject)
+    saveCourses([...courses, {
+      id: Date.now(), subject: cls.subject, level: cls.level, instructor: cls.instructor,
+      progress: 0, totalClasses: 30, completedClasses: 0, nextClass: 'TBD – Admin will confirm', status: 'active',
+    }])
+    const enrollments = JSON.parse(localStorage.getItem('runningClassEnrollments') || '[]')
+    enrollments.push({ id: `ENROLL${Date.now()}`, fullName: enrollName || '', email: enrollEmail || '', phone: user?.phone || '', classSubject: selectedSubject, message: enrollMessage, enrollmentDate: new Date().toISOString(), status: 'Pending' })
+    localStorage.setItem('runningClassEnrollments', JSON.stringify(enrollments))
+    toast.success(`Enrolled in ${selectedSubject}! Our team will confirm the schedule.`)
+    setShowEnrollModal(false); setSelectedSubject(''); setEnrollMessage(''); setEnrollName(user?.fullName || ''); setEnrollEmail(user?.email || '')
   }
 
-  const handleViewMaterials = async (courseId) => {
-    try {
-      const response = await courseApi.getCourseMaterials(courseId)
-      setShowMaterialsId(courseId)
-      // You could display materials in a modal or navigate to a materials page
-    } catch (err) {
-      console.error('Error fetching materials:', err)
-    }
-  }
+  const filteredCourses = filter === 'all' ? courses : courses.filter(c => c.status === filter)
+  const totalPages = Math.ceil(filteredCourses.length / ITEMS_PER_PAGE)
+  const paginated = filteredCourses.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+  const handleFilterChange = (f) => { setFilter(f); setCurrentPage(1) }
 
-  const filteredCourses = filter === 'all' 
-    ? courses 
-    : courses.filter(course => course.status === filter)
-
-  // Pagination
-  const totalPages = Math.ceil(filteredCourses.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const paginatedCourses = filteredCourses.slice(startIndex, startIndex + itemsPerPage)
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-900"></div>
-          <p className="mt-4 text-lg font-semibold text-blue-900">Loading courses...</p>
-        </div>
-      </div>
-    )
-  }
+  if (loading) return (
+    <div className="flex items-center justify-center py-20">
+      <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#1e3a8a]"></div>
+    </div>
+  )
 
   return (
-    <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="bg-white border-b-2 border-blue-900 rounded-xl p-6 flex items-center justify-between flex-wrap gap-3">
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-blue-900">My Courses</h2>
-          <p className="text-gray-500 text-sm mt-1">Track your enrolled courses and progress</p>
+          <h2 className="text-2xl font-bold" style={{ color: '#1e3a8a' }}>My Courses</h2>
+          <p className="text-gray-500 text-sm mt-0.5">Track your enrolled courses and progress</p>
         </div>
-        <button className="bg-blue-900 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-blue-800 transition-all shadow-md">
-          + Enroll New Course
+        <button
+          onClick={() => setShowEnrollModal(true)}
+          className="px-5 py-2.5 rounded-lg font-semibold text-sm border-2 border-[#1e3a8a] text-[#1e3a8a] bg-white hover:bg-[#1e3a8a] hover:text-white transition-all"
+        >
+          + Enroll in a Course
         </button>
       </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="bg-red-100 border-l-4 border-red-500 p-4 rounded">
-          <p className="text-red-700">{error}</p>
-        </div>
-      )}
-
-      {/* Filters */}
-      <div className="flex gap-3 bg-white p-4 rounded-xl shadow-md flex-wrap">
-        <button onClick={() => { setFilter('all'); setCurrentPage(1) }} className={`px-5 py-2 rounded-lg font-semibold transition-all text-sm ${filter === 'all' ? 'bg-blue-900 text-white shadow-md' : 'text-gray-700 hover:bg-white'}`}>All Courses ({courses.length})</button>
-        <button onClick={() => { setFilter('active'); setCurrentPage(1) }} className={`px-5 py-2 rounded-lg font-semibold transition-all text-sm ${filter === 'active' ? 'bg-blue-900 text-white shadow-md' : 'text-gray-700 hover:bg-white'}`}>Active ({courses.filter(c => c.status === 'active').length})</button>
-        <button onClick={() => { setFilter('completed'); setCurrentPage(1) }} className={`px-5 py-2 rounded-lg font-semibold transition-all text-sm ${filter === 'completed' ? 'bg-green-500 text-white shadow-md' : 'text-gray-700 hover:bg-white'}`}>Completed ({courses.filter(c => c.status === 'completed').length})</button>
-      </div>
-
-      {/* Courses Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {paginatedCourses.map((course) => (
-          <div
-            key={course.id}
-            className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all overflow-hidden border-t-4"
-            style={{ borderTopColor: course.status === 'completed' ? '#28a745' : '#1e3a8a' }}
+      {/* Filter Tabs */}
+      <div className="flex flex-wrap gap-2 bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+        {[
+          { key: 'all', label: `All (${courses.length})` },
+          { key: 'active', label: `Active (${courses.filter(c => c.status === 'active').length})` },
+          { key: 'completed', label: `Completed (${courses.filter(c => c.status === 'completed').length})` },
+        ].map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => handleFilterChange(key)}
+            className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all border ${
+              filter === key
+                ? 'bg-[#1e3a8a] text-white border-[#1e3a8a]'
+                : 'bg-white text-gray-600 border-gray-200 hover:border-[#1e3a8a] hover:text-[#1e3a8a]'
+            }`}
           >
-            <div className="p-6">
-              {/* Course Header */}
-              <div className="flex items-start gap-4 mb-4">
-                <div
-                  className="w-16 h-16 rounded-xl flex items-center justify-center text-2xl font-bold text-white shadow-md bg-blue-900 shrink-0"
-                >
-                  {course.title.charAt(0)}
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold mb-1" style={{ color: '#1e3a8a' }}>
-                    {course.title}
-                  </h3>
-                  <p className="text-gray-600 text-sm">{course.tutor}</p>
-                </div>
-                <span
-                  className="px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap"
-                  style={{
-                    backgroundColor: course.status === 'completed' ? '#28a745' : '#f59e0b',
-                    color: 'white'
-                  }}
-                >
-                  {course.status === 'completed' ? 'Completed' : 'Active'}
-                </span>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold text-gray-700">Progress</span>
-                  <span className="text-sm font-bold" style={{ color: '#1e3a8a' }}>
-                    {course.progress}%
-                  </span>
-                </div>
-                <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all"
-                    style={{
-                      width: `${course.progress}%`,
-                      backgroundColor: course.status === 'completed' ? '#28a745' : '#f59e0b'
-                    }}
-                  ></div>
-                </div>
-              </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="p-3 rounded-lg" style={{ backgroundColor: '#ffffff' }}>
-                  <p className="text-xs text-gray-600 mb-1">Classes</p>
-                  <p className="font-bold text-gray-800">
-                    {course.completedClasses}/{course.totalClasses}
-                  </p>
-                </div>
-                <div className="p-3 rounded-lg" style={{ backgroundColor: '#ffffff' }}>
-                  <p className="text-xs text-gray-600 mb-1">Next Class</p>
-                  <p className="font-bold text-gray-800 text-sm">{course.upcomingClass}</p>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-3">
-                <button
-                  className="flex-1 py-2 rounded-lg font-semibold text-white transition-all hover:opacity-90"
-                  style={{ backgroundColor: '#1e3a8a' }}
-                >
-                  View Details
-                </button>
-                <button
-                  onClick={() => handleViewMaterials(course.id)}
-                  className="flex-1 py-2 rounded-lg font-semibold transition-all border-2 hover:bg-white"
-                  style={{ 
-                    borderColor: '#1e3a8a',
-                    color: '#1e3a8a',
-                    backgroundColor: 'transparent'
-                  }}
-                >
-                  Materials
-                </button>
-              </div>
-            </div>
-          </div>
+            {label}
+          </button>
         ))}
       </div>
 
+      {/* Courses Table */}
+      <div className="bg-white rounded-xl shadow-md overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b-2" style={{ borderBottomColor: '#1e3a8a' }}>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Course</th>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Instructor</th>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Level</th>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Progress</th>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Classes</th>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Next Class</th>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Status</th>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginated.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-5 py-12 text-center">
+                    <p className="text-4xl mb-3">📚</p>
+                    <p className="text-gray-600 font-medium">No courses found.</p>
+                    <button onClick={() => setShowEnrollModal(true)} className="mt-4 px-5 py-2 rounded-lg text-sm font-semibold border-2 border-[#1e3a8a] text-[#1e3a8a] bg-white hover:bg-[#1e3a8a] hover:text-white transition-all">
+                      Enroll in a Course
+                    </button>
+                  </td>
+                </tr>
+              ) : paginated.map((course) => (
+                <tr key={course.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">{getEmoji(course.subject)}</span>
+                      <p className="font-semibold text-gray-800">{course.subject}</p>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4 text-gray-700">👨‍🏫 {course.instructor}</td>
+                  <td className="px-5 py-4 text-gray-500">{course.level}</td>
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-2 min-w-[100px]">
+                      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-full rounded-full" style={{ width: `${course.progress}%`, backgroundColor: course.status === 'completed' ? '#28a745' : '#f59e0b' }} />
+                      </div>
+                      <span className="text-xs font-bold whitespace-nowrap" style={{ color: '#1e3a8a' }}>{course.progress}%</span>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4 font-bold text-gray-800">{course.completedClasses}/{course.totalClasses}</td>
+                  <td className="px-5 py-4 text-gray-700 text-xs">{course.nextClass}</td>
+                  <td className="px-5 py-4">
+                    <span
+                      className="px-2 py-1 rounded-full text-xs font-bold whitespace-nowrap"
+                      style={{
+                        backgroundColor: course.status === 'completed' ? '#e8f5e9' : '#fff8e1',
+                        color: course.status === 'completed' ? '#28a745' : '#b45309',
+                      }}
+                    >
+                      {course.status === 'completed' ? '✓ Done' : 'Active'}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4">
+                    <button
+                      onClick={() => setDetailCourse(course)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold border-2 hover:bg-[#1e3a8a] hover:text-white transition-all whitespace-nowrap"
+                      style={{ borderColor: '#1e3a8a', color: '#1e3a8a', backgroundColor: 'white' }}
+                    >
+                      View Details
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-6">
-          <button
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ 
-              backgroundColor: currentPage === 1 ? '#e0e0e0' : '#1e3a8a',
-              color: currentPage === 1 ? '#666' : 'white'
-            }}
-          >
-            Previous
-          </button>
-          {[...Array(totalPages)].map((_, index) => (
-            <button
-              key={index + 1}
-              onClick={() => setCurrentPage(index + 1)}
-              className="px-4 py-2 rounded-lg font-semibold transition-all"
-              style={{
-                backgroundColor: currentPage === index + 1 ? '#1e3a8a' : 'white',
-                color: currentPage === index + 1 ? 'white' : '#1e3a8a',
-                border: '2px solid #1e3a8a'
-              }}
-            >
-              {index + 1}
-            </button>
-          ))}
-          <button
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ 
-              backgroundColor: currentPage === totalPages ? '#e0e0e0' : '#1e3a8a',
-              color: currentPage === totalPages ? '#666' : 'white'
-            }}
-          >
-            Next
-          </button>
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        totalItems={filteredCourses.length}
+        itemsPerPage={ITEMS_PER_PAGE}
+      />
+
+      {/* ── Enroll Modal ── */}
+      {showEnrollModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setShowEnrollModal(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setShowEnrollModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+            <h3 className="text-xl font-bold mb-1" style={{ color: '#1e3a8a' }}>Enroll in a Course</h3>
+            <p className="text-sm text-gray-500 mb-5">Select a running class to join</p>
+            <form onSubmit={handleEnrollSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Name</label>
+                  <input 
+                    value={enrollName} 
+                    onChange={e => setEnrollName(e.target.value)}
+                    placeholder="Your name"
+                    className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#1e3a8a] bg-white" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Email</label>
+                  <input 
+                    value={enrollEmail} 
+                    onChange={e => setEnrollEmail(e.target.value)}
+                    placeholder="Your email"
+                    className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#1e3a8a] bg-white" 
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Select Class <span className="text-red-500">*</span></label>
+                <select value={selectedSubject} onChange={e => setSelectedSubject(e.target.value)} required className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#1e3a8a] bg-white">
+                  <option value="">-- Choose a class --</option>
+                  {AVAILABLE_CLASSES.map(cls => (
+                    <option key={cls.id} value={cls.subject}>{cls.subject} — {cls.level} ({cls.schedule})</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Message (optional)</label>
+                <textarea value={enrollMessage} onChange={e => setEnrollMessage(e.target.value)} placeholder="Any timing preference or requirements..." rows={2} className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#1e3a8a] resize-none" />
+              </div>
+              <div className="flex gap-3 pt-1">
+                <button type="submit" className="flex-1 py-2.5 rounded-lg font-semibold text-sm bg-[#1e3a8a] text-white hover:bg-blue-800 transition-all">Confirm Enrollment</button>
+                <button type="button" onClick={() => setShowEnrollModal(false)} className="flex-1 py-2.5 rounded-lg font-semibold text-sm border-2 border-gray-200 text-gray-600 bg-white hover:border-gray-400 transition-all">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Course Detail Modal ── */}
+      {detailCourse && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setDetailCourse(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setDetailCourse(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-14 h-14 rounded-xl bg-gray-50 flex items-center justify-center text-3xl">{getEmoji(detailCourse.subject)}</div>
+              <div>
+                <h3 className="font-bold text-lg" style={{ color: '#1e3a8a' }}>{detailCourse.subject}</h3>
+                <p className="text-gray-500 text-sm">{detailCourse.level}</p>
+              </div>
+            </div>
+            <div className="h-0.5 rounded-full mb-4" style={{ backgroundColor: '#f59e0b' }} />
+            <div className="space-y-3 text-sm">
+              {[
+                ['Instructor', detailCourse.instructor],
+                ['Progress', `${detailCourse.progress}%`],
+                ['Classes Completed', `${detailCourse.completedClasses} / ${detailCourse.totalClasses}`],
+                ['Next Class', detailCourse.nextClass],
+                ['Status', detailCourse.status === 'completed' ? 'Completed' : 'Active'],
+              ].map(([label, value]) => (
+                <div key={label} className="flex justify-between">
+                  <span className="text-gray-500">{label}</span>
+                  <span className={`font-semibold ${label === 'Status' ? (detailCourse.status === 'completed' ? 'text-green-600' : 'text-amber-600') : 'text-gray-800'}`}>{value}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+              <div className="h-full rounded-full" style={{ width: `${detailCourse.progress}%`, backgroundColor: detailCourse.status === 'completed' ? '#28a745' : '#f59e0b' }} />
+            </div>
+            <button onClick={() => setDetailCourse(null)} className="mt-5 w-full py-2.5 rounded-lg font-semibold text-sm border-2 border-[#1e3a8a] text-[#1e3a8a] bg-white hover:bg-[#1e3a8a] hover:text-white transition-all">Close</button>
+          </div>
         </div>
       )}
     </div>
   )
 }
+

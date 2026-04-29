@@ -31,7 +31,7 @@ export default function ContactUs() {
       <Header />
 
       {/* Hero Section */}
-      <section className="py-12 md:py-16 text-black">
+      <section className="py-10 md:py-10 text-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4">📞 Get In Touch</h1>
           <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto px-4">
@@ -41,7 +41,7 @@ export default function ContactUs() {
       </section>
 
       {/* Contact Information Cards */}
-      <section className="py-12 md:py-16 bg-linear-to-b from-gray-50 to-white">
+      <section className="py-10 md:py-10 bg-linear-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center text-gray-900 mb-12">Quick Contact Information</h2>
           
@@ -75,7 +75,7 @@ export default function ContactUs() {
               <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">Phone</h3>
               <p className="text-xs sm:text-sm text-gray-600 mb-4">Call us directly</p>
               <div className="space-y-2">
-                <a href="tel:+918861919000" className="text-blue-600 font-bold hover:text-blue-700 block text-sm sm:text-base">
+                <a href="tel:+917795010900" className="text-blue-600 font-bold hover:text-blue-700 block text-sm sm:text-base">
                   +91 779 501 0900
                 </a>
               </div>
@@ -232,7 +232,7 @@ export default function ContactUs() {
               📱 WhatsApp Now
             </a>
             <a 
-              href="tel:+918861919000"
+              href="tel:+917795010900"
               className="border-2 border-white text-white px-10 py-4 rounded-lg font-bold text-lg hover:bg-white hover:text-blue-900 transition"
             >
               📞 Call Us

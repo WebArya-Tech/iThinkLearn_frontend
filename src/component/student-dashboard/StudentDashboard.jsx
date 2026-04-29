@@ -87,9 +87,9 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-linear-to-r from-blue-900 via-blue-800 to-indigo-900 shadow-xl sticky top-0 z-50">
+    <div className="h-screen bg-white flex flex-col overflow-hidden">
+      {/* Header - Fixed */}
+      <header className="bg-linear-to-r from-blue-900 via-blue-800 to-indigo-900 shadow-xl flex-shrink-0 z-50">
         <div className="px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
@@ -124,8 +124,8 @@ export default function StudentDashboard() {
         </div>
       </header>
 
-      <div className="flex">
-        {/* Sidebar */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar - Fixed */}
         <StudentSidebar 
           currentView={currentView} 
           setCurrentView={setCurrentView}
@@ -133,8 +133,8 @@ export default function StudentDashboard() {
           setSidebarOpen={setSidebarOpen}
         />
 
-        {/* Main Content */}
-        <main className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'ml-0'}`}>
+        {/* Main Content - Scrollable */}
+        <main className={`flex-1 overflow-y-auto transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'ml-0'}`}>
           <div className="p-6">
             {renderView()}
           </div>

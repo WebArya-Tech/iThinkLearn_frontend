@@ -200,7 +200,7 @@ export default function OurTutors() {
               </div>
               <div className="hidden lg:block">
                 <img 
-                  src="https://images.unsplash.com/photo-1571260899304-425eee4c7efc?w=600&h=450&fit=crop" 
+                  src="https://media.istockphoto.com/id/1429678950/photo/confident-mid-adult-male-professor-explaining-mature-adult-students-in-the-classroom.webp?a=1&b=1&s=612x612&w=0&k=20&c=abSkWxEPH-t5I1IjxwkbVsJNj2kRJThvBbbvNv5q0Z8=" 
                   alt="Expert Tutors" 
                   className="rounded-2xl shadow-2xl w-full"
                 />
@@ -391,7 +391,7 @@ export default function OurTutors() {
               </div>
               <div className="hidden lg:block">
                 <img 
-                  src="https://images.unsplash.com/photo-1571260899304-425eee4c7efc?w=600&h=450&fit=crop" 
+                  src="https://plus.unsplash.com/premium_photo-1683121152928-787ececd7359?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8V2h5JTIwT3VyJTIwVHV0b3JzJTIwU3RhbmQlMjBPdXR8ZW58MHx8MHx8fDA%3D" 
                   alt="Expert Teaching" 
                   className="rounded-2xl shadow-xl w-full"
                 />
@@ -442,7 +442,7 @@ export default function OurTutors() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a 
-                href="tel:+918197466607" 
+                href="tel:+917795010900" 
                 className="inline-flex items-center justify-center gap-2 bg-linear-to-r from-yellow-400 to-orange-500 text-blue-900 px-8 py-4 rounded-xl font-bold text-lg hover:from-yellow-300 hover:to-orange-400 transition-all transform hover:scale-105 shadow-lg"
               >
                 📞 Book Free Demo Class
@@ -454,17 +454,7 @@ export default function OurTutors() {
                 📧 Email Us
               </a>
             </div>
-            <div className="mt-8 flex flex-wrap justify-center gap-6 text-blue-100">
-              <a href="tel:+918197466607" className="hover:text-white transition flex items-center gap-2">
-                <span>📱</span> +91 819 746 6607
-              </a>
-              <a href="tel:+918861919000" className="hover:text-white transition flex items-center gap-2">
-                <span>📱</span> +91 779 501 0900
-              </a>
-              <a href="mailto:  ithinklearn@ixpoe.com" className="hover:text-white transition flex items-center gap-2">
-                <span>✉️</span>   ithinklearn@ixpoe.com
-              </a>
-            </div>
+           
           </div>
         </section>
       </main>

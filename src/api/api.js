@@ -6,11 +6,9 @@ const api = axios.create({
         'Content-Type': 'application/json',
     },
 });
-
 // Request interceptor for adding auth headers
 api.interceptors.request.use(
     (config) => {
-        
         // For admin requests, always use Basic Auth from environment
         const role = localStorage.getItem('icfy_role');
         const username = import.meta.env.VITE_ADMIN_USERNAME;

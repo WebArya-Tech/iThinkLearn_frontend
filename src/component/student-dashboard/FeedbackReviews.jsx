@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import Pagination from '../ui/Pagination'
 
 export default function FeedbackReviews() {
   const [showFeedbackForm, setShowFeedbackForm] = useState(false)
@@ -106,14 +107,15 @@ export default function FeedbackReviews() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white border-b-2 border-blue-900 rounded-xl p-6 flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-blue-900">Feedback & Reviews</h2>
-          <p className="text-gray-500 text-sm mt-1">Share your experience and read reviews from other students</p>
+          <h2 className="text-3xl font-bold" style={{ color: '#1e3a8a' }}>Feedback & Reviews</h2>
+          <p className="text-gray-600 mt-2">Share your experience and read reviews from other students</p>
         </div>
         <button
           onClick={() => setShowFeedbackForm(true)}
-          className="px-6 py-3 rounded-lg font-bold shadow-md hover:opacity-90 transition-all bg-blue-900 text-white"
+          className="px-6 py-3 rounded-lg text-white font-bold shadow-md hover:opacity-90 transition-all"
+          style={{ backgroundColor: '#1e3a8a' }}
         >
           Write Review
         </button>
@@ -121,11 +123,11 @@ export default function FeedbackReviews() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-400">
+        <div className="bg-white rounded-xl shadow-md p-6 border-l-4" style={{ borderLeftColor: '#f59e0b' }}>
           <h3 className="text-sm font-semibold text-gray-600 mb-2">Average Rating</h3>
           <div className="flex items-center gap-3">
-            <p className="text-4xl font-bold text-yellow-500">{averageRating}</p>
-            <span className="text-3xl text-yellow-500">★</span>
+            <p className="text-4xl font-bold" style={{ color: '#f59e0b' }}>{averageRating}</p>
+            <span className="text-3xl" style={{ color: '#f59e0b' }}>★</span>
           </div>
         </div>
         <div className="bg-white rounded-xl shadow-md p-6 border-l-4" style={{ borderLeftColor: '#1e3a8a' }}>
@@ -138,160 +140,117 @@ export default function FeedbackReviews() {
         </div>
       </div>
 
-      {/* My Reviews */}
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <h3 className="text-2xl font-bold mb-6" style={{ color: '#1e3a8a' }}>My Reviews</h3>
-        <div className="space-y-4">
-          {paginatedMyReviews.map((review) => (
-            <div
-              key={review.id}
-              className="p-5 rounded-lg border-l-4"
-              style={{ backgroundColor: '#ffffff', borderLeftColor: '#f59e0b' }}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <h4 className="font-bold text-lg mb-2">{review.course}</h4>
-                  {renderStars(review.rating)}
-                  <span className="px-3 py-1 rounded-full text-xs font-bold mt-2 inline-block" style={{ backgroundColor: '#1e3a8a', color: 'white' }}>
-                    {review.category}
-                  </span>
-                </div>
-                <span className="text-sm text-gray-600">{review.date}</span>
-              </div>
-              <p className="text-gray-700 mb-3">{review.feedback}</p>
-              {review.response && (
-                <div className="mt-3 p-3 rounded-lg" style={{ backgroundColor: 'white' }}>
-                  <p className="text-sm font-semibold mb-1" style={{ color: '#1e3a8a' }}>Admin Response:</p>
-                  <p className="text-sm text-gray-700">{review.response}</p>
-                </div>
-              )}
-            </div>
-          ))}
+      {/* My Reviews Table */}
+      <div className="bg-white rounded-xl shadow-md overflow-hidden">
+        <div className="px-6 pt-5 pb-2 flex items-center justify-between">
+          <h3 className="text-xl font-bold" style={{ color: '#1e3a8a' }}>My Reviews</h3>
         </div>
-
-        {/* Pagination for My Reviews */}
-        {myReviewsTotalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-6">
-            <button
-              onClick={() => setMyReviewsPage(prev => Math.max(prev - 1, 1))}
-              disabled={myReviewsPage === 1}
-              className="px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ 
-                backgroundColor: myReviewsPage === 1 ? '#e0e0e0' : '#1e3a8a',
-                color: myReviewsPage === 1 ? '#666' : 'white'
-              }}
-            >
-              Previous
-            </button>
-            {[...Array(myReviewsTotalPages)].map((_, index) => (
-              <button
-                key={index + 1}
-                onClick={() => setMyReviewsPage(index + 1)}
-                className="px-4 py-2 rounded-lg font-semibold transition-all"
-                style={{
-                  backgroundColor: myReviewsPage === index + 1 ? '#1e3a8a' : 'white',
-                  color: myReviewsPage === index + 1 ? 'white' : '#1e3a8a',
-                  border: '2px solid #1e3a8a'
-                }}
-              >
-                {index + 1}
-              </button>
-            ))}
-            <button
-              onClick={() => setMyReviewsPage(prev => Math.min(prev + 1, myReviewsTotalPages))}
-              disabled={myReviewsPage === myReviewsTotalPages}
-              className="px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ 
-                backgroundColor: myReviewsPage === myReviewsTotalPages ? '#e0e0e0' : '#1e3a8a',
-                color: myReviewsPage === myReviewsTotalPages ? '#666' : 'white'
-              }}
-            >
-              Next
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* All Reviews */}
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <h3 className="text-2xl font-bold mb-6" style={{ color: '#1e3a8a' }}>Student Reviews</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {paginatedAllReviews.map((review) => (
-            <div
-              key={review.id}
-              className="p-5 rounded-lg"
-              style={{ backgroundColor: '#ffffff' }}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white"
-                      style={{ backgroundColor: '#1e3a8a' }}
-                    >
-                      {review.student.charAt(0)}
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b-2" style={{ borderBottomColor: '#1e3a8a' }}>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Course</th>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Rating</th>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Category</th>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Date</th>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Feedback</th>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Response</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedMyReviews.map((review) => (
+                <tr key={review.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                  <td className="px-5 py-4 font-semibold text-gray-800">{review.course}</td>
+                  <td className="px-5 py-4">
+                    <div className="flex gap-0.5">
+                      {[1,2,3,4,5].map(s => (
+                        <span key={s} style={{ color: s <= review.rating ? '#f59e0b' : '#e0e0e0' }}>★</span>
+                      ))}
                     </div>
-                    <div>
-                      <h4 className="font-bold">{review.student}</h4>
-                      <p className="text-xs text-gray-600">{review.date}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <p className="text-sm font-semibold mb-2" style={{ color: '#1e3a8a' }}>{review.course}</p>
-              <div className="mb-2">{renderStars(review.rating)}</div>
-              <p className="text-gray-700 text-sm">{review.feedback}</p>
-            </div>
-          ))}
+                  </td>
+                  <td className="px-5 py-4">
+                    <span className="px-2 py-1 rounded-full text-xs font-bold text-white" style={{ backgroundColor: '#1e3a8a' }}>{review.category}</span>
+                  </td>
+                  <td className="px-5 py-4 text-gray-500 whitespace-nowrap">{review.date}</td>
+                  <td className="px-5 py-4 text-gray-700 max-w-50">
+                    <p className="line-clamp-2">{review.feedback}</p>
+                  </td>
+                  <td className="px-5 py-4">
+                    {review.response ? (
+                      <p className="text-xs text-gray-600 max-w-40 line-clamp-2" style={{ color: '#1e3a8a' }}>{review.response}</p>
+                    ) : <span className="text-gray-400 text-xs">No response yet</span>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-
-        {/* Pagination for All Reviews */}
-        {allReviewsTotalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-6">
-            <button
-              onClick={() => setAllReviewsPage(prev => Math.max(prev - 1, 1))}
-              disabled={allReviewsPage === 1}
-              className="px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ 
-                backgroundColor: allReviewsPage === 1 ? '#e0e0e0' : '#1e3a8a',
-                color: allReviewsPage === 1 ? '#666' : 'white'
-              }}
-            >
-              Previous
-            </button>
-            {[...Array(allReviewsTotalPages)].map((_, index) => (
-              <button
-                key={index + 1}
-                onClick={() => setAllReviewsPage(index + 1)}
-                className="px-4 py-2 rounded-lg font-semibold transition-all"
-                style={{
-                  backgroundColor: allReviewsPage === index + 1 ? '#1e3a8a' : 'white',
-                  color: allReviewsPage === index + 1 ? 'white' : '#1e3a8a',
-                  border: '2px solid #1e3a8a'
-                }}
-              >
-                {index + 1}
-              </button>
-            ))}
-            <button
-              onClick={() => setAllReviewsPage(prev => Math.min(prev + 1, allReviewsTotalPages))}
-              disabled={allReviewsPage === allReviewsTotalPages}
-              className="px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ 
-                backgroundColor: allReviewsPage === allReviewsTotalPages ? '#e0e0e0' : '#1e3a8a',
-                color: allReviewsPage === allReviewsTotalPages ? '#666' : 'white'
-              }}
-            >
-              Next
-            </button>
-          </div>
-        )}
       </div>
+      <Pagination
+        currentPage={myReviewsPage}
+        totalPages={myReviewsTotalPages}
+        onPageChange={setMyReviewsPage}
+        totalItems={myReviews.length}
+        itemsPerPage={itemsPerPage}
+      />
+
+      {/* All Reviews Table */}
+      <div className="bg-white rounded-xl shadow-md overflow-hidden">
+        <div className="px-6 pt-5 pb-2">
+          <h3 className="text-xl font-bold" style={{ color: '#1e3a8a' }}>Student Reviews</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b-2" style={{ borderBottomColor: '#1e3a8a' }}>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Student</th>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Course</th>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Rating</th>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Date</th>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Feedback</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedAllReviews.map((review) => (
+                <tr key={review.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-sm shrink-0" style={{ backgroundColor: '#1e3a8a' }}>
+                        {review.student.charAt(0)}
+                      </div>
+                      <p className="font-semibold text-gray-800 whitespace-nowrap">{review.student}</p>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4 text-gray-700">{review.course}</td>
+                  <td className="px-5 py-4">
+                    <div className="flex gap-0.5">
+                      {[1,2,3,4,5].map(s => (
+                        <span key={s} style={{ color: s <= review.rating ? '#f59e0b' : '#e0e0e0' }}>★</span>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="px-5 py-4 text-gray-500 whitespace-nowrap">{review.date}</td>
+                  <td className="px-5 py-4 text-gray-700 max-w-60">
+                    <p className="line-clamp-2">{review.feedback}</p>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <Pagination
+        currentPage={allReviewsPage}
+        totalPages={allReviewsTotalPages}
+        onPageChange={setAllReviewsPage}
+        totalItems={allReviews.length}
+        itemsPerPage={itemsPerPage}
+      />
 
       {/* Feedback Form Modal */}
       {showFeedbackForm && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          className="fixed inset-0  flex items-center justify-center z-50"
           onClick={() => setShowFeedbackForm(false)}
         >
           <div

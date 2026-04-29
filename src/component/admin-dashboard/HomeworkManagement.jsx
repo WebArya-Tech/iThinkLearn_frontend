@@ -1,9 +1,9 @@
 ﻿import React, { useState, useEffect } from 'react';
 
 const DEFAULT_HOMEWORK = [
-  { id: 1, title: 'Calculus Assignment 1', subject: 'Mathematics', dueDate: '2026-03-10', marks: 25, description: 'Solve all integration problems from chapter 5. Show all working steps.' },
-  { id: 2, title: 'Physics Project', subject: 'Physics', dueDate: '2026-03-15', marks: 30, description: 'Create a detailed project on simple machines with diagrams.' },
-  { id: 3, title: 'Organic Chemistry Worksheet', subject: 'Chemistry', dueDate: '2026-03-20', marks: 20, description: 'Complete reaction mechanism worksheet for Chapter 5.' },
+  { id: 1, title: 'Calculus Assignment 1', subject: 'Mathematics', dueDate: '2026-03-10', assignedDate: 'Feb 28, 2026', marks: 25, description: 'Solve all integration problems from chapter 5. Show all working steps.' },
+  { id: 2, title: 'Physics Project', subject: 'Physics', dueDate: '2026-03-15', assignedDate: 'Mar 01, 2026', marks: 30, description: 'Create a detailed project on simple machines with diagrams.' },
+  { id: 3, title: 'Organic Chemistry Worksheet', subject: 'Chemistry', dueDate: '2026-03-20', assignedDate: 'Mar 05, 2026', marks: 20, description: 'Complete reaction mechanism worksheet for Chapter 5.' },
 ]
 
 const loadHomework = () => {
@@ -16,7 +16,7 @@ const loadHomework = () => {
 export default function HomeworkManagement() {
   const [homework, setHomework] = useState(loadHomework);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ title: '', subject: '', dueDate: '', marks: 10, description: '' });
+  const [form, setForm] = useState({ title: '', subject: '', dueDate: '', marks: 10, description: '', assignedDate: '' });
   const [editId, setEditId] = useState(null);
 
   // Save to localStorage so student Homework.jsx can read them
@@ -29,11 +29,11 @@ export default function HomeworkManagement() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (editId) {
-      setHomework(homework.map(h => h.id === editId ? { ...form, id: editId } : h));
+      setHomework(homework.map(h => h.id === editId ? { ...h, ...form, id: editId } : h));
     } else {
-      setHomework([...homework, { ...form, id: Date.now(), assignedDate: new Date().toLocaleDateString('en-IN') }]);
+      setHomework([...homework, { ...form, id: Date.now(), assignedDate: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) }]);
     }
-    setForm({ title: '', subject: '', dueDate: '', marks: 10, description: '' });
+    setForm({ title: '', subject: '', dueDate: '', marks: 10, description: '', assignedDate: '' });
     setEditId(null);
     setShowForm(false);
   };

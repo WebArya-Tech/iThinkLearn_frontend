@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import Pagination from '../ui/Pagination'
 
 const STATIC_HOMEWORK = [
   { id: 1, subject: 'Mathematics', title: 'Calculus Problem Set 5', description: 'Solve problems 1-15 from Chapter 8. Focus on integration techniques.', dueDate: 'Mar 10, 2026', status: 'pending', marks: 25, assignedDate: 'Feb 28, 2026' },
@@ -14,7 +15,7 @@ const loadHomework = () => {
         ...h,
         status: h.status || 'pending',
         marks: h.marks || 10,
-        assignedDate: h.assignedDate || (h.dueDate ? '' : new Date().toLocaleDateString('en-IN')),
+        assignedDate: h.assignedDate || 'Not assigned',
       }))
     }
   } catch {}
@@ -26,6 +27,7 @@ export default function Homework() {
   const [showSubmitModal, setShowSubmitModal] = useState(false)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [selectedHomework, setSelectedHomework] = useState(null)
+  const [selectedFile, setSelectedFile] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [homework, setHomework] = useState(loadHomework)
   const itemsPerPage = 5
@@ -74,7 +76,15 @@ export default function Homework() {
 
   const handleSubmitHomework = (e) => {
     e.preventDefault()
-    alert('Homework submitted successfully!')
+    const submittedDate = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+    const updatedHomework = homework.map(h =>
+      h.id === selectedHomework.id
+        ? { ...h, status: 'submitted', submittedDate, submittedFile: selectedFile ? selectedFile.name : '' }
+        : h
+    )
+    setHomework(updatedHomework)
+    localStorage.setItem('icfy_homework', JSON.stringify(updatedHomework))
+    setSelectedFile(null)
     setShowSubmitModal(false)
     setSelectedHomework(null)
   }
@@ -85,153 +95,153 @@ export default function Homework() {
 
   return (
     <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="bg-white border-b-2 border-blue-900 rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-blue-900">Homework</h2>
-        <p className="text-gray-500 text-sm mt-1">Track and submit your homework assignments</p>
+      {/* Header */}
+      <div>
+        <h2 className="text-3xl font-bold" style={{ color: '#1e3a8a' }}>Homework</h2>
+        <p className="text-gray-600 mt-2">Track and submit your homework assignments</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-400">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-white rounded-xl shadow-md p-6 border-l-4" style={{ borderLeftColor: '#ffc107' }}>
           <h3 className="text-sm font-semibold text-gray-600 mb-2">Pending</h3>
-          <p className="text-4xl font-bold text-yellow-500">{pendingCount}</p>
+          <p className="text-4xl font-bold" style={{ color: '#ffc107' }}>{pendingCount}</p>
         </div>
-        <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-red-400">
+        <div className="bg-white rounded-xl shadow-md p-6 border-l-4" style={{ borderLeftColor: '#dc3545' }}>
           <h3 className="text-sm font-semibold text-gray-600 mb-2">Overdue</h3>
-          <p className="text-4xl font-bold text-red-500">{overdueCount}</p>
+          <p className="text-4xl font-bold" style={{ color: '#dc3545' }}>{overdueCount}</p>
         </div>
-        <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
+        <div className="bg-white rounded-xl shadow-md p-6 border-l-4" style={{ borderLeftColor: '#28a745' }}>
           <h3 className="text-sm font-semibold text-gray-600 mb-2">Submitted</h3>
-          <p className="text-4xl font-bold text-green-600">{submittedCount}</p>
+          <p className="text-4xl font-bold" style={{ color: '#28a745' }}>{submittedCount}</p>
         </div>
-        <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-700">
+        <div className="bg-white rounded-xl shadow-md p-6 border-l-4" style={{ borderLeftColor: '#1e3a8a' }}>
           <h3 className="text-sm font-semibold text-gray-600 mb-2">Total</h3>
-          <p className="text-4xl font-bold text-blue-900">{homework.length}</p>
+          <p className="text-4xl font-bold" style={{ color: '#1e3a8a' }}>{homework.length}</p>
         </div>
       </div>
 
-        <div className="bg-white rounded-xl shadow-md p-4">
+      {/* Filter Tabs */}
+      <div className="bg-white rounded-xl shadow-md p-4">
         <div className="flex flex-wrap gap-3">
-          <button onClick={() => setFilter('all')} className={`px-4 py-2 rounded-lg font-semibold transition-all text-sm ${filter === 'all' ? 'bg-blue-900 text-white shadow-md' : 'text-gray-700 hover:bg-white'}`}>All ({homework.length})</button>
-          <button onClick={() => setFilter('pending')} className={`px-4 py-2 rounded-lg font-semibold transition-all text-sm ${filter === 'pending' ? 'bg-yellow-400 text-blue-900 shadow-md' : 'text-gray-700 hover:bg-white'}`}>Pending ({pendingCount})</button>
-          <button onClick={() => setFilter('overdue')} className={`px-4 py-2 rounded-lg font-semibold transition-all text-sm ${filter === 'overdue' ? 'bg-red-500 text-white shadow-md' : 'text-gray-700 hover:bg-white'}`}>Overdue ({overdueCount})</button>
-          <button onClick={() => setFilter('submitted')} className={`px-4 py-2 rounded-lg font-semibold transition-all text-sm ${filter === 'submitted' ? 'bg-green-500 text-white shadow-md' : 'text-gray-700 hover:bg-white'}`}>Submitted</button>
+          <button
+            onClick={() => setFilter('all')}
+            className={`px-4 py-2 rounded-lg font-semibold transition-all text-sm ${
+              filter === 'all' ? 'text-white shadow-md' : 'text-gray-700 hover:bg-gray-50'
+            }`}
+            style={{ backgroundColor: filter === 'all' ? '#1e3a8a' : 'transparent' }}
+          >
+            All ({homework.length})
+          </button>
+          <button
+            onClick={() => setFilter('pending')}
+            className={`px-4 py-2 rounded-lg font-semibold transition-all text-sm ${
+              filter === 'pending' ? 'text-white shadow-md' : 'text-gray-700 hover:bg-gray-50'
+            }`}
+            style={{ backgroundColor: filter === 'pending' ? '#ffc107' : 'transparent' }}
+          >
+            Pending ({pendingCount})
+          </button>
+          <button
+            onClick={() => setFilter('overdue')}
+            className={`px-4 py-2 rounded-lg font-semibold transition-all text-sm ${
+              filter === 'overdue' ? 'text-white shadow-md' : 'text-gray-700 hover:bg-gray-50'
+            }`}
+            style={{ backgroundColor: filter === 'overdue' ? '#dc3545' : 'transparent' }}
+          >
+            Overdue ({overdueCount})
+          </button>
+          <button
+            onClick={() => setFilter('submitted')}
+            className={`px-4 py-2 rounded-lg font-semibold transition-all text-sm ${
+              filter === 'submitted' ? 'text-white shadow-md' : 'text-gray-700 hover:bg-gray-50'
+            }`}
+            style={{ backgroundColor: filter === 'submitted' ? '#28a745' : 'transparent' }}
+          >
+            Submitted
+          </button>
         </div>
       </div>
 
-      {/* Homework List */}
-      <div className="space-y-4">
-        {paginatedHomework.map((hw) => (
-          <div
-            key={hw.id}
-            className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all border-l-4"
-            style={{ borderLeftColor: getStatusColor(hw.status) }}
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-3 flex-wrap">
-                  <h3 className="text-xl font-bold text-blue-900">{hw.title}</h3>
-                  <span className="px-3 py-1 rounded-full text-xs font-bold text-white" style={{ backgroundColor: getStatusColor(hw.status) }}>{getStatusText(hw.status)}</span>
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-900 text-white">{hw.subject}</span>
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-900 text-white">{hw.marks} Marks</span>
-                </div>
-                <p className="text-gray-700 mb-3">{hw.description}</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
-                  <div>
-                    <span className="font-semibold">Assigned:</span> {hw.assignedDate}
-                  </div>
-                  <div>
-                    <span className="font-semibold">Due Date:</span> {hw.dueDate}
-                  </div>
-                  {hw.submittedDate && (
-                    <div>
-                      <span className="font-semibold">Submitted:</span> {hw.submittedDate}
-                    </div>
-                  )}
-                  {hw.grade !== null && hw.grade !== undefined && (
-                    <div>
-                      <span className="font-semibold">Grade:</span>{' '}
-                      <span className="font-bold" style={{ color: '#28a745' }}>
-                        {hw.grade}/{hw.marks}
-                      </span>
-                    </div>
-                  )}
-                </div>
-                {hw.feedback && (
-                  <div className="mt-3 p-3 rounded-lg bg-white">
-                    <p className="text-sm font-semibold mb-1 text-blue-900">Teacher's Feedback:</p>
-                    <p className="text-sm text-gray-700">{hw.feedback}</p>
-                  </div>
-                )}
-              </div>
-              <div className="flex flex-col gap-2 ml-4">
-                <button
-                  onClick={() => { setSelectedHomework(hw); setShowDetailsModal(true) }}
-                  className="px-6 py-3 rounded-lg text-white font-bold shadow-md hover:opacity-90 transition-all whitespace-nowrap bg-blue-900"
+      {/* Homework Table */}
+      <div className="bg-white rounded-xl shadow-md overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b-2" style={{ borderBottomColor: '#1e3a8a' }}>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Title</th>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Subject</th>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Assigned</th>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Due Date</th>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Marks</th>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Status</th>
+                <th className="text-left px-5 py-3 font-bold" style={{ color: '#1e3a8a' }}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedHomework.map((hw, idx) => (
+                <tr
+                  key={hw.id}
+                  className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                 >
-                  View Details
-                </button>
-                {(hw.status === 'pending' || hw.status === 'overdue') && (
-                  <button
-                    onClick={() => handleSubmit(hw)}
-                    className="px-6 py-3 rounded-lg text-white font-bold shadow-md hover:opacity-90 transition-all whitespace-nowrap bg-blue-900"
-                  >
-                    Submit
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
+                  <td className="px-5 py-4">
+                    <p className="font-semibold text-gray-800">{hw.title}</p>
+                    <p className="text-xs text-gray-500 mt-0.5 max-w-[180px] truncate">{hw.description}</p>
+                  </td>
+                  <td className="px-5 py-4 font-medium text-gray-700">{hw.subject}</td>
+                  <td className="px-5 py-4 text-gray-600">{hw.assignedDate}</td>
+                  <td className="px-5 py-4 text-gray-600">{hw.dueDate}</td>
+                  <td className="px-5 py-4 font-bold" style={{ color: '#f59e0b' }}>
+                    {hw.grade != null ? `${hw.grade}/${hw.marks}` : hw.marks}
+                  </td>
+                  <td className="px-5 py-4">
+                    <span
+                      className="px-3 py-1 rounded-full text-xs font-bold text-white whitespace-nowrap"
+                      style={{ backgroundColor: getStatusColor(hw.status) }}
+                    >
+                      {getStatusText(hw.status)}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => { setSelectedHomework(hw); setShowDetailsModal(true) }}
+                        className="px-3 py-1.5 rounded-lg text-xs font-bold border-2 transition-all hover:bg-gray-50 whitespace-nowrap"
+                        style={{ borderColor: '#f59e0b', color: '#f59e0b', backgroundColor: 'white' }}
+                      >
+                        View
+                      </button>
+                      {(hw.status === 'pending' || hw.status === 'overdue') && (
+                        <button
+                          onClick={() => handleSubmit(hw)}
+                          className="px-3 py-1.5 rounded-lg text-xs font-bold border-2 transition-all hover:bg-blue-800 hover:text-white whitespace-nowrap"
+                          style={{ borderColor: '#1e3a8a', color: '#1e3a8a', backgroundColor: 'white' }}
+                        >
+                          Submit
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-6">
-          <button
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ 
-              backgroundColor: currentPage === 1 ? '#e0e0e0' : '#1e3a8a',
-              color: currentPage === 1 ? '#666' : 'white'
-            }}
-          >
-            Previous
-          </button>
-          {[...Array(totalPages)].map((_, index) => (
-            <button
-              key={index + 1}
-              onClick={() => setCurrentPage(index + 1)}
-              className="px-4 py-2 rounded-lg font-semibold transition-all"
-              style={{
-                backgroundColor: currentPage === index + 1 ? '#1e3a8a' : 'white',
-                color: currentPage === index + 1 ? 'white' : '#1e3a8a',
-                border: '2px solid #1e3a8a'
-              }}
-            >
-              {index + 1}
-            </button>
-          ))}
-          <button
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ 
-              backgroundColor: currentPage === totalPages ? '#e0e0e0' : '#1e3a8a',
-              color: currentPage === totalPages ? '#666' : 'white'
-            }}
-          >
-            Next
-          </button>
-        </div>
-      )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        totalItems={filteredHomework.length}
+        itemsPerPage={itemsPerPage}
+      />
 
       {/* View Details Modal */}
       {showDetailsModal && selectedHomework && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          className="fixed inset-0  flex items-center justify-center z-50"
           onClick={() => setShowDetailsModal(false)}
         >
           <div
@@ -244,7 +254,7 @@ export default function Homework() {
                 onClick={() => setShowDetailsModal(false)}
                 className="text-2xl text-gray-400 hover:text-gray-600 transition"
               >
-                ×
+                ✕
               </button>
             </div>
             
@@ -255,25 +265,25 @@ export default function Homework() {
               </div>
               
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 rounded-lg" style={{ backgroundColor: '#ffffff' }}>
+                <div className="p-3 rounded-lg" style={{ backgroundColor: '#fef9f0' }}>
                   <p className="text-xs text-gray-600 font-semibold">Subject</p>
                   <p className="text-lg font-bold" style={{ color: '#1e3a8a' }}>{selectedHomework.subject}</p>
                 </div>
-                <div className="p-3 rounded-lg" style={{ backgroundColor: '#ffffff' }}>
+                <div className="p-3 rounded-lg" style={{ backgroundColor: '#fef9f0' }}>
                   <p className="text-xs text-gray-600 font-semibold">Marks</p>
                   <p className="text-lg font-bold" style={{ color: '#f59e0b' }}>{selectedHomework.marks} Marks</p>
                 </div>
-                <div className="p-3 rounded-lg" style={{ backgroundColor: '#ffffff' }}>
+                <div className="p-3 rounded-lg" style={{ backgroundColor: '#fef9f0' }}>
                   <p className="text-xs text-gray-600 font-semibold">Assigned Date</p>
                   <p className="text-lg font-bold" style={{ color: '#1e3a8a' }}>{selectedHomework.assignedDate}</p>
                 </div>
-                <div className="p-3 rounded-lg" style={{ backgroundColor: '#ffffff' }}>
+                <div className="p-3 rounded-lg" style={{ backgroundColor: '#fef9f0' }}>
                   <p className="text-xs text-gray-600 font-semibold">Due Date</p>
                   <p className="text-lg font-bold" style={{ color: '#dc3545' }}>{selectedHomework.dueDate}</p>
                 </div>
               </div>
               
-              <div className="p-4 rounded-lg" style={{ backgroundColor: 'white' }}>
+              <div className="p-4 rounded-lg" style={{ backgroundColor: '#e8f5f0' }}>
                 <p className="text-sm font-semibold mb-1" style={{ color: '#1e3a8a' }}>Status</p>
                 <span
                   className="px-3 py-1 rounded-full text-sm font-bold text-white"
@@ -308,8 +318,8 @@ export default function Homework() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowDetailsModal(false)}
-                className="flex-1 py-3 rounded-lg font-bold border-2 transition-all"
-                style={{ borderColor: '#1e3a8a', color: '#1e3a8a' }}
+                className="flex-1 py-3 rounded-lg font-bold border-2 transition-all hover:bg-gray-50"
+                style={{ borderColor: '#1e3a8a', color: '#1e3a8a', backgroundColor: 'white' }}
               >
                 Close
               </button>
@@ -319,8 +329,8 @@ export default function Homework() {
                     setShowDetailsModal(false)
                     handleSubmit(selectedHomework)
                   }}
-                  className="flex-1 py-3 rounded-lg text-white font-bold shadow-md hover:opacity-90 transition-all"
-                  style={{ backgroundColor: '#1e3a8a' }}
+                  className="flex-1 py-3 rounded-lg font-bold border-2 transition-all hover:bg-blue-800 hover:text-white"
+                  style={{ borderColor: '#1e3a8a', color: '#1e3a8a', backgroundColor: 'white' }}
                 >
                   Submit Homework
                 </button>
@@ -333,60 +343,57 @@ export default function Homework() {
       {/* Submit Homework Modal */}
       {showSubmitModal && selectedHomework && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
           onClick={() => setShowSubmitModal(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full mx-4"
+            className="bg-white rounded-xl shadow-xl w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-2xl font-bold mb-6" style={{ color: '#1e3a8a' }}>Submit Homework</h2>
-            
-            <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: '#ffffff' }}>
-              <h3 className="font-bold text-lg mb-2">{selectedHomework.title}</h3>
-              <p className="text-sm text-gray-600 mb-1">{selectedHomework.subject}</p>
-              <p className="text-sm"><span className="font-semibold">Due Date:</span> {selectedHomework.dueDate}</p>
+            <div className="p-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-1">Submit Homework</h2>
+              <p className="text-gray-500 text-sm mb-4">{selectedHomework.title}</p>
+
+              <form onSubmit={handleSubmitHomework} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Upload File</label>
+                  <input
+                    type="file"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:border-gray-400 text-sm"
+                    required
+                    onChange={(e) => setSelectedFile(e.target.files[0] || null)}
+                  />
+                  {selectedFile && (
+                    <p className="text-xs mt-1 text-green-600">Selected: {selectedFile.name}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Comments (Optional)</label>
+                  <textarea
+                    className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:border-gray-400 text-sm resize-none"
+                    rows="3"
+                    placeholder="Add any comments..."
+                  ></textarea>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => { setShowSubmitModal(false); setSelectedFile(null); }}
+                    className="flex-1 py-2 rounded-lg font-medium text-sm border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-2 rounded-lg font-medium text-sm bg-gray-800 text-white hover:bg-gray-700 transition-colors"
+                  >
+                    Submit
+                  </button>
+                </div>
+              </form>
             </div>
-
-            <form onSubmit={handleSubmitHomework} className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Upload File</label>
-                <input
-                  type="file"
-                  className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none"
-                  style={{ borderColor: '#1e3a8a' }}
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Comments (Optional)</label>
-                <textarea
-                  className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none"
-                  style={{ borderColor: '#1e3a8a' }}
-                  rows="4"
-                  placeholder="Add any comments or notes..."
-                ></textarea>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowSubmitModal(false)}
-                  className="flex-1 py-3 rounded-lg font-bold border-2 transition-all"
-                  style={{ borderColor: '#dc3545', color: '#dc3545' }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-3 rounded-lg text-white font-bold shadow-md hover:opacity-90 transition-all"
-                  style={{ backgroundColor: '#1e3a8a' }}
-                >
-                  Submit Homework
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}

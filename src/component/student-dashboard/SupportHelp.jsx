@@ -1,9 +1,14 @@
 import React, { useState } from 'react'
+import Pagination from '../ui/Pagination'
 
 export default function SupportHelp() {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [ticketsPage, setTicketsPage] = useState(1)
   const [faqsPage, setFaqsPage] = useState(1)
+  const [showTicketModal, setShowTicketModal] = useState(false)
+  const [selectedTicket, setSelectedTicket] = useState(null)
+  const [showNewTicketModal, setShowNewTicketModal] = useState(false)
+  const [newTicketForm, setNewTicketForm] = useState({ subject: '', category: 'technical', description: '' })
   const itemsPerPage = 5
 
   const faqs = [
@@ -85,127 +90,143 @@ export default function SupportHelp() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'open':
-        return '#dc3545'
-      case 'in-progress':
-        return '#ffc107'
-      case 'resolved':
-        return '#28a745'
-      default:
-        return '#1e3a8a'
+      case 'open': return '#dc3545'
+      case 'in-progress': return '#ffc107'
+      case 'resolved': return '#28a745'
+      default: return '#1e3a8a'
     }
+  }
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'high': return '#dc3545'
+      case 'medium': return '#ffc107'
+      case 'low': return '#28a745'
+      default: return '#1e3a8a'
+    }
+  }
+
+  const handleNewTicketSubmit = (e) => {
+    e.preventDefault()
+    alert('Ticket submitted! Our support team will respond within 24 hours.')
+    setShowNewTicketModal(false)
+    setNewTicketForm({ subject: '', category: 'technical', description: '' })
   }
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white border-b-2 border-blue-900 rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-blue-900">Support & Help</h2>
-        <p className="text-gray-500 text-sm mt-1">Get help and support for your queries</p>
+      <div>
+        <h2 className="text-3xl font-bold" style={{ color: '#1e3a8a' }}>💬 Support & Help</h2>
+        <p className="text-gray-600 mt-2">Get help and support for your queries</p>
       </div>
 
       {/* Contact Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-900">
-          <h3 className="text-xl font-bold mb-2 text-blue-900">Call Us</h3>
+        <div className="bg-white rounded-xl shadow-md p-6 border-l-4" style={{ borderLeftColor: '#1e3a8a' }}>
+          <h3 className="text-xl font-bold mb-2" style={{ color: '#1e3a8a' }}>Call Us</h3>
           <p className="text-gray-700 mb-3">+91 779 501 0900</p>
           <p className="text-sm text-gray-600">Mon - Sat, 9 AM - 6 PM IST</p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-400">
-          <h3 className="text-xl font-bold mb-2 text-yellow-500">Email Us</h3>
-          <p className="text-gray-700 mb-3">icfyglobal@ixpoe.com</p>
+        <div className="bg-white rounded-xl shadow-md p-6 border-l-4" style={{ borderLeftColor: '#f59e0b' }}>
+          <h3 className="text-xl font-bold mb-2" style={{ color: '#f59e0b' }}>Email Us</h3>
+          <p className="text-gray-700 mb-3">ithinklearn@ixpoe.com</p>
           <p className="text-sm text-gray-600">We'll respond within 24 hours</p>
+        </div>
+      </div>
+
+      {/* Current Project Details */}
+      <div className="bg-white rounded-xl shadow-md p-6">
+        <h3 className="text-2xl font-bold mb-4" style={{ color: '#1e3a8a' }}>📁 Current Project Details</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="p-4 rounded-lg" style={{ backgroundColor: '#fef9f0' }}>
+            <p className="text-sm text-gray-500 mb-1">Active Course</p>
+            <p className="font-semibold text-gray-800">UG Mathematics</p>
+            <p className="text-xs text-gray-600 mt-1">Ms. Neha Aggarwal</p>
+          </div>
+          <div className="p-4 rounded-lg" style={{ backgroundColor: '#e8f5f0' }}>
+            <p className="text-sm text-gray-500 mb-1">Ongoing Assignment</p>
+            <p className="font-semibold text-gray-800">Calculus Problem Set 3</p>
+            <p className="text-xs text-gray-600 mt-1">Due: Mar 10, 2026</p>
+          </div>
+          <div className="p-4 rounded-lg" style={{ backgroundColor: '#fff8e1' }}>
+            <p className="text-sm text-gray-500 mb-1">Pending Homework</p>
+            <p className="font-semibold text-gray-800">Integration Worksheet</p>
+            <p className="text-xs text-gray-600 mt-1">3 days left</p>
+          </div>
         </div>
       </div>
 
       {/* My Support Tickets */}
       <div className="bg-white rounded-xl shadow-md p-6">
-        <h3 className="text-2xl font-bold mb-6" style={{ color: '#1e3a8a' }}>My Support Tickets</h3>
-        <div className="space-y-3">
-          {paginatedTickets.map((ticket) => (
-            <div
-              key={ticket.id}
-              className="p-4 rounded-lg border-l-4 hover:shadow-md transition-all"
-              style={{
-                backgroundColor: '#ffffff',
-                borderLeftColor: getStatusColor(ticket.status)
-              }}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h4 className="font-bold text-gray-800">{ticket.subject}</h4>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-2xl font-bold" style={{ color: '#1e3a8a' }}>My Support Tickets</h3>
+          <button
+            onClick={() => setShowNewTicketModal(true)}
+            className="px-5 py-2 rounded-lg text-white font-bold hover:opacity-90 transition-all"
+            style={{ backgroundColor: '#1e3a8a' }}
+          >
+            + New Ticket
+          </button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b-2" style={{ borderColor: '#1e3a8a' }}>
+                <th className="text-left py-3 px-4 font-bold" style={{ color: '#1e3a8a' }}>Ticket ID</th>
+                <th className="text-left py-3 px-4 font-bold" style={{ color: '#1e3a8a' }}>Subject</th>
+                <th className="text-left py-3 px-4 font-bold" style={{ color: '#1e3a8a' }}>Category</th>
+                <th className="text-left py-3 px-4 font-bold" style={{ color: '#1e3a8a' }}>Date</th>
+                <th className="text-left py-3 px-4 font-bold" style={{ color: '#1e3a8a' }}>Priority</th>
+                <th className="text-left py-3 px-4 font-bold" style={{ color: '#1e3a8a' }}>Status</th>
+                <th className="text-left py-3 px-4 font-bold" style={{ color: '#1e3a8a' }}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedTickets.map((ticket) => (
+                <tr key={ticket.id} className="border-b hover:bg-gray-50">
+                  <td className="py-3 px-4 font-mono text-sm">{ticket.id}</td>
+                  <td className="py-3 px-4 font-semibold">{ticket.subject}</td>
+                  <td className="py-3 px-4 text-sm capitalize">{ticket.category}</td>
+                  <td className="py-3 px-4 text-sm text-gray-600">{ticket.date}</td>
+                  <td className="py-3 px-4">
+                    <span
+                      className="px-3 py-1 rounded-full text-xs font-bold text-white"
+                      style={{ backgroundColor: getPriorityColor(ticket.priority) }}
+                    >
+                      {ticket.priority.toUpperCase()}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4">
                     <span
                       className="px-3 py-1 rounded-full text-xs font-bold text-white"
                       style={{ backgroundColor: getStatusColor(ticket.status) }}
                     >
                       {ticket.status.toUpperCase()}
                     </span>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-2">Ticket ID: {ticket.id}</p>
-                  <div className="flex gap-4 text-sm text-gray-600">
-                    <span>{ticket.date}</span>
-                    <span>Updated: {ticket.lastUpdate}</span>
-                    <span>Priority: {ticket.priority}</span>
-                  </div>
-                </div>
-                <button
-                  className="px-4 py-2 rounded-lg font-semibold transition-all border-2"
-                  style={{
-                    borderColor: '#1e3a8a',
-                    color: '#1e3a8a',
-                    backgroundColor: 'transparent'
-                  }}
-                >
-                  View Details
-                </button>
-              </div>
-            </div>
-          ))}
+                  </td>
+                  <td className="py-3 px-4">
+                    <button
+                      onClick={() => { setSelectedTicket(ticket); setShowTicketModal(true) }}
+                      className="px-4 py-2 rounded-lg text-sm font-semibold border-2 bg-white transition-all hover:opacity-80"
+                      style={{ borderColor: '#1e3a8a', color: '#1e3a8a' }}
+                    >
+                      View Details
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-
-        {/* Pagination for Tickets */}
-        {ticketsTotalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-6">
-            <button
-              onClick={() => setTicketsPage(prev => Math.max(prev - 1, 1))}
-              disabled={ticketsPage === 1}
-              className="px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ 
-                backgroundColor: ticketsPage === 1 ? '#e0e0e0' : '#1e3a8a',
-                color: ticketsPage === 1 ? '#666' : 'white'
-              }}
-            >
-              Previous
-            </button>
-            {[...Array(ticketsTotalPages)].map((_, index) => (
-              <button
-                key={index + 1}
-                onClick={() => setTicketsPage(index + 1)}
-                className="px-4 py-2 rounded-lg font-semibold transition-all"
-                style={{
-                  backgroundColor: ticketsPage === index + 1 ? '#1e3a8a' : 'white',
-                  color: ticketsPage === index + 1 ? 'white' : '#1e3a8a',
-                  border: '2px solid #1e3a8a'
-                }}
-              >
-                {index + 1}
-              </button>
-            ))}
-            <button
-              onClick={() => setTicketsPage(prev => Math.min(prev + 1, ticketsTotalPages))}
-              disabled={ticketsPage === ticketsTotalPages}
-              className="px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ 
-                backgroundColor: ticketsPage === ticketsTotalPages ? '#e0e0e0' : '#1e3a8a',
-                color: ticketsPage === ticketsTotalPages ? '#666' : 'white'
-              }}
-            >
-              Next
-            </button>
-          </div>
-        )}
+        <Pagination
+          currentPage={ticketsPage}
+          totalPages={ticketsTotalPages}
+          onPageChange={setTicketsPage}
+          totalItems={tickets.length}
+          itemsPerPage={itemsPerPage}
+        />
       </div>
 
       {/* FAQ Section */}
@@ -217,7 +238,7 @@ export default function SupportHelp() {
           <button
             onClick={() => setSelectedCategory('all')}
             className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
-              selectedCategory === 'all' ? 'text-white shadow-md' : 'text-gray-700 hover:bg-white'
+              selectedCategory === 'all' ? 'text-white shadow-md' : 'text-gray-700 hover:bg-gray-50'
             }`}
             style={{ backgroundColor: selectedCategory === 'all' ? '#1e3a8a' : 'transparent', border: '2px solid #1e3a8a' }}
           >
@@ -226,7 +247,7 @@ export default function SupportHelp() {
           <button
             onClick={() => setSelectedCategory('account')}
             className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
-              selectedCategory === 'account' ? 'text-white shadow-md' : 'text-gray-700 hover:bg-white'
+              selectedCategory === 'account' ? 'text-white shadow-md' : 'text-gray-700 hover:bg-gray-50'
             }`}
             style={{ backgroundColor: selectedCategory === 'account' ? '#f59e0b' : 'transparent', border: '2px solid #f59e0b' }}
           >
@@ -235,7 +256,7 @@ export default function SupportHelp() {
           <button
             onClick={() => setSelectedCategory('courses')}
             className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
-              selectedCategory === 'courses' ? 'text-white shadow-md' : 'text-gray-700 hover:bg-white'
+              selectedCategory === 'courses' ? 'text-white shadow-md' : 'text-gray-700 hover:bg-gray-50'
             }`}
             style={{ backgroundColor: selectedCategory === 'courses' ? '#28a745' : 'transparent', border: '2px solid #28a745' }}
           >
@@ -244,7 +265,7 @@ export default function SupportHelp() {
           <button
             onClick={() => setSelectedCategory('assignments')}
             className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
-              selectedCategory === 'assignments' ? 'text-white shadow-md' : 'text-gray-700 hover:bg-white'
+              selectedCategory === 'assignments' ? 'text-white shadow-md' : 'text-gray-700 hover:bg-gray-50'
             }`}
             style={{ backgroundColor: selectedCategory === 'assignments' ? '#ffc107' : 'transparent', border: '2px solid #ffc107' }}
           >
@@ -253,7 +274,7 @@ export default function SupportHelp() {
           <button
             onClick={() => setSelectedCategory('technical')}
             className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
-              selectedCategory === 'technical' ? 'text-white shadow-md' : 'text-gray-700 hover:bg-white'
+              selectedCategory === 'technical' ? 'text-white shadow-md' : 'text-gray-700 hover:bg-gray-50'
             }`}
             style={{ backgroundColor: selectedCategory === 'technical' ? '#dc3545' : 'transparent', border: '2px solid #dc3545' }}
           >
@@ -267,7 +288,7 @@ export default function SupportHelp() {
             <details
               key={index}
               className="p-4 rounded-lg cursor-pointer hover:shadow-md transition-all"
-              style={{ backgroundColor: '#ffffff' }}
+              style={{ backgroundColor: '#fef9f0' }}
             >
               <summary className="font-bold text-gray-800 cursor-pointer">
                 {faq.question}
@@ -277,50 +298,145 @@ export default function SupportHelp() {
           ))}
         </div>
 
-        {/* Pagination for FAQs */}
-        {faqsTotalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-6">
-            <button
-              onClick={() => setFaqsPage(prev => Math.max(prev - 1, 1))}
-              disabled={faqsPage === 1}
-              className="px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ 
-                backgroundColor: faqsPage === 1 ? '#e0e0e0' : '#1e3a8a',
-                color: faqsPage === 1 ? '#666' : 'white'
-              }}
-            >
-              Previous
-            </button>
-            {[...Array(faqsTotalPages)].map((_, index) => (
-              <button
-                key={index + 1}
-                onClick={() => setFaqsPage(index + 1)}
-                className="px-4 py-2 rounded-lg font-semibold transition-all"
-                style={{
-                  backgroundColor: faqsPage === index + 1 ? '#1e3a8a' : 'white',
-                  color: faqsPage === index + 1 ? 'white' : '#1e3a8a',
-                  border: '2px solid #1e3a8a'
-                }}
-              >
-                {index + 1}
-              </button>
-            ))}
-            <button
-              onClick={() => setFaqsPage(prev => Math.min(prev + 1, faqsTotalPages))}
-              disabled={faqsPage === faqsTotalPages}
-              className="px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ 
-                backgroundColor: faqsPage === faqsTotalPages ? '#e0e0e0' : '#1e3a8a',
-                color: faqsPage === faqsTotalPages ? '#666' : 'white'
-              }}
-            >
-              Next
-            </button>
-          </div>
-        )}
+        <Pagination
+          currentPage={faqsPage}
+          totalPages={faqsTotalPages}
+          onPageChange={setFaqsPage}
+          totalItems={filteredFaqs.length}
+          itemsPerPage={itemsPerPage}
+        />
       </div>
 
-     
+      {/* Ticket Detail Modal */}
+      {showTicketModal && selectedTicket && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={() => setShowTicketModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl p-8 max-w-lg w-full mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold" style={{ color: '#1e3a8a' }}>Ticket Details</h2>
+              <button onClick={() => setShowTicketModal(false)} className="text-gray-500 hover:text-gray-700 text-2xl font-bold leading-none">&times;</button>
+            </div>
+            <div className="space-y-3 mb-6">
+              <div className="flex justify-between">
+                <span className="text-sm font-semibold text-gray-600">Ticket ID</span>
+                <span className="font-mono text-sm">{selectedTicket.id}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-semibold text-gray-600">Subject</span>
+                <span className="text-sm font-semibold">{selectedTicket.subject}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-semibold text-gray-600">Category</span>
+                <span className="text-sm capitalize">{selectedTicket.category}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-semibold text-gray-600">Date</span>
+                <span className="text-sm">{selectedTicket.date}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-semibold text-gray-600">Last Update</span>
+                <span className="text-sm">{selectedTicket.lastUpdate}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-semibold text-gray-600">Priority</span>
+                <span className="px-3 py-1 rounded-full text-xs font-bold text-white" style={{ backgroundColor: getPriorityColor(selectedTicket.priority) }}>{selectedTicket.priority.toUpperCase()}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-semibold text-gray-600">Status</span>
+                <span className="px-3 py-1 rounded-full text-xs font-bold text-white" style={{ backgroundColor: getStatusColor(selectedTicket.status) }}>{selectedTicket.status.toUpperCase()}</span>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowTicketModal(false)}
+              className="w-full py-3 rounded-lg font-bold text-white hover:opacity-90 transition-all"
+              style={{ backgroundColor: '#1e3a8a' }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* New Ticket Modal */}
+      {showNewTicketModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={() => setShowNewTicketModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl p-8 max-w-lg w-full mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold" style={{ color: '#1e3a8a' }}>Submit New Ticket</h2>
+              <button onClick={() => setShowNewTicketModal(false)} className="text-gray-500 hover:text-gray-700 text-2xl font-bold leading-none">&times;</button>
+            </div>
+            <form onSubmit={handleNewTicketSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Subject</label>
+                <input
+                  type="text"
+                  value={newTicketForm.subject}
+                  onChange={(e) => setNewTicketForm({ ...newTicketForm, subject: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none"
+                  style={{ borderColor: '#1e3a8a' }}
+                  placeholder="Briefly describe your issue"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Category</label>
+                <select
+                  value={newTicketForm.category}
+                  onChange={(e) => setNewTicketForm({ ...newTicketForm, category: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none"
+                  style={{ borderColor: '#1e3a8a' }}
+                >
+                  <option value="technical">Technical</option>
+                  <option value="account">Account</option>
+                  <option value="courses">Courses</option>
+                  <option value="payments">Payments</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                <textarea
+                  value={newTicketForm.description}
+                  onChange={(e) => setNewTicketForm({ ...newTicketForm, description: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none"
+                  style={{ borderColor: '#1e3a8a' }}
+                  rows="4"
+                  placeholder="Describe your issue in detail..."
+                  required
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowNewTicketModal(false)}
+                  className="flex-1 py-3 rounded-lg font-bold border-2 bg-white transition-all hover:opacity-80"
+                  style={{ borderColor: '#dc3545', color: '#dc3545' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-3 rounded-lg text-white font-bold hover:opacity-90 transition-all"
+                  style={{ backgroundColor: '#1e3a8a' }}
+                >
+                  Submit Ticket
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -186,7 +186,9 @@ export default function Testimonials() {
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
   const [testimonials, setTestimonials] = useState(hardcodedTestimonials);
   const [loading, setLoading] = useState(false);
+  const [pendingTestimonial, setPendingTestimonial] = useState(null);
   const testimonialsRef = useRef(null);
+  const pendingRef = useRef(null);
 
   // Fetch approved testimonials from API
   useEffect(() => {
@@ -209,7 +211,25 @@ export default function Testimonials() {
     fetchApprovedTestimonials();
   }, []);
 
-  const handleSubmitSuccess = () => {
+  const handleSubmitSuccess = (submittedData) => {
+    // Store pending testimonial to show immediately
+    setPendingTestimonial({
+      name: submittedData.name,
+      role: submittedData.role || (submittedData.type === 'parent' ? 'Parent' : 'Student'),
+      text: submittedData.message,
+      type: submittedData.type,
+      rating: submittedData.rating,
+      isPending: true,
+      submittedAt: new Date().toLocaleDateString()
+    });
+    
+    // Scroll to pending section after a short delay
+    setTimeout(() => {
+      if (pendingRef.current) {
+        pendingRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 300);
+    
     // Refresh testimonials after successful submission
     setLoading(true);
     const fetchApprovedTestimonials = async () => {
@@ -236,20 +256,20 @@ export default function Testimonials() {
   return (
     <div className="w-full">
       <Header />
-      <section className="w-full bg-white py-16 px-4 md:px-8 lg:px-12 border-b border-gray-200">
+      <section className="w-full bg-white py-10 sm:py-12 md:py-16 px-3 sm:px-4 md:px-8 lg:px-12 border-b border-gray-200">
         <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-5xl md:text-6xl font-bold text-blue-900 mb-6">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-blue-900 mb-4 sm:mb-6">
             Testimonials & Success Stories
           </h1>
-          <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-2 sm:px-0">
             Hear directly from students and parents whose academic journeys have been transformed through iThinkLearn's structured mentoring and personalized guidance.
           </p>
         </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 pt-10 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-8 sm:pt-10 justify-center px-4 sm:px-0">
             <button
               onClick={handleExploreTestimonials}
-              className="bg-blue-900 text-white font-bold py-4 px-12 rounded-lg hover:bg-blue-800 transition-colors text-lg shadow-lg hover:shadow-xl"
+              className="bg-blue-900 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 md:px-12 rounded-lg hover:bg-blue-800 transition-colors text-base sm:text-lg shadow-lg hover:shadow-xl w-full sm:w-auto"
             >
               Explore Testimonials
             </button>
@@ -261,41 +281,73 @@ export default function Testimonials() {
                 }
                 setIsSubmitModalOpen(true)
               }}
-              className="bg-gradient-to-r from-yellow-400 to-orange-500 text-blue-900 font-bold py-4 px-12 rounded-lg hover:from-yellow-300 hover:to-orange-400 transition-all text-lg shadow-lg hover:shadow-xl"
+              className="bg-gradient-to-r from-yellow-400 to-orange-500 text-blue-900 font-bold py-3 sm:py-4 px-6 sm:px-8 md:px-12 rounded-lg hover:from-yellow-300 hover:to-orange-400 transition-all text-base sm:text-lg shadow-lg hover:shadow-xl w-full sm:w-auto"
             >
               Write Your Testimonial
             </button>
           </div>
       </section>
 
-      <section className="w-full bg-gray-50 py-16 px-4 md:px-8 lg:px-12" ref={testimonialsRef}>
+      <section className="w-full bg-gray-50 py-10 sm:py-12 md:py-16 px-3 sm:px-4 md:px-8 lg:px-12" ref={testimonialsRef}>
         <div className="max-w-7xl mx-auto">
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 md:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {testimonials.map((item, index) => (
-              <div key={index} className="bg-white rounded-xl border-2 border-gray-100 p-8 hover:border-blue-900 hover:shadow-xl transition-all duration-300 flex flex-col relative">
+              <div key={index} className="bg-white rounded-xl border-2 border-gray-100 p-4 sm:p-6 md:p-8 hover:border-blue-900 hover:shadow-xl transition-all duration-300 flex flex-col relative">
                 {!item.isPending && item.type === 'student' && (
-                  <div className="absolute top-4 right-4 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-semibold">
+                  <div className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-blue-100 text-blue-800 px-2 sm:px-3 py-1 rounded-full text-xs font-semibold">
                     Student
                   </div>
                 )}
                 {!item.isPending && item.type === 'parent' && (
-                  <div className="absolute top-4 right-4 bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">
+                  <div className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-green-100 text-green-800 px-2 sm:px-3 py-1 rounded-full text-xs font-semibold">
                     Parent
                   </div>
                 )}
-                <Quote className="text-yellow-400 mb-4" size={32} />
-                <p className="text-gray-700 mb-6 text-sm md:text-base leading-relaxed grow">
+                <Quote className="text-yellow-400 mb-3 sm:mb-4" size={28} />
+                <p className="text-gray-700 mb-4 sm:mb-6 text-sm md:text-base leading-relaxed grow">
                   "{item.text}"
                 </p>
-                <div className="w-full h-0.5 bg-gradient-to-r from-blue-900/20 to-indigo-900/20 mb-4"></div>
+                <div className="w-full h-0.5 bg-gradient-to-r from-blue-900/20 to-indigo-900/20 mb-3 sm:mb-4"></div>
                 <div>
-                  <h3 className="font-bold text-blue-900 text-lg">{item.name}</h3>
-                  <p className="text-gray-600 text-sm">{item.role}</p>
+                  <h3 className="font-bold text-blue-900 text-base sm:text-lg">{item.name}</h3>
+                  <p className="text-gray-600 text-xs sm:text-sm">{item.role}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
+        
+        {/* Pending Testimonial - Shows immediately after submission */}
+        {pendingTestimonial && (
+          <div ref={pendingRef} className="mt-8 sm:mt-12 max-w-2xl mx-auto">
+            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-400 rounded-xl p-4 sm:p-6 relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-500 text-white px-4 py-1 rounded-full text-xs font-bold shadow-lg">
+                ⏳ Your Review - Pending Approval
+              </div>
+              <div className="pt-4">
+                <div className="flex items-center gap-1 mb-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <span key={star} className={`text-lg ${star <= (pendingTestimonial.rating || 5) ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
+                  ))}
+                </div>
+                <Quote className="text-yellow-500 mb-2" size={24} />
+                <p className="text-gray-700 mb-4 text-sm md:text-base leading-relaxed">
+                  "{pendingTestimonial.text}"
+                </p>
+                <div className="flex items-center justify-between border-t border-yellow-200 pt-3">
+                  <div>
+                    <h4 className="font-bold text-blue-900">{pendingTestimonial.name}</h4>
+                    <p className="text-gray-600 text-xs sm:text-sm">{pendingTestimonial.role}</p>
+                  </div>
+                  <span className="text-xs text-gray-500">Submitted: {pendingTestimonial.submittedAt}</span>
+                </div>
+              </div>
+            </div>
+            <p className="text-center text-gray-500 text-xs sm:text-sm mt-3">
+              Your review will be visible to everyone after admin approval.
+            </p>
+          </div>
+        )}
       </section>
 
       {/* Modals */}
@@ -303,6 +355,7 @@ export default function Testimonials() {
         isOpen={isSubmitModalOpen} 
         onClose={() => setIsSubmitModalOpen(false)}
         onSuccess={handleSubmitSuccess}
+        user={user}
       />
       <LoginModal
         isOpen={isLoginModalOpen}

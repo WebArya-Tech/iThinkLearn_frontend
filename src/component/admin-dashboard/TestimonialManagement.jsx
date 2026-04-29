@@ -120,28 +120,28 @@ export default function TestimonialManagement() {
   return (
     <div className="w-full">
       {/* Page Header */}
-      <div className="bg-white border-b-2 border-blue-900 rounded-xl p-6 mb-6">
-        <h1 className="text-2xl font-bold text-blue-900">Testimonial Management</h1>
-        <p className="text-gray-500 text-sm mt-1">Review, approve, and manage student testimonials</p>
+      <div className="bg-white border-b-2 border-blue-900 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-blue-900">Testimonial Management</h1>
+        <p className="text-gray-500 text-xs sm:text-sm mt-1">Review, approve, and manage student testimonials</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
         {stats.map((s) => (
-          <div key={s.label} className={`rounded-xl p-4 text-center font-semibold ${s.color}`}>
-            <div className="text-2xl font-bold">{s.count}</div>
+          <div key={s.label} className={`rounded-xl p-3 sm:p-4 text-center font-semibold ${s.color}`}>
+            <div className="text-xl sm:text-2xl font-bold">{s.count}</div>
             <div className="text-xs mt-1">{s.label}</div>
           </div>
         ))}
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex gap-3 flex-wrap mb-6">
+      <div className="flex gap-2 sm:gap-3 flex-wrap mb-4 sm:mb-6">
         {['all', 'pending', 'approved', 'rejected'].map((s) => (
           <button
             key={s}
             onClick={() => setSelectedStatus(s)}
-            className={`px-4 py-2 rounded-lg font-semibold transition-colors text-sm ${
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold transition-colors text-xs sm:text-sm ${
               selectedStatus === s
                 ? 'bg-blue-900 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -153,28 +153,28 @@ export default function TestimonialManagement() {
       </div>
 
       {loading ? (
-        <div className="text-center py-12">
-          <p className="text-gray-600">Loading testimonials...</p>
+        <div className="text-center py-8 sm:py-12">
+          <p className="text-gray-600 text-sm sm:text-base">Loading testimonials...</p>
         </div>
       ) : filteredTestimonials.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-xl border border-gray-200">
-          <AlertCircle className="mx-auto mb-3 text-gray-400" size={40} />
-          <p className="text-gray-600">
+        <div className="text-center py-8 sm:py-12 bg-gray-50 rounded-xl border border-gray-200">
+          <AlertCircle className="mx-auto mb-3 text-gray-400" size={32} />
+          <p className="text-gray-600 text-sm sm:text-base">
             No {selectedStatus !== 'all' ? selectedStatus : ''} testimonials found
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm -mx-2 sm:mx-0">
+          <table className="w-full text-xs sm:text-sm min-w-160">
             <thead>
               <tr className="bg-blue-900 text-white text-left">
-                <th className="px-4 py-3 font-semibold">#</th>
-                <th className="px-4 py-3 font-semibold">Name</th>
-                <th className="px-4 py-3 font-semibold">Role</th>
-                <th className="px-4 py-3 font-semibold">Rating</th>
-                <th className="px-4 py-3 font-semibold">Status</th>
-                <th className="px-4 py-3 font-semibold">Message</th>
-                <th className="px-4 py-3 font-semibold text-center">Actions</th>
+                <th className="px-2 sm:px-4 py-2 sm:py-3 font-semibold">#</th>
+                <th className="px-2 sm:px-4 py-2 sm:py-3 font-semibold">Name</th>
+                <th className="px-2 sm:px-4 py-2 sm:py-3 font-semibold">Role</th>
+                <th className="px-2 sm:px-4 py-2 sm:py-3 font-semibold">Rating</th>
+                <th className="px-2 sm:px-4 py-2 sm:py-3 font-semibold">Status</th>
+                <th className="px-2 sm:px-4 py-2 sm:py-3 font-semibold">Message</th>
+                <th className="px-2 sm:px-4 py-2 sm:py-3 font-semibold text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -182,7 +182,7 @@ export default function TestimonialManagement() {
                 <tr key={t._id} className="border-t border-gray-100 hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3 text-gray-500">{idx + 1}</td>
                   <td className="px-4 py-3 font-semibold text-gray-800 whitespace-nowrap">{t.name}</td>
-                  <td className="px-4 py-3 text-gray-600 max-w-[160px] truncate">{t.role}</td>
+                  <td className="px-4 py-3 text-gray-600 max-w-40 truncate">{t.role}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-0.5">
                       {[...Array(5)].map((_, i) => (
@@ -195,7 +195,7 @@ export default function TestimonialManagement() {
                     </div>
                   </td>
                   <td className="px-4 py-3">{statusBadge(t.status)}</td>
-                  <td className="px-4 py-3 text-gray-600 max-w-[200px]">
+                  <td className="px-4 py-3 text-gray-600 max-w-50">
                     <span className="line-clamp-2">{t.message}</span>
                   </td>
                   <td className="px-4 py-3">

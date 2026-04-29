@@ -78,7 +78,7 @@ const standOutPoints = [
     desc: 'Thousands of students have improved dramatically in academics — from average performance to top scorers. Our results speak louder than any promise.',
     accent: 'from-amber-500 to-yellow-600',
     iconBg: 'bg-amber-100',
-    img: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=600&auto=format&fit=crop&q=80',
+    img: 'https://media.istockphoto.com/id/651240134/photo/record-written-on-chalkboard.webp?a=1&b=1&s=612x612&w=0&k=20&c=beSCj237dv_N1nrKIKBt1Vp339aR9SNiYE-v9Oz8w78=',
   },
 ]
 
@@ -388,9 +388,16 @@ export default function HowAreDifferent() {
           <p className="text-gray-600 text-lg mb-3 leading-relaxed">
             Join a Free Demo Class and see why students and parents trust iThinkLearn.
           </p>
-          <p className="text-blue-900 font-semibold text-lg mb-8">
-            📞 Call / WhatsApp: +91 819 746 6607 &nbsp;|&nbsp; +91 779 501 0900
-          </p>
+          <div className="text-blue-900 font-semibold text-lg mb-8 space-y-2">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
+              <span>📞 Call:</span>
+              <a href="tel:+917795010900" className="text-blue-600 hover:text-blue-800 underline">+91 779 501 0900</a>
+            </div>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
+              <span>💬 WhatsApp:</span>
+              <a href="https://wa.me/918197466607" target="_blank" rel="noopener noreferrer" className="text-green-600 hover:text-green-800 underline">+91 819 746 6607</a>
+            </div>
+          </div>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={() => setIsModalOpen(true)}

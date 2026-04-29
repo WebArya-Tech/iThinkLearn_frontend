@@ -88,16 +88,16 @@ export default function StudentManagement() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="bg-white border-b-2 border-blue-900 rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-blue-900">Student Management</h2>
-        <p className="text-gray-500 text-sm mt-1">Manage all registered students</p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4">
+        <div className="bg-white border-b-2 border-blue-900 rounded-xl p-4 sm:p-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-blue-900">Student Management</h2>
+        <p className="text-gray-500 text-xs sm:text-sm mt-1">Manage all registered students</p>
       </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="px-6 py-3 rounded-lg text-white font-bold shadow-md hover:opacity-90 transition-all w-full md:w-auto bg-blue-900"
+          className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg text-white font-bold shadow-md hover:opacity-90 transition-all w-full md:w-auto bg-blue-900 text-sm sm:text-base"
         >
           + Add New Student
         </button>
@@ -105,43 +105,43 @@ export default function StudentManagement() {
       {true ? (
         <>
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-white rounded-xl shadow-md p-6 border-l-4" style={{ borderLeftColor: '#1e3a8a' }}>
-              <h3 className="text-sm font-semibold text-gray-600 mb-2">Total Students</h3>
-              <p className="text-4xl font-bold text-blue-900">{students.length}</p>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+            <div className="bg-white rounded-xl shadow-md p-3 sm:p-4 md:p-6 border-l-4" style={{ borderLeftColor: '#1e3a8a' }}>
+              <h3 className="text-xs sm:text-sm font-semibold text-gray-600 mb-1 sm:mb-2">Total Students</h3>
+              <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-blue-900">{students.length}</p>
             </div>
-            <div className="bg-white rounded-xl shadow-md p-6 border-l-4" style={{ borderLeftColor: '#28a745' }}>
-              <h3 className="text-sm font-semibold text-gray-600 mb-2">Active Students</h3>
-              <p className="text-4xl font-bold" style={{ color: '#28a745' }}>
+            <div className="bg-white rounded-xl shadow-md p-3 sm:p-4 md:p-6 border-l-4" style={{ borderLeftColor: '#28a745' }}>
+              <h3 className="text-xs sm:text-sm font-semibold text-gray-600 mb-1 sm:mb-2">Active Students</h3>
+              <p className="text-2xl sm:text-3xl md:text-4xl font-bold" style={{ color: '#28a745' }}>
                 {students.filter(s => s.status === 'active').length}
               </p>
             </div>
-            <div className="bg-white rounded-xl shadow-md p-6 border-l-4" style={{ borderLeftColor: '#ffc107' }}>
-              <h3 className="text-sm font-semibold text-gray-600 mb-2">Inactive Students</h3>
-              <p className="text-4xl font-bold" style={{ color: '#ffc107' }}>
+            <div className="bg-white rounded-xl shadow-md p-3 sm:p-4 md:p-6 border-l-4" style={{ borderLeftColor: '#ffc107' }}>
+              <h3 className="text-xs sm:text-sm font-semibold text-gray-600 mb-1 sm:mb-2">Inactive Students</h3>
+              <p className="text-2xl sm:text-3xl md:text-4xl font-bold" style={{ color: '#ffc107' }}>
                 {students.filter(s => s.status === 'inactive').length}
               </p>
             </div>
-            <div className="bg-white rounded-xl shadow-md p-6 border-l-4" style={{ borderLeftColor: '#eab308' }}>
-              <h3 className="text-sm font-semibold text-gray-600 mb-2">Pending</h3>
-              <p className="text-4xl font-bold" style={{ color: '#eab308' }}>{students.filter(s => s.status === 'pending').length}</p>
+            <div className="bg-white rounded-xl shadow-md p-3 sm:p-4 md:p-6 border-l-4" style={{ borderLeftColor: '#eab308' }}>
+              <h3 className="text-xs sm:text-sm font-semibold text-gray-600 mb-1 sm:mb-2">Pending</h3>
+              <p className="text-2xl sm:text-3xl md:text-4xl font-bold" style={{ color: '#eab308' }}>{students.filter(s => s.status === 'pending').length}</p>
             </div>
           </div>
           {/* Search and Filter */}
-          <div className="bg-white rounded-xl shadow-md p-4 md:p-6">
-            <div className="flex flex-col md:flex-row gap-4">
+          <div className="bg-white rounded-xl shadow-md p-3 sm:p-4 md:p-6">
+            <div className="flex flex-col md:flex-row gap-3 sm:gap-4">
               <input
                 type="text"
                 placeholder="Search by name, email, or ID..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1 px-4 py-3 rounded-lg border-2 focus:outline-none"
+                className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg border-2 focus:outline-none text-sm"
                 style={{ borderColor: '#1e3a8a' }}
               />
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-4 py-3 rounded-lg border-2 focus:outline-none"
+                className="px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg border-2 focus:outline-none text-sm"
                 style={{ borderColor: '#1e3a8a' }}
               >
                 <option value="all">All Status</option>
@@ -152,36 +152,36 @@ export default function StudentManagement() {
             </div>
           </div>
           {/* Students Table */}
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+          <div className="bg-white rounded-xl shadow-md overflow-hidden -mx-2 sm:mx-0">
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-160">
                 <thead>
                   <tr className="border-b-2" style={{ borderColor: '#1e3a8a', backgroundColor: '#fefce8' }}>
-                    <th className="text-left py-4 px-6 font-bold text-blue-900">Student ID</th>
-                    <th className="text-left py-4 px-6 font-bold text-blue-900">Name</th>
-                    <th className="text-left py-4 px-6 font-bold text-blue-900">Email</th>
-                    <th className="text-left py-4 px-6 font-bold text-blue-900">Phone</th>
-                    <th className="text-left py-4 px-6 font-bold text-blue-900">Status</th>
-                    <th className="text-left py-4 px-6 font-bold text-blue-900">Actions</th>
+                    <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-bold text-blue-900 text-xs sm:text-sm">Student ID</th>
+                    <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-bold text-blue-900 text-xs sm:text-sm">Name</th>
+                    <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-bold text-blue-900 text-xs sm:text-sm">Email</th>
+                    <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-bold text-blue-900 text-xs sm:text-sm">Phone</th>
+                    <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-bold text-blue-900 text-xs sm:text-sm">Status</th>
+                    <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-bold text-blue-900 text-xs sm:text-sm">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {paginatedStudents.length === 0 ? (
                     <tr>
-                      <td colSpan="6" className="text-center py-8 text-gray-600">No students found</td>
+                      <td colSpan="6" className="text-center py-6 sm:py-8 text-gray-600 text-sm">No students found</td>
                     </tr>
                   ) : (
                     paginatedStudents.map((student) => (
                       <tr key={student.id} className="border-b hover:bg-gray-50">
-                        <td className="py-4 px-6 font-mono text-sm">{student.id}</td>
-                        <td className="py-4 px-6 font-semibold">{student.name}</td>
-                        <td className="py-4 px-6">{student.email}</td>
-                        <td className="py-4 px-6">{student.phone}</td>
-                        <td className="py-4 px-6">
+                        <td className="py-3 sm:py-4 px-3 sm:px-6 font-mono text-xs sm:text-sm">{student.id}</td>
+                        <td className="py-3 sm:py-4 px-3 sm:px-6 font-semibold text-xs sm:text-sm">{student.name}</td>
+                        <td className="py-3 sm:py-4 px-3 sm:px-6 text-xs sm:text-sm">{student.email}</td>
+                        <td className="py-3 sm:py-4 px-3 sm:px-6 text-xs sm:text-sm">{student.phone}</td>
+                        <td className="py-3 sm:py-4 px-3 sm:px-6">
                           <select
                             value={student.status || 'active'}
                             onChange={(e) => handleStatusUpdate(student.id, e.target.value)}
-                            className="px-2 py-1 rounded text-sm border"
+                            className="px-2 py-1 rounded text-xs sm:text-sm border"
                           >
                             <option value="active">Active</option>
                             <option value="inactive">Inactive</option>
