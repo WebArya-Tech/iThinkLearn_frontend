@@ -1,9 +1,28 @@
+version: '3.8'
+
 services:
   frontend:
     build:
       context: .
       dockerfile: Dockerfile
+      target: production
     container_name: ithinklearn-frontend
+    image: ithinklearn-frontend:latest
     ports:
-      - "8010:80"
+      - "9063:3000"
+    environment:
+      - NODE_ENV=production
+      - VITE_API_URL=${VITE_API_URL:-https://blog.ithinklearn.com}
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

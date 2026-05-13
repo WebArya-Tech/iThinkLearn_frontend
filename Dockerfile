@@ -1,29 +1,42 @@
 # ─────────────────────────────────────────
-# Stage 1 – Build the React app with Node
+# Stage 1 – Build the React app
 # ─────────────────────────────────────────
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install dependencies first (layer-cache friendly)
-COPY package.json package-lock.json* ./
-RUN npm ci
+# Set NODE_ENV to production during build
+ENV NODE_ENV=production
 
-# Copy the rest of the source and build
+# Install dependencies (layer-cache friendly)
+COPY package.json package-lock.json* ./
+RUN npm ci --only=production
+
+# Copy source code
 COPY . .
+
+# Build the app
 RUN npm run build
 
 # ─────────────────────────────────────────
-# Stage 2 – Serve with Nginx
+# Stage 2 – Production image with static server
 # ─────────────────────────────────────────
-FROM nginx:1.27-alpine AS production
+FROM node:20-alpine AS production
 
-# Replace the default Nginx config with our custom one
-COPY ngnix.conf /etc/nginx/conf.d/default.conf
+WORKDIR /app
 
-# Copy Vite build output into Nginx's html directory
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Install a lightweight static server
+RUN npm install -g serve
 
-EXPOSE 80
+# Copy built assets from builder
+COPY --from=builder /app/dist ./dist
 
-CMD ["nginx", "-g", "daemon off;"]
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+
+# Start the app
+CMD ["serve", "-s", "dist", "-l", "3000"]
