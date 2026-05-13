@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import Pagination from '../ui/Pagination'
 
 const studentTestimonials = [
   {
@@ -119,13 +120,22 @@ const renderStars = (rating) =>
 
 export default function Testimonials() {
   const [activeTab, setActiveTab] = useState('students')
+  const [filter, setFilter] = useState('all')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 100
+
+  const filteredTestimonials = filter === 'all'
+    ? (activeTab === 'students' ? studentTestimonials : parentTestimonials)
+    : (activeTab === 'students' ? studentTestimonials.filter(t => t.role.toLowerCase().includes(filter.toLowerCase())) : parentTestimonials.filter(t => t.role.toLowerCase().includes(filter.toLowerCase())))
+
+  const totalPages = Math.ceil(filteredTestimonials.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const paginatedTestimonials = filteredTestimonials.slice(startIndex, startIndex + itemsPerPage)
 
   const tabs = [
     { id: 'students', label: 'Student Reviews' },
     { id: 'parents', label: 'Parent Reviews' },
   ]
-
-  const displayList = activeTab === 'students' ? studentTestimonials : parentTestimonials
 
   return (
     <div className="p-4 md:p-6 space-y-6">
@@ -169,7 +179,7 @@ export default function Testimonials() {
 
       {/* Testimonial Cards Grid */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {displayList.map((testimonial) => (
+        {paginatedTestimonials.map((testimonial) => (
           <div
             key={testimonial.id}
             className="group bg-white rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-blue-200 relative overflow-hidden"
@@ -214,6 +224,16 @@ export default function Testimonials() {
           </div>
         ))}
       </div>
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        totalItems={filteredTestimonials.length}
+        itemsPerPage={itemsPerPage}
+        alwaysShow={true}
+      />
     </div>
   )
 }

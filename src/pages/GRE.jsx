@@ -421,12 +421,12 @@ export default function GRE() {
             >
               Start Your GRE Journey
             </button>
-            <button
-              onClick={() => setIsContactOpen(true)}
-              className="w-full sm:w-auto bg-white/10 border-2 border-white/40 text-white font-bold py-3 px-8 md:px-12 rounded-lg hover:bg-white/20 transition-all text-sm sm:text-base md:text-lg backdrop-blur-sm"
+            <a
+              href="mailto:ithinklearn@ixpoe.com"
+              className="w-full sm:w-auto bg-white/10 border-2 border-white/40 text-white font-bold py-3 px-8 md:px-12 rounded-lg hover:bg-white/20 transition-all text-sm sm:text-base md:text-lg backdrop-blur-sm inline-flex items-center justify-center"
             >
               Talk to an Expert
-            </button>
+            </a>
           </div>
         </div>
       </section>

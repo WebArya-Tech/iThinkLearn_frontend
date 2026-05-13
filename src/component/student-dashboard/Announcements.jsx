@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import Pagination from '../ui/Pagination'
 
 const STATIC_ANNOUNCEMENTS = [
   { id: 'static1', title: 'Important: Midterm Exam Schedule Released', message: 'The midterm examination schedule for all subjects has been released. Please check your schedule section for detailed timings.', category: 'exam', priority: 'high', date: '2 hours ago', postedBy: 'Admin' },
@@ -30,7 +31,7 @@ export default function Announcements() {
   const [filter, setFilter] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [announcements, setAnnouncements] = useState(loadAnnouncements)
-  const itemsPerPage = 5
+  const itemsPerPage = 100
 
   // Reload if admin updates announcements while student is logged in
   useEffect(() => {
@@ -181,46 +182,14 @@ export default function Announcements() {
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-6">
-          <button
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ 
-              backgroundColor: currentPage === 1 ? '#e0e0e0' : '#1e3a8a',
-              color: currentPage === 1 ? '#666' : 'white'
-            }}
-          >
-            Previous
-          </button>
-          {[...Array(totalPages)].map((_, index) => (
-            <button
-              key={index + 1}
-              onClick={() => setCurrentPage(index + 1)}
-              className="px-4 py-2 rounded-lg font-semibold transition-all"
-              style={{
-                backgroundColor: currentPage === index + 1 ? '#1e3a8a' : 'white',
-                color: currentPage === index + 1 ? 'white' : '#1e3a8a',
-                border: '2px solid #1e3a8a'
-              }}
-            >
-              {index + 1}
-            </button>
-          ))}
-          <button
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ 
-              backgroundColor: currentPage === totalPages ? '#e0e0e0' : '#1e3a8a',
-              color: currentPage === totalPages ? '#666' : 'white'
-            }}
-          >
-            Next
-          </button>
-        </div>
-      )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        totalItems={filteredAnnouncements.length}
+        itemsPerPage={itemsPerPage}
+        alwaysShow={true}
+      />
 
       {filteredAnnouncements.length === 0 && (
         <div className="bg-white rounded-xl shadow-md p-12 text-center">

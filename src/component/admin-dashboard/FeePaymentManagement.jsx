@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
+import Pagination from '../ui/Pagination';
 
 const SAMPLE_PAYMENTS = [
   { id: 'ICFY001', fullName: 'Rahul Sharma', courseName: 'UG Mathematics', feeAmount: '5000', status: 'paid', paymentDate: '2026-02-18', phone: '+91 98765 43210', email: 'rahul@example.com', razorpayPaymentId: 'rzp_demo_001' },
@@ -17,6 +18,23 @@ export default function FeePaymentManagement() {
   const [payments, setPayments] = useState(loadPayments);
   const [filterStatus, setFilterStatus] = useState('all');
   const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 100;
+
+  const filtered = payments.filter(p => {
+    // Normalize Razorpay's 'Success' as 'paid' for filtering
+    const normalizedStatus = (p.status === 'Success') ? 'paid' : p.status
+    const matchStatus = filterStatus === 'all' || normalizedStatus === filterStatus
+    const matchSearch = !search ||
+      (p.fullName || '').toLowerCase().includes(search.toLowerCase()) ||
+      (p.email || '').toLowerCase().includes(search.toLowerCase()) ||
+      (p.courseName || '').toLowerCase().includes(search.toLowerCase())
+    return matchStatus && matchSearch
+  })
+
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedPayments = filtered.slice(startIndex, startIndex + itemsPerPage);
 
   // Reload from localStorage when component mounts (picks up new payments from frontend)
   useEffect(() => {
@@ -38,16 +56,6 @@ export default function FeePaymentManagement() {
     localStorage.setItem('feePayments', JSON.stringify(updated))
   }
 
-  const filtered = payments.filter(p => {
-    // Normalize Razorpay's 'Success' as 'paid' for filtering
-    const normalizedStatus = (p.status === 'Success') ? 'paid' : p.status
-    const matchStatus = filterStatus === 'all' || normalizedStatus === filterStatus
-    const matchSearch = !search ||
-      (p.fullName || '').toLowerCase().includes(search.toLowerCase()) ||
-      (p.email || '').toLowerCase().includes(search.toLowerCase()) ||
-      (p.courseName || '').toLowerCase().includes(search.toLowerCase())
-    return matchStatus && matchSearch
-  })
 
   const getTotalAmount = () => payments.reduce((sum, p) => sum + Number(p.feeAmount || p.amount || 0), 0)
   const getPaidAmount = () => payments.filter(p => p.status === 'paid' || p.status === 'Success').reduce((sum, p) => sum + Number(p.feeAmount || p.amount || 0), 0)
@@ -105,9 +113,9 @@ export default function FeePaymentManagement() {
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
+              {paginatedPayments.length === 0 ? (
                 <tr><td colSpan="9" className="text-center py-10 text-gray-500">No payment records found.</td></tr>
-              ) : filtered.map((p, idx) => (
+              ) : paginatedPayments.map((p, idx) => (
                 <tr key={p.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                   <td className="px-4 py-3 font-mono text-xs text-gray-600">{p.id}</td>
                   <td className="px-4 py-3 font-semibold text-blue-900">{p.fullName || p.studentName || '-'}</td>
@@ -140,6 +148,14 @@ export default function FeePaymentManagement() {
             </tbody>
           </table>
         </div>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={filtered.length}
+          itemsPerPage={itemsPerPage}
+          alwaysShow={true}
+        />
       </div>
     </div>
   );

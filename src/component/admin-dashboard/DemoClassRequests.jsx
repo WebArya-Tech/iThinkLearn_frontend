@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react'
+import Pagination from '../ui/Pagination'
 
 const SAMPLE_REQUESTS = [
   { id: 'DEMO001', name: 'Rajesh Kumar', email: 'rajesh@example.com', phone: '+91 98765 43210', course: 'Mathematics', preferredDate: 'Mar 01, 2026', preferredTime: '4:00 PM', status: 'pending', notes: 'Interested in calculus', requestedOn: '2026-02-20' },
@@ -24,7 +25,7 @@ export default function DemoClassRequests() {
   const [filterStatus, setFilterStatus] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [viewRequest, setViewRequest] = useState(null)
-  const itemsPerPage = 10
+  const itemsPerPage = 100
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('icfy_demo_requests') || 'null')
@@ -128,20 +129,14 @@ export default function DemoClassRequests() {
         </div>
 
         {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex justify-between items-center px-6 py-4 border-t">
-            <p className="text-sm text-gray-500">
-              Showing {startIndex + 1} - {Math.min(startIndex + itemsPerPage, filteredRequests.length)} of {filteredRequests.length}
-            </p>
-            <div className="flex gap-2">
-              <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}
-                className="px-3 py-1 rounded border disabled:opacity-40 text-sm" style={{ borderColor: '#1e3a8a', color: '#1e3a8a' }}>Prev</button>
-              <span className="px-3 py-1 text-sm font-semibold text-blue-900">{currentPage}/{totalPages}</span>
-              <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}
-                className="px-3 py-1 rounded border disabled:opacity-40 text-sm" style={{ borderColor: '#1e3a8a', color: '#1e3a8a' }}>Next</button>
-            </div>
-          </div>
-        )}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={filteredRequests.length}
+          itemsPerPage={itemsPerPage}
+          alwaysShow={true}
+        />
       </div>
 
       {/* View Detail Modal */}

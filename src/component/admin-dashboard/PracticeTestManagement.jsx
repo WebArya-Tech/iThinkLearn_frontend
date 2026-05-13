@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
+import Pagination from '../ui/Pagination';
 
 const DEFAULT_TESTS = [
   { id: 1, name: 'Calculus Test 1', subject: 'Mathematics', duration: 60, questions: 30, difficulty: 'Medium' },
@@ -18,6 +19,12 @@ export default function PracticeTestManagement() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: '', subject: '', duration: 0, questions: 0, difficulty: 'Medium' });
   const [editId, setEditId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 100;
+
+  const totalPages = Math.ceil(tests.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedTests = tests.slice(startIndex, startIndex + itemsPerPage);
 
   useEffect(() => { localStorage.setItem('icfy_practice_tests', JSON.stringify(tests)) }, [tests])
 
@@ -126,7 +133,7 @@ export default function PracticeTestManagement() {
                 </tr>
               </thead>
               <tbody>
-                {tests.map((t) => (
+                {paginatedTests.map((t) => (
                   <tr key={t.id} className="hover:bg-gray-50">
                     <td className="px-4 py-2">{t.name}</td>
                     <td className="px-4 py-2">{t.subject}</td>
@@ -148,6 +155,14 @@ export default function PracticeTestManagement() {
             </table>
           </div>
         )}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={tests.length}
+          itemsPerPage={itemsPerPage}
+          alwaysShow={true}
+        />
       </div>
     </div>
   );

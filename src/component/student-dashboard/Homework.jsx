@@ -30,7 +30,7 @@ export default function Homework() {
   const [selectedFile, setSelectedFile] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [homework, setHomework] = useState(loadHomework)
-  const itemsPerPage = 5
+  const itemsPerPage = 100
 
   // Reload when admin updates homework
   useEffect(() => {
@@ -235,7 +235,8 @@ export default function Homework() {
         totalPages={totalPages}
         onPageChange={setCurrentPage}
         totalItems={filteredHomework.length}
-        itemsPerPage={itemsPerPage}
+        itemsPerPage={100}
+        alwaysShow={true}
       />
 
       {/* View Details Modal */}

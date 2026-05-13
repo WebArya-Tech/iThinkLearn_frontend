@@ -5,7 +5,7 @@ export default function FeedbackReviews() {
   const [showFeedbackForm, setShowFeedbackForm] = useState(false)
   const [myReviewsPage, setMyReviewsPage] = useState(1)
   const [allReviewsPage, setAllReviewsPage] = useState(1)
-  const itemsPerPage = 5
+  const itemsPerPage = 100
   const [feedbackForm, setFeedbackForm] = useState({
     course: '',
     rating: 5,
@@ -192,6 +192,7 @@ export default function FeedbackReviews() {
         onPageChange={setMyReviewsPage}
         totalItems={myReviews.length}
         itemsPerPage={itemsPerPage}
+        alwaysShow={true}
       />
 
       {/* All Reviews Table */}
@@ -245,6 +246,7 @@ export default function FeedbackReviews() {
         onPageChange={setAllReviewsPage}
         totalItems={allReviews.length}
         itemsPerPage={itemsPerPage}
+        alwaysShow={true}
       />
 
       {/* Feedback Form Modal */}

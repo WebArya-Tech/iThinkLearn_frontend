@@ -1,7 +1,7 @@
 import React from 'react';
 
-export default function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage }) {
-  if (totalPages <= 1) return null;
+export default function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage, alwaysShow = false }) {
+  if (totalPages <= 1 && !alwaysShow) return null;
 
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);

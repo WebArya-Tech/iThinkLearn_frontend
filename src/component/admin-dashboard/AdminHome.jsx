@@ -49,9 +49,9 @@ export default function AdminHome({ setCurrentView }) {
   ]
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
+    <div className="max-w-7xl mx-auto px-4 md:px-6 ">
       {/* Page Header */}
-      <div className="bg-white border-b-2 border-blue-900 rounded-xl p-6 mb-6">
+      <div className="bg-white border-b-2 border-blue-900 rounded-xl p-2 mb-6">
         <h1 className="text-2xl font-bold text-blue-900">Admin Dashboard</h1>
         <p className="text-gray-500 text-sm mt-1">Welcome back! Here's a live overview of iThinkLearn.</p>
       </div>

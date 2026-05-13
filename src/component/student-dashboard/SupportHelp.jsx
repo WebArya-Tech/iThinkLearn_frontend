@@ -9,7 +9,7 @@ export default function SupportHelp() {
   const [selectedTicket, setSelectedTicket] = useState(null)
   const [showNewTicketModal, setShowNewTicketModal] = useState(false)
   const [newTicketForm, setNewTicketForm] = useState({ subject: '', category: 'technical', description: '' })
-  const itemsPerPage = 5
+  const itemsPerPage = 100
 
   const faqs = [
     {
@@ -125,109 +125,18 @@ export default function SupportHelp() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-md p-6 border-l-4" style={{ borderLeftColor: '#1e3a8a' }}>
           <h3 className="text-xl font-bold mb-2" style={{ color: '#1e3a8a' }}>Call Us</h3>
-          <p className="text-gray-700 mb-3">+91 779 501 0900</p>
+          <a href="tel:+917795010900" className="text-gray-700 mb-3 block hover:text-blue-900 hover:underline transition-colors">+91 779 501 0900</a>
           <p className="text-sm text-gray-600">Mon - Sat, 9 AM - 6 PM IST</p>
         </div>
 
         <div className="bg-white rounded-xl shadow-md p-6 border-l-4" style={{ borderLeftColor: '#f59e0b' }}>
           <h3 className="text-xl font-bold mb-2" style={{ color: '#f59e0b' }}>Email Us</h3>
-          <p className="text-gray-700 mb-3">ithinklearn@ixpoe.com</p>
+          <a href="mailto:ithinklearn@ixpoe.com" className="text-gray-700 mb-3 block hover:text-amber-600 hover:underline transition-colors">ithinklearn@ixpoe.com</a>
           <p className="text-sm text-gray-600">We'll respond within 24 hours</p>
         </div>
       </div>
 
-      {/* Current Project Details */}
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <h3 className="text-2xl font-bold mb-4" style={{ color: '#1e3a8a' }}>📁 Current Project Details</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 rounded-lg" style={{ backgroundColor: '#fef9f0' }}>
-            <p className="text-sm text-gray-500 mb-1">Active Course</p>
-            <p className="font-semibold text-gray-800">UG Mathematics</p>
-            <p className="text-xs text-gray-600 mt-1">Ms. Neha Aggarwal</p>
-          </div>
-          <div className="p-4 rounded-lg" style={{ backgroundColor: '#e8f5f0' }}>
-            <p className="text-sm text-gray-500 mb-1">Ongoing Assignment</p>
-            <p className="font-semibold text-gray-800">Calculus Problem Set 3</p>
-            <p className="text-xs text-gray-600 mt-1">Due: Mar 10, 2026</p>
-          </div>
-          <div className="p-4 rounded-lg" style={{ backgroundColor: '#fff8e1' }}>
-            <p className="text-sm text-gray-500 mb-1">Pending Homework</p>
-            <p className="font-semibold text-gray-800">Integration Worksheet</p>
-            <p className="text-xs text-gray-600 mt-1">3 days left</p>
-          </div>
-        </div>
-      </div>
-
-      {/* My Support Tickets */}
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-2xl font-bold" style={{ color: '#1e3a8a' }}>My Support Tickets</h3>
-          <button
-            onClick={() => setShowNewTicketModal(true)}
-            className="px-5 py-2 rounded-lg text-white font-bold hover:opacity-90 transition-all"
-            style={{ backgroundColor: '#1e3a8a' }}
-          >
-            + New Ticket
-          </button>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b-2" style={{ borderColor: '#1e3a8a' }}>
-                <th className="text-left py-3 px-4 font-bold" style={{ color: '#1e3a8a' }}>Ticket ID</th>
-                <th className="text-left py-3 px-4 font-bold" style={{ color: '#1e3a8a' }}>Subject</th>
-                <th className="text-left py-3 px-4 font-bold" style={{ color: '#1e3a8a' }}>Category</th>
-                <th className="text-left py-3 px-4 font-bold" style={{ color: '#1e3a8a' }}>Date</th>
-                <th className="text-left py-3 px-4 font-bold" style={{ color: '#1e3a8a' }}>Priority</th>
-                <th className="text-left py-3 px-4 font-bold" style={{ color: '#1e3a8a' }}>Status</th>
-                <th className="text-left py-3 px-4 font-bold" style={{ color: '#1e3a8a' }}>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedTickets.map((ticket) => (
-                <tr key={ticket.id} className="border-b hover:bg-gray-50">
-                  <td className="py-3 px-4 font-mono text-sm">{ticket.id}</td>
-                  <td className="py-3 px-4 font-semibold">{ticket.subject}</td>
-                  <td className="py-3 px-4 text-sm capitalize">{ticket.category}</td>
-                  <td className="py-3 px-4 text-sm text-gray-600">{ticket.date}</td>
-                  <td className="py-3 px-4">
-                    <span
-                      className="px-3 py-1 rounded-full text-xs font-bold text-white"
-                      style={{ backgroundColor: getPriorityColor(ticket.priority) }}
-                    >
-                      {ticket.priority.toUpperCase()}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <span
-                      className="px-3 py-1 rounded-full text-xs font-bold text-white"
-                      style={{ backgroundColor: getStatusColor(ticket.status) }}
-                    >
-                      {ticket.status.toUpperCase()}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <button
-                      onClick={() => { setSelectedTicket(ticket); setShowTicketModal(true) }}
-                      className="px-4 py-2 rounded-lg text-sm font-semibold border-2 bg-white transition-all hover:opacity-80"
-                      style={{ borderColor: '#1e3a8a', color: '#1e3a8a' }}
-                    >
-                      View Details
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <Pagination
-          currentPage={ticketsPage}
-          totalPages={ticketsTotalPages}
-          onPageChange={setTicketsPage}
-          totalItems={tickets.length}
-          itemsPerPage={itemsPerPage}
-        />
-      </div>
+     
 
       {/* FAQ Section */}
       <div className="bg-white rounded-xl shadow-md p-6">
@@ -304,6 +213,7 @@ export default function SupportHelp() {
           onPageChange={setFaqsPage}
           totalItems={filteredFaqs.length}
           itemsPerPage={itemsPerPage}
+          alwaysShow={true}
         />
       </div>
 

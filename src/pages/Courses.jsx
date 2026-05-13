@@ -224,12 +224,20 @@ export default function Courses() {
           <p className="text-base sm:text-lg md:text-xl text-blue-100 mb-8 px-4">
             Choose from our comprehensive range of courses and begin your path to academic excellence
           </p>
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="inline-block bg-white text-blue-900 px-8 sm:px-10 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg hover:bg-blue-50 transition transform hover:scale-105"
-          >
-            Book Free Demo Class
-          </button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="inline-block bg-white text-blue-900 px-8 sm:px-10 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg hover:bg-blue-50 transition transform hover:scale-105"
+            >
+              Book Free Demo Class
+            </button>
+            <a
+              href="mailto:ithinklearn@ixpoe.com"
+              className="inline-block bg-transparent border-2 border-white text-white px-8 sm:px-10 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg hover:bg-white hover:text-blue-900 transition transform hover:scale-105"
+            >
+              Email Us
+            </a>
+          </div>
         </div>
       </section>
 

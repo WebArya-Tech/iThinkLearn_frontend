@@ -83,30 +83,30 @@ export default function OnlineClasses() {
       <Header />
 
       {/* Hero */}
-      <section className="bg-white py-16 md:py-20 px-4 md:px-8 border-b border-gray-100 overflow-hidden">
+      <section className="bg-white py-12 md:py-20 px-4 sm:px-6 lg:px-8 border-b border-gray-100 overflow-hidden">
         <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
 
             {/* Left — Text */}
             <div>
-             
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-blue-900 mb-5 leading-tight">
+
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-blue-900 mb-4 md:mb-5 leading-tight">
                 High-Quality <span className="bg-gradient-to-r from-blue-900 to-indigo-600 bg-clip-text text-transparent">Online Classes</span>
                 <br />Designed for Excellence
               </h1>
-              <p className="text-lg text-gray-600 mb-8 leading-relaxed">
+              <p className="text-base sm:text-lg text-gray-600 mb-6 md:mb-8 leading-relaxed">
                 At iThinkLearn, we specialize exclusively in online learning — ensuring every class is interactive, structured, and result-oriented. With <strong className="text-blue-900">25+ years of teaching experience</strong>, we combine expert teaching, advanced technology, and personalized attention to give students the best of convenience and academic rigor.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white font-bold py-3.5 px-10 rounded-xl hover:from-blue-800 hover:to-indigo-800 transition-all shadow-lg text-base"
+                  className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white font-bold py-3 sm:py-3.5 px-8 sm:px-10 rounded-xl hover:from-blue-800 hover:to-indigo-800 transition-all shadow-lg text-sm sm:text-base"
                 >
                   Book a Free Demo Class
                 </button>
-                <Link to="/courses">
-                  <button className="border-2 border-blue-900 text-blue-900 font-bold py-3.5 px-10 rounded-xl hover:bg-blue-50 transition text-base w-full sm:w-auto">
+                <Link to="/courses" className="w-full sm:w-auto">
+                  <button className="border-2 border-blue-900 text-blue-900 font-bold py-3 sm:py-3.5 px-8 sm:px-10 rounded-xl hover:bg-blue-50 transition text-sm sm:text-base w-full">
                     Explore Courses →
                   </button>
                 </Link>
@@ -134,12 +134,12 @@ export default function OnlineClasses() {
       </section>
 
       {/* 25+ Years Banner */}
-      <section className="bg-blue-900 py-10 px-4">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
-          <div className="text-5xl shrink-0">🌟</div>
+      <section className="bg-blue-900 py-8 md:py-10 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-4 md:gap-6 text-center md:text-left">
+          <div className="text-4xl md:text-5xl shrink-0">🌟</div>
           <div>
-            <h2 className="text-2xl font-bold text-white mb-2">25+ Years of Academic Mentoring Excellence</h2>
-            <p className="text-blue-200 leading-relaxed">
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">25+ Years of Academic Mentoring Excellence</h2>
+            <p className="text-blue-200 text-sm sm:text-base leading-relaxed">
               With over two decades of proven experience, iThinkLearn brings unparalleled academic expertise to students across various disciplines. Our long-standing legacy in education reflects our commitment to student success, continuous innovation, and a deep understanding of the challenges learners face today. This experience allows us to deliver structured, reliable, and results-driven mentoring that has helped thousands of students excel academically.
             </p>
           </div>
@@ -171,7 +171,7 @@ export default function OnlineClasses() {
       </section>
 
       {/* Class Features */}
-      <section className="bg-gray-50 py-20 px-4 md:px-8">
+      <section className="bg-gray-50 py-10 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold text-blue-900 mb-4">What's Included in Every Class</h2>
@@ -195,33 +195,37 @@ export default function OnlineClasses() {
       </section>
 
       {/* Comparison Table */}
-      <section className="bg-white py-20">
-        <div className="w-7xl mx-auto">
-          <div className="text-center mb-12 px-4 md:px-8">
-            <h2 className="text-3xl md:text-4xl font-bold text-blue-900 mb-4">Why Online Classes at iThinkLearn Work Better</h2>
+      <section className="bg-white py-10 md:py-10 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-8 md:mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-blue-900 mb-4">Why Online Classes at iThinkLearn Work Better</h2>
             <div className="w-20 h-1 bg-gradient-to-r from-blue-900 to-indigo-900 rounded-full mx-auto"></div>
           </div>
-          <div className="overflow-hidden shadow-xl border-y border-gray-200">
-            {/* Table Header */}
-            <div className="grid grid-cols-2">
-              <div className="bg-gradient-to-r from-blue-900 to-indigo-900 px-8 py-5 text-white font-bold text-center text-xl">
-                ✅ Online at iThinkLearn
+          <div className="overflow-x-auto shadow-xl border border-gray-200 rounded-lg -mx-4 sm:mx-0">
+            <div className="min-w-[600px] sm:min-w-full">
+              {/* Table Header */}
+              <div className="grid grid-cols-2">
+                <div className="bg-gradient-to-r from-blue-900 to-indigo-900 px-4 sm:px-6 lg:px-8 py-4 md:py-5 text-white font-bold text-center text-sm sm:text-base lg:text-xl">
+                  ✅ Online at iThinkLearn
+                </div>
+                <div className="bg-gray-600 px-4 sm:px-6 lg:px-8 py-4 md:py-5 text-white font-bold text-center text-sm sm:text-base lg:text-xl">
+                  ❌ Traditional Offline Tuition
+                </div>
               </div>
-              <div className="bg-gray-600 px-8 py-5 text-white font-bold text-center text-xl">
-                ❌ Traditional Offline Tuition
-              </div>
+              {/* Rows */}
+              {comparisonRows.map((row, i) => (
+                <div key={i} className={`grid grid-cols-2 ${i % 2 === 0 ? 'bg-blue-50' : 'bg-white'}`}>
+                  <div className="px-4 sm:px-6 lg:px-8 py-4 md:py-5 text-sm sm:text-base text-blue-900 font-medium border-r border-gray-200 flex items-start gap-2 sm:gap-3">
+                    <span className="text-green-600 font-bold text-base sm:text-lg shrink-0">✓</span>
+                    <span className="leading-relaxed">{row[0]}</span>
+                  </div>
+                  <div className="px-4 sm:px-6 lg:px-8 py-4 md:py-5 text-sm sm:text-base text-gray-500 flex items-start gap-2 sm:gap-3">
+                    <span className="text-red-400 font-bold text-base sm:text-lg shrink-0">✗</span>
+                    <span className="leading-relaxed">{row[1]}</span>
+                  </div>
+                </div>
+              ))}
             </div>
-            {/* Rows */}
-            {comparisonRows.map((row, i) => (
-              <div key={i} className={`grid grid-cols-2 ${i % 2 === 0 ? 'bg-blue-50' : 'bg-white'}`}>
-                <div className="px-8 py-5 text-base text-blue-900 font-medium border-r border-gray-200 flex items-center gap-3">
-                  <span className="text-green-600 font-bold text-lg shrink-0">✓</span> {row[0]}
-                </div>
-                <div className="px-8 py-5 text-base text-gray-500 flex items-center gap-3">
-                  <span className="text-red-400 font-bold text-lg shrink-0">✗</span> {row[1]}
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </section>
@@ -229,39 +233,47 @@ export default function OnlineClasses() {
       {/* Perfect for Today's Students */}
       <section className="bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-900 py-16 px-4 md:px-8">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Perfect for Today's Students</h2>
-            <p className="text-blue-200 text-lg max-w-2xl mx-auto">
+          <div className="text-center mb-8 md:mb-10">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">Perfect for Today's Students</h2>
+            <p className="text-blue-200 text-base sm:text-lg max-w-2xl mx-auto">
               Students today need flexibility, clarity, and personal mentoring. iThinkLearn's online platform delivers a learning experience that is:
             </p>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8 md:mb-10">
             {['Focused and distraction-free', 'Highly interactive', 'Efficient and time-saving', 'Built around student needs'].map((item, i) => (
-              <div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl px-5 py-4 text-center border border-white/20">
+              <div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl px-3 sm:px-5 py-3 sm:py-4 text-center border border-white/20">
                 <span className="text-yellow-400 text-xl font-bold">●</span>
-                <p className="text-white font-semibold mt-2">{item}</p>
+                <p className="text-white font-semibold mt-2 text-sm sm:text-base">{item}</p>
               </div>
             ))}
           </div>
-          <p className="text-center text-blue-200 text-lg mb-2">
+          <p className="text-center text-blue-200 text-base sm:text-lg mb-2 px-4">
             We ensure that students don't just memorize or ROTE learn — they <strong className="text-white">understand, apply, and excel</strong>.
           </p>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="bg-white py-16 px-4 md:px-8 border-t border-gray-100">
+      <section className="bg-white py-12 md:py-16 px-4 md:px-8 border-t border-gray-100">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-blue-900 mb-4">Start Learning the iThinkLearn Way</h2>
-          <p className="text-gray-600 text-lg mb-8 leading-relaxed">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-blue-900 mb-4">Start Learning the iThinkLearn Way</h2>
+          <p className="text-gray-600 text-base sm:text-lg mb-6 md:mb-8 leading-relaxed px-2 sm:px-0">
             Experience a demo class and see how online learning can transform your child's performance and confidence.
           </p>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white font-bold py-4 px-12 rounded-xl hover:from-blue-800 hover:to-indigo-800 transition shadow-lg text-lg"
-          >
-            Book a Free Demo Class Now
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white font-bold py-3 sm:py-4 px-8 sm:px-12 rounded-xl hover:from-blue-800 hover:to-indigo-800 transition shadow-lg text-base sm:text-lg"
+            >
+              Book a Free Demo Class Now
+            </button>
+            <a
+              href="mailto:ithinklearn@ixpoe.com"
+              className="bg-transparent border-2 border-blue-900 text-blue-900 font-bold py-3 sm:py-4 px-8 sm:px-12 rounded-xl hover:bg-blue-900 hover:text-white transition shadow-lg text-base sm:text-lg inline-flex items-center justify-center"
+            >
+              Email Us
+            </a>
+          </div>
         </div>
       </section>
 

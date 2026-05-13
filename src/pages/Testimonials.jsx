@@ -1,373 +1,443 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Quote } from "lucide-react";
-import Header from "../component/Header";
-import Footer from "../component/Footer";
-import SubmitTestimonialModal from "../component/SubmitTestimonialModal";
-import LoginModal from "../component/auth/LoginModal";
-import SignupModal from "../component/auth/SignupModal";
-import { getApprovedTestimonials } from "../api/testimonialApi";
-import { useAuth } from "../context/AuthContext";
-import toast from "react-hot-toast";
+import React, { useEffect, useMemo, useState } from 'react';
+import { X, Video, Headphones, MessageCircle, Image as ImageIcon, FileText, Plus } from 'lucide-react';
+import { getApprovedTestimonials } from '../api/api/testimonialApi.js';
+import TestimonialFormModal from '../component/TestimonialFormModal';
+import Header from '../component/Header';
+import Footer from '../component/Footer';
 
-const hardcodedTestimonials = [
-  // Student Testimonials
-  {
-    name: "Aarav S.",
-    role: "AP Calculus BC Student",
-    text: "iThinkLearn helped me master AP Calculus BC with complete conceptual clarity. The problem-solving approach made even the toughest questions manageable.",
-    type: "student",
-  },
-  {
-    name: "Rohan K.",
-    role: "AMC (USA) Aspirant",
-    text: "The AMC and Olympiad-style training at iThinkLearn significantly improved my logical thinking and speed. I feel far more confident now.",
-    type: "student",
-  },
-  {
-    name: "Meera P.",
-    role: "AP Statistics & SAT Student",
-    text: "AP Statistics and SAT Math became much easier after joining iThinkLearn. The classes are focused, interactive, and very effective.",
-    type: "student",
-  },
-  {
-    name: "Daniel M.",
-    role: "TMUA Candidate",
-    text: "The TMUA preparation was extremely structured. Every session focused on accuracy, reasoning, and exam strategy.",
-    type: "student",
-  },
-  {
-    name: "Ananya R.",
-    role: "GRE Student",
-    text: "iThinkLearn's GRE Quant coaching helped me improve my score in a short time. The faculty explains concepts in a very clear and practical way.",
-    type: "student",
-  },
-  {
-    name: "Lucas T.",
-    role: "AP Economics Student",
-    text: "From AP Economics to advanced math problem-solving, iThinkLearn helped me build confidence across subjects.",
-    type: "student",
-  },
-  {
-    name: "Vikram S.",
-    role: "AMC & IMO Track Student",
-    text: "The Olympiad-level questions and mentoring pushed me to think beyond textbooks. It was exactly what I needed for AMC preparation.",
-    type: "student",
-  },
-  // Parent Testimonials
-  {
-    name: "Parent of AP Calculus AB Student",
-    role: "Parent",
-    text: "The personalized attention at iThinkLearn is outstanding. My son's performance in AP Calculus AB improved significantly within months.",
-    type: "parent",
-  },
-  {
-    name: "Parent of SAT & AP Statistics Student",
-    role: "Parent",
-    text: "iThinkLearn's structured teaching and regular feedback helped my daughter gain confidence in SAT Math and AP Statistics.",
-    type: "parent",
-  },
-  {
-    name: "Parent of AMC (USA) Student",
-    role: "Parent",
-    text: "The faculty is highly knowledgeable and patient. The one-on-one mentoring made a big difference in my child's AMC preparation.",
-    type: "parent",
-  },
-  {
-    name: "Parent of GMAT Student",
-    role: "Parent",
-    text: "We chose iThinkLearn for GMAT Quant preparation, and the results were excellent. The teaching is focused and exam-oriented.",
-    type: "parent",
-  },
-  {
-    name: "Parent of Olympiad Student",
-    role: "Parent",
-    text: "The clarity with which complex concepts are explained is remarkable. My son now enjoys advanced math.",
-    type: "parent",
-  },
-  {
-    name: "Parent of International Student",
-    role: "Parent",
-    text: "iThinkLearn provides global-level coaching with consistent monitoring and feedback. We are very satisfied with the progress.",
-    type: "parent",
-  },
-  {
-    name: "Parent of AP Biology Student",
-    role: "Parent",
-    text: "The mentors are approachable and genuinely invested in student success. AP Biology and Statistics preparation was well-structured.",
-    type: "parent",
-  },
-  {
-    name: "Parent of Competitive Exam Student",
-    role: "Parent",
-    text: "iThinkLearn is not just coaching—it's mentorship. My child gained both academic strength and confidence.",
-    type: "parent",
-  },
-  {
-    name: "Ananya Oberoi",
-    role: "Undergraduate Student, International Track",
-    text: "I have rarely encountered mentors with such depth of knowledge and genuine commitment to student success. ICFY Global tutors' clarity of explanation, structured guidance, and continuous availability for academic support played a pivotal role in strengthening my understanding of complex undergraduate concepts.",
-  },
-  {
-    name: "Sunita Rao",
-    role: "Parent of an Undergraduate Student",
-    text: "The individualized mentoring approach truly sets the ICFY Global platform apart. The one-to-one academic support provided my son with the confidence and clarity needed to manage demanding university-level coursework successfully.",
-  },
-  {
-    name: "Karan Deshpande",
-    role: "Bachelor's Degree Student",
-    text: "The systematic learning structure and continuous academic monitoring of ICFY Global helped me remain focused and consistent throughout my bachelor's program. The ICFY Global mentors ensured seamless progression across subjects, which was essential for long-term academic stability.",
-  },
-  {
-    name: "Ishita Mehra",
-    role: "Undergraduate Student, Overseas Program",
-    text: "As an international learner, I was impressed by the clarity, organization, and academic rigor of the teaching methodology of the ICFY Global tutors. Regular doubt-resolution sessions and personalized study planning significantly enhanced my confidence in tackling advanced topics.",
-  },
-  {
-    name: "Christopher Allen",
-    role: "Undergraduate Student, International Program",
-    text: "The emphasis on conceptual mastery rather than rote learning made a remarkable difference in my academic journey. Even advanced coursework felt approachable due to the ICFY Global mentors' detailed explanations and continuous guidance.",
-  },
-  {
-    name: "Sneha Menon",
-    role: "Bachelor's Program Student",
-    text: "The ICFY Global helped me establish a strong academic foundation during my bachelor's degree. Clear instruction, structured assessments, and insightful feedback of the ICFY Global tutors contributed significantly to my improved performance and subject mastery.",
-  },
-  {
-    name: "Ritvik Malhotra",
-    role: "Final-Year Undergraduate Student",
-    text: "Throughout my final year, ICFY Global served as a reliable academic anchor. The mentors offered in-depth syllabus coverage along with effective exam strategies that helped me stay confident and well-prepared.",
-  },
-  {
-    name: "Daniel Fernandes",
-    role: "Undergraduate Student, International",
-    text: "University-level studies can be challenging, but the personalized doubt-clearing sessions and well-curated practice assignments made learning both efficient and enjoyable at ICFY Global. My accuracy and problem-solving speed improved considerably.",
-  },
-  {
-    name: "Aditya Jain",
-    role: "Engineering Undergraduate Student",
-    text: "Analytical problem-solving was once my weakest area, but the structured, step-by-step mentoring approach transformed my learning experience. Targeted practice, continuous feedback, and ICFY Global mentor support helped me exceed my own expectations.",
-  },
-  {
-    name: "Emily Carter",
-    role: "Undergraduate Student, Global Program",
-    text: "The ICFY Global mentors focus on logical reasoning and real-world application rather than memorization. This approach made complex concepts engaging and enabled me to develop strong analytical skills critical for my degree program.",
-  },
-  {
-    name: "Rahul Srivastava",
-    role: "Graduation-Level Student",
-    text: "Expert mentorship of ICFY Global provided me with exceptional conceptual clarity in advanced subjects. Strategic revision plans and exam-focused guidance reduced academic pressure and made complex material manageable.",
-  },
-  {
-    name: "Megha Khurana",
-    role: "Undergraduate Science Student",
-    text: "The integration of practical examples and real-world applications significantly enhanced my understanding across disciplines. The overall learning experience has been intellectually stimulating and academically enriching. Thank you to ICFY Global tutors for their enormous support.",
-  },
-  {
-    name: "Oliver Grant",
-    role: "Undergraduate Student, Overseas Program",
-    text: "Structured notes, precise explanations, and regular academic evaluations made revision streamlined and effective. Weekly assessments conducted by ICFY Global tutors helped me track progress and build consistent academic confidence.",
-  },
-  {
-    name: "Nandita Bose",
-    role: "Undergraduate Student",
-    text: "ICFY Global has been transformative for my college education. The mentors address every academic query with patience and depth, ensuring a strong conceptual foundation across multiple subjects.",
-  },
-  {
-    name: "Vikram Raghavan",
-    role: "Graduation-Level Student",
-    text: "I am sincerely grateful to the ICFY Global mentors for making my academic journey engaging, organized, and stress-free. Their constant support and guidance were instrumental in helping me manage rigorous coursework with confidence and clarity.",
-  }
+const whatsappImageUrls = {
+  sanjana: new URL('../assets/A level Math and Statistics guidance to Sanjana.png', import.meta.url).href,
+  amrit: new URL('../assets/Amrit scored A grade for Math classes IGCSE.png', import.meta.url).href,
+  rithika: new URL('../assets/AS Level guidance and support for Math and Statistics to Rithika.jpeg', import.meta.url).href,
+  mahiRia: new URL('../assets/Mahi and Ria scored A (star) and A grades in IGCSE Math.PNG', import.meta.url).href,
+  pradyumna: new URL("../assets/Pradyumna's bridge course for a smooth transition from CBSE to IGCSE.png", import.meta.url).href,
+  rheaTheaOjal: new URL('../assets/Rhea, Thea and Ojal Math group classes for IGCSE.png', import.meta.url).href,
+  siddhantPC: new URL('../assets/Siddhant scored A (star) grades in Physics and Chemistry subjects.png', import.meta.url).href,
+  siddhantML: new URL("../assets/Siddhant's IA-ML computer science project feedback for IGCSE.png", import.meta.url).href,
+  thanya: new URL('../assets/Thanya scored an A grade for 8th grade Math IGCSE.png', import.meta.url).href,
+};
+
+const cardBackgrounds = [
+  'https://images.unsplash.com/photo-1501504905252-473c47e087f8?w=800&h=1000&fit=crop',
+  'https://images.unsplash.com/photo-1557821552-17105176677c?w=800&h=1000&fit=crop',
 ];
 
-export default function Testimonials() {
-  const { user } = useAuth()
-  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
-  const [testimonials, setTestimonials] = useState(hardcodedTestimonials);
-  const [loading, setLoading] = useState(false);
-  const [pendingTestimonial, setPendingTestimonial] = useState(null);
-  const testimonialsRef = useRef(null);
-  const pendingRef = useRef(null);
+const maskPhone = (phone) => {
+  if (!phone) return '';
+  return phone.replace(/(\d{2})(\d{6})(\d{2})/, '$1XXXXXX$3');
+};
 
-  // Fetch approved testimonials from API
+const isMediaUrl = (url) => {
+  if (!url || typeof url !== 'string') return false;
+  return url.startsWith('http') && (
+    url.match(/\.(mp4|webm|ogg|mp3|wav|jpg|jpeg|png|gif|webp)/i) ||
+    url.includes('cloudinary.com') ||
+    url.includes('youtube.com') ||
+    url.includes('youtu.be')
+  );
+};
+
+const linkifyText = (text) => {
+  if (!text) return text;
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = [];
+  let lastIndex = 0;
+
+  let match;
+  while ((match = urlRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    parts.push(
+      <a
+        key={`link-${match.index}`}
+        href={match[0]}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline decoration-blue-200 hover:text-blue-100"
+      >
+        {match[0]}
+      </a>
+    );
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts.length > 0 ? parts : text;
+};
+
+const Testimonials = () => {
+  const categories = ['All', 'IGCSE', 'AS/A Level'];
+
+  const types = ['All', 'audio', 'video', 'whatsapp', 'text', 'image'];
+
+  const [selectedCategory] = useState('All');
+  const [selectedType] = useState('All');
+  const [visibleCount, setVisibleCount] = useState(9);
+  const [testimonials, setTestimonials] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   useEffect(() => {
-    const fetchApprovedTestimonials = async () => {
-      setLoading(true);
+    const fetchTestimonials = async () => {
       try {
         const data = await getApprovedTestimonials();
-        // Combine hardcoded and API testimonials
-        if (data && Array.isArray(data)) {
-          setTestimonials([...hardcodedTestimonials, ...data]);
-        }
+        const testimonialList = data?.content || (Array.isArray(data) ? data : []);
+        setTestimonials(testimonialList);
       } catch (error) {
-        // API unavailable — silently fall back to hardcoded testimonials
-        setTestimonials(hardcodedTestimonials);
+        console.error('Error fetching testimonials:', error);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchApprovedTestimonials();
+    fetchTestimonials();
   }, []);
 
-  const handleSubmitSuccess = (submittedData) => {
-    // Store pending testimonial to show immediately
-    setPendingTestimonial({
-      name: submittedData.name,
-      role: submittedData.role || (submittedData.type === 'parent' ? 'Parent' : 'Student'),
-      text: submittedData.message,
-      type: submittedData.type,
-      rating: submittedData.rating,
-      isPending: true,
-      submittedAt: new Date().toLocaleDateString()
-    });
-    
-    // Scroll to pending section after a short delay
-    setTimeout(() => {
-      if (pendingRef.current) {
-        pendingRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 300);
-    
-    // Refresh testimonials after successful submission
-    setLoading(true);
-    const fetchApprovedTestimonials = async () => {
-      try {
-        const data = await getApprovedTestimonials();
-        if (data && Array.isArray(data)) {
-          setTestimonials([...hardcodedTestimonials, ...data]);
-        }
-      } catch (error) {
-        // API unavailable — keep existing testimonials
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchApprovedTestimonials();
+  const [active, setActive] = useState(null);
+
+  useEffect(() => {
+    setVisibleCount(9);
+  }, [selectedCategory, selectedType]);
+
+  const handleLoadMore = () => {
+    setVisibleCount(prev => prev + 18);
   };
 
-  const handleExploreTestimonials = () => {
-    if (testimonialsRef.current) {
-      testimonialsRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
+  const primaryTestimonial = useMemo(() =>
+    testimonials.find(t => t.primary),
+    [testimonials]
+  );
+
+  const filteredTestimonials = useMemo(() => {
+    return testimonials.filter((t) => {
+      const categoryMatch = selectedCategory === 'All' || t.category === selectedCategory;
+      const typeMatch = selectedType === 'All' || t.type === selectedType;
+      const isNotPrimary = !t.primary;
+      return categoryMatch && typeMatch && isNotPrimary;
+    });
+  }, [testimonials, selectedCategory, selectedType]);
+
+  const paginatedTestimonials = filteredTestimonials.slice(0, visibleCount);
 
   return (
-    <div className="w-full">
+    <div className="flex flex-col min-h-screen">
       <Header />
-      <section className="w-full bg-white py-10 sm:py-12 md:py-16 px-3 sm:px-4 md:px-8 lg:px-12 border-b border-gray-200">
-        <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-blue-900 mb-4 sm:mb-6">
-            Testimonials & Success Stories
-          </h1>
-          <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-2 sm:px-0">
-            Hear directly from students and parents whose academic journeys have been transformed through iThinkLearn's structured mentoring and personalized guidance.
-          </p>
-        </div>
+      <div className="flex-1 min-h-screen bg-gradient-to-b from-indigo-50 via-white to-fuchsia-50">
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.05);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 107, 107, 0.6);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 107, 107, 0.9);
+        }
+      `}</style>
 
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-8 sm:pt-10 justify-center px-4 sm:px-0">
-            <button
-              onClick={handleExploreTestimonials}
-              className="bg-blue-900 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 md:px-12 rounded-lg hover:bg-blue-800 transition-colors text-base sm:text-lg shadow-lg hover:shadow-xl w-full sm:w-auto"
-            >
-              Explore Testimonials
-            </button>
-            <button
-              onClick={() => {
-                if (!user) {
-                  setIsLoginModalOpen(true)
-                  return
-                }
-                setIsSubmitModalOpen(true)
-              }}
-              className="bg-gradient-to-r from-yellow-400 to-orange-500 text-blue-900 font-bold py-3 sm:py-4 px-6 sm:px-8 md:px-12 rounded-lg hover:from-yellow-300 hover:to-orange-400 transition-all text-base sm:text-lg shadow-lg hover:shadow-xl w-full sm:w-auto"
-            >
-              Write Your Testimonial
-            </button>
-          </div>
-      </section>
+      {/* Primary Testimonial Banner Removed */}
 
-      <section className="w-full bg-gray-50 py-10 sm:py-12 md:py-16 px-3 sm:px-4 md:px-8 lg:px-12" ref={testimonialsRef}>
-        <div className="max-w-7xl mx-auto">
-          <div className="grid gap-4 sm:gap-6 md:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {testimonials.map((item, index) => (
-              <div key={index} className="bg-white rounded-xl border-2 border-gray-100 p-4 sm:p-6 md:p-8 hover:border-blue-900 hover:shadow-xl transition-all duration-300 flex flex-col relative">
-                {!item.isPending && item.type === 'student' && (
-                  <div className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-blue-100 text-blue-800 px-2 sm:px-3 py-1 rounded-full text-xs font-semibold">
-                    Student
-                  </div>
-                )}
-                {!item.isPending && item.type === 'parent' && (
-                  <div className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-green-100 text-green-800 px-2 sm:px-3 py-1 rounded-full text-xs font-semibold">
-                    Parent
-                  </div>
-                )}
-                <Quote className="text-yellow-400 mb-3 sm:mb-4" size={28} />
-                <p className="text-gray-700 mb-4 sm:mb-6 text-sm md:text-base leading-relaxed grow">
-                  "{item.text}"
-                </p>
-                <div className="w-full h-0.5 bg-gradient-to-r from-blue-900/20 to-indigo-900/20 mb-3 sm:mb-4"></div>
-                <div>
-                  <h3 className="font-bold text-blue-900 text-base sm:text-lg">{item.name}</h3>
-                  <p className="text-gray-600 text-xs sm:text-sm">{item.role}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        
-        {/* Pending Testimonial - Shows immediately after submission */}
-        {pendingTestimonial && (
-          <div ref={pendingRef} className="mt-8 sm:mt-12 max-w-2xl mx-auto">
-            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-400 rounded-xl p-4 sm:p-6 relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-500 text-white px-4 py-1 rounded-full text-xs font-bold shadow-lg">
-                ⏳ Your Review - Pending Approval
-              </div>
-              <div className="pt-4">
-                <div className="flex items-center gap-1 mb-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <span key={star} className={`text-lg ${star <= (pendingTestimonial.rating || 5) ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
-                  ))}
-                </div>
-                <Quote className="text-yellow-500 mb-2" size={24} />
-                <p className="text-gray-700 mb-4 text-sm md:text-base leading-relaxed">
-                  "{pendingTestimonial.text}"
-                </p>
-                <div className="flex items-center justify-between border-t border-yellow-200 pt-3">
-                  <div>
-                    <h4 className="font-bold text-blue-900">{pendingTestimonial.name}</h4>
-                    <p className="text-gray-600 text-xs sm:text-sm">{pendingTestimonial.role}</p>
-                  </div>
-                  <span className="text-xs text-gray-500">Submitted: {pendingTestimonial.submittedAt}</span>
-                </div>
-              </div>
+      {/* Main Grid */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {loading ? (
+            <div className="text-center py-20">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-900 mb-4"></div>
+              <p className="text-blue-900 font-bold">Loading Testimonials...</p>
             </div>
-            <p className="text-center text-gray-500 text-xs sm:text-sm mt-3">
-              Your review will be visible to everyone after admin approval.
-            </p>
-          </div>
-        )}
+          ) : filteredTestimonials.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">No testimonials found for the selected filters.</p>
+            </div>
+          ) : (
+            <>
+              <div className="text-center max-w-3xl mx-auto mb-6">
+                <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                  Student Testimonials
+                </h1>
+                <div className="h-1.5 w-24 bg-indigo-600 mx-auto rounded-full"></div>
+                <p className="mt-6 text-lg text-gray-600">
+                  Explore real stories from IGCSE and AS/A Level students and parents.
+                </p>
+              </div>
+
+              {/* Authenticity Statement */}
+              <div className="max-w-4xl mx-auto mb-12">
+                <p className="text-sm text-gray-800 mb-3" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  <span className="font-semibold">Dear Parents and Students,</span> Trust and authenticity are at the heart of everything we do. All testimonials displayed here are 100% genuine and have been provided by real students and parents. None of them is AI-generated, fake, edited, or modified in any manner.
+                </p>
+                <p className="text-sm text-gray-800" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  We invite you to click on each testimonial to view the original feedback. We also welcome any further verification to reassure you of the authenticity of every testimonial shared here.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                {paginatedTestimonials.map((testimonial, index) => {
+                  const id = testimonial.id || testimonial._id;
+                  const studentName = testimonial.name || testimonial.reviewerName || 'Student';
+
+                  // FIX: Use `testimonial.text` from the new API as the primary source of truth.
+                  let testimonialText = testimonial.text || testimonial.quote || testimonial.message || "Experience excellence with A Star Classes.";
+
+                  // Special handling for specific students
+                  if (studentName.toLowerCase().includes('sanjana')) {
+                    testimonialText = "Thank you so much Sir! You have really had a huge impact on her life - especially her interest in Math and especially Stats! She hopes to pursue these in college.";
+                  } else if (studentName.toLowerCase().includes('amrit')) {
+                    testimonialText = "Poonam Kumar: Thanks Rohit. You'll be happy to know that Amrit got an A on his most recent midterm. Thanks much for your hard work with him. Any hw for this week? Sanjeev Kumar: Yes. Amrit scored well above the average. Let's keep with the drill...";
+                  } else if (testimonial.content && testimonial.content.startsWith('http')) {
+                    // Fallback for old data that might still use `content` for a URL
+                    testimonialText = `Outstanding success in ${testimonial.subject || 'studies'}! Click to see the full ${testimonial.type} testimonial and detailed feedback.`;
+                  }
+
+                  // Determine media type for the icon
+                  const mediaUrl = testimonial.mediaUrl || testimonial.content;
+                  let mediaType = testimonial.type || 'text';
+                  if (mediaUrl) {
+                    if (mediaUrl.startsWith('data:video/') || mediaUrl.match(/\.(mp4|webm|mov)$/i)) mediaType = 'video';
+                    else if (mediaUrl.startsWith('data:audio/') || mediaUrl.match(/\.(mp3|wav|ogg)$/i)) mediaType = 'audio';
+                    else if (mediaUrl.startsWith('data:image/') || mediaUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)) mediaType = 'image';
+                    else if (mediaUrl.match(/\.pdf$/i)) mediaType = 'pdf';
+                  }
+
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setActive(testimonial)}
+                      className="group relative flex flex-col w-full rounded-2xl overflow-hidden transition-all duration-500 hover:scale-[1.03] text-left shadow-2xl aspect-[4/5]"
+                    >
+                      {/* Background Image with Overlay */}
+                      <div className="absolute inset-0">
+                        <img
+                          src={cardBackgrounds[index % cardBackgrounds.length]}
+                          alt="Card background"
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#002B5B] via-[#002B5B]/80 to-transparent opacity-90"></div>
+                        <div className="absolute inset-0 border-[8px] border-[#FF6B6B]/20 group-hover:border-[#FF6B6B]/40 transition-colors duration-300"></div>
+                      </div>
+
+                      {/* Content Overlay */}
+                      <div className="relative h-full flex flex-col p-6 pb-4 justify-between z-10">
+                        {/* Media Icon Indicator */}
+                        <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 group-hover:bg-[#FF6B6B] group-hover:border-[#FF6B6B] transition-all duration-300">
+                          {mediaType === 'video' && <Video size={18} className="text-white" />}
+                          {mediaType === 'audio' && <Headphones size={18} className="text-white" />}
+                          {mediaType === 'image' && <ImageIcon size={18} className="text-white" />}
+                          {mediaType === 'pdf' && <FileText size={18} className="text-white" />}
+                          {mediaType === 'text' && !mediaUrl && <MessageCircle size={18} className="text-white" />}
+                        </div>
+
+                        {/* Top Quote Icon */}
+                        <div className="text-[#FF6B6B] opacity-60">
+                          <span className="text-5xl font-serif leading-none">&ldquo;</span>
+                        </div>
+
+                        {/* Testimonial Text with Scroll */}
+                        <div className="flex-1 overflow-y-auto pr-2 -mr-2 custom-scrollbar scroll-smooth my-4">
+                          <div className="text-white text-base md:text-lg font-bold italic leading-relaxed drop-shadow-sm" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                            {linkifyText(testimonialText)}
+                          </div>
+                        </div>
+
+                        {/* Bottom Quote Icon */}
+                        <div className="text-[#FF6B6B] opacity-60 flex justify-end">
+                          <span className="text-5xl font-serif leading-none rotate-180 inline-block">&ldquo;</span>
+                        </div>
+                      </div>
+
+
+                    </button>
+                  );
+                })}
+              </div>
+
+              {filteredTestimonials.length > paginatedTestimonials.length && (
+                <div className="mt-16 flex flex-col items-center justify-center gap-4">
+                  <button
+                    type="button"
+                    onClick={handleLoadMore}
+                    className="group flex items-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-4 rounded-full font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-600/20 transition-all hover:scale-105 active:scale-95"
+                  >
+                    Load More Success Stories
+                    <Plus size={16} className="group-hover:rotate-90 transition-transform duration-300" />
+                  </button>
+                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">
+                    Showing {paginatedTestimonials.length} of {filteredTestimonials.length} Stories
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </section>
 
-      {/* Modals */}
-      <SubmitTestimonialModal 
-        isOpen={isSubmitModalOpen} 
-        onClose={() => setIsSubmitModalOpen(false)}
-        onSuccess={handleSubmitSuccess}
-        user={user}
+      {/* Testimonial Modal */}
+      {
+        active && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-[#002B5B]/90 backdrop-blur-md"
+              onClick={() => setActive(null)}
+            />
+
+            <div className="relative z-10 w-full max-w-4xl max-h-[90vh] flex flex-col items-center justify-center">
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={() => setActive(null)}
+                className="absolute -top-12 right-0 md:-right-12 rounded-full p-2 text-white hover:bg-white/20 transition-all z-30"
+              >
+                <X size={32} />
+              </button>
+
+              {/* Evidence Content Only */}
+              <div className="w-full h-full overflow-hidden rounded-3xl shadow-2xl bg-white border-4 border-[#FF6B6B]">
+                {active.mediaUrl || active.image || (active.content && active.content.startsWith('http')) ? (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-900 min-h-[400px]">
+                    {(() => {
+                      const url = active.mediaUrl || active.image || active.content;
+                      
+                      // Video: mp4, webm, mov, or data video
+                      if (url.startsWith('data:video/') || url.match(/\.(mp4|webm|mov|m4v)$/i)) {
+                        return (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <video 
+                              src={url} 
+                              controls 
+                              autoPlay
+                              className="max-w-full max-h-[80vh] w-full h-full object-contain" 
+                              style={{ backgroundColor: '#000' }}
+                            />
+                          </div>
+                        );
+                      } 
+                      // Image: jpg, png, gif, webp
+                      else if (url.startsWith('data:image/') || url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+                        return (
+                          <img
+                            src={url}
+                            alt="Testimonial Evidence"
+                            className="max-w-full max-h-[80vh] object-contain"
+                          />
+                        );
+                      } 
+                      // PDF
+                      else if (url.match(/\.pdf$/i)) {
+                        return (
+                          <iframe
+                            src={url}
+                            title="PDF evidence"
+                            className="w-full h-[80vh]"
+                          />
+                        );
+                      } 
+                      // Audio: mp3, wav, ogg
+                      else if (url.startsWith('data:audio/') || url.match(/\.(mp3|wav|ogg|m4a)$/i)) {
+                        return (
+                          <div className="p-12 w-full max-w-lg bg-gradient-to-br from-purple-900 to-indigo-900 rounded-2xl shadow-xl">
+                            <div className="flex items-center justify-center mb-8">
+                              <Headphones size={48} className="text-[#FF6B6B]" />
+                            </div>
+                            <h3 className="text-xl font-black text-white mb-2 text-center uppercase tracking-widest">Audio Testimonial</h3>
+                            <p className="text-purple-200 text-center mb-6 text-sm">Listen to the original feedback</p>
+                            <audio 
+                              controls 
+                              autoPlay
+                              src={url} 
+                              className="w-full" 
+                              style={{ 
+                                accentColor: '#FF6B6B',
+                                filter: 'brightness(1.2)'
+                              }}
+                            />
+                          </div>
+                        );
+                      }
+                      
+                      // Fallback if URL type can't be determined
+                      return (
+                        <div className="p-12 text-center bg-gradient-to-br from-gray-100 to-gray-50 w-full h-full flex flex-col items-center justify-center">
+                          <FileText size={64} className="text-gray-400 mb-4" />
+                          <p className="text-xl font-bold text-gray-600">Media Content</p>
+                          <p className="text-gray-500 mt-2">{url}</p>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                ) : (
+                  <div className="p-12 text-center bg-gradient-to-br from-white to-gray-50 min-h-[400px] flex flex-col items-center justify-center">
+                    <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <MessageCircle size={40} className="text-blue-600" />
+                    </div>
+                    <h3 className="text-2xl font-black text-gray-900 mb-2">Testimonial from {active.name || active.reviewerName}</h3>
+                    <p className="text-gray-500 mb-6 text-sm font-medium">{active.role || 'Student'}</p>
+                    <div className="flex gap-0.5 mb-6 justify-center">
+                      {[...Array(5)].map((_, i) => (
+                        <span key={i}>
+                          <span className={i < (active.rating || 5) ? '⭐' : '☆'} />
+                        </span>
+                      ))}
+                    </div>
+                    <div className="text-left text-gray-800 whitespace-pre-wrap break-words leading-relaxed font-medium max-w-2xl bg-blue-50 p-6 rounded-xl border-l-4 border-blue-600">
+                      "{linkifyText(active.text || active.quote || active.message || active.content || 'No testimonial text available.')}"
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <p className="mt-6 text-white/60 text-sm font-bold uppercase tracking-[0.4em]">
+                Actual Testimonial
+              </p>
+            </div>
+          </div>
+        )
+      }
+
+      {/* Submit Testimonial CTA */}
+      {/**
+      <section className="py-16 bg-linear-to-r from-blue-600 to-purple-600 text-white">
+        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">
+            Share Your Success Story
+          </h2>
+          <p className="text-xl mb-8 text-blue-100">
+            Are you an A Star Classes alumnus? We'd love to hear about your journey and achievements!
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors"
+            >
+              Submit Your Story
+            </button>
+            <button
+              onClick={() => window.open('https://wa.me/918861919000', '_blank')}
+              className="border-2 border-white hover:bg-white hover:text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg transition-colors"
+            >
+              Contact Us
+            </button>
+          </div>
+        </div>
+      </section>
+      */}
+
+      {/* Submission Modal */}
+      <TestimonialFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
       />
-      <LoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-        onOpenSignup={() => { setIsLoginModalOpen(false); setIsSignupModalOpen(true) }}
-      />
-      <SignupModal
-        isOpen={isSignupModalOpen}
-        onClose={() => setIsSignupModalOpen(false)}
-        onOpenLogin={() => { setIsSignupModalOpen(false); setIsLoginModalOpen(true) }}
-      />
+      </div>
       <Footer />
     </div>
   );
-}
+};
+
+export default Testimonials;

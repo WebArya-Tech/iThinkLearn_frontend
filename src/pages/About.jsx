@@ -395,14 +395,14 @@ export default function About() {
                 onClick={() => setIsModalOpen(true)}
                 className="bg-white text-blue-600 px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-bold hover:bg-blue-50 transition shadow-lg inline-flex items-center justify-center gap-2 text-sm sm:text-base"
               >
-                � Book Free Demo Class
+                 Book Free Demo Class
               </button>
               <a href="tel:+917795010900" className="bg-transparent border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-bold hover:bg-white hover:text-blue-600 transition inline-flex items-center justify-center gap-2 text-sm sm:text-base">
-                � Call: +91 779 501 0900
+                 Call: +91 779 501 0900
               </a>
-              <Link to="/contact" className="bg-transparent border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-bold hover:bg-white hover:text-blue-600 transition inline-flex items-center justify-center gap-2 text-sm sm:text-base">
-                📧 Contact Us
-              </Link>
+              <a href="mailto:ithinklearn@ixpoe.com" className="bg-transparent border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-bold hover:bg-white hover:text-blue-600 transition inline-flex items-center justify-center gap-2 text-sm sm:text-base">
+                 Email Us
+              </a>
             </div>
           </div>
         </div>

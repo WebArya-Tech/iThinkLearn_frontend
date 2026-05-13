@@ -20,7 +20,7 @@ A modern, professional website for   iThinkLearn Tuitions - a global online coac
 ## 📄 Website Sections
 
 ### 1. Header & Navigation
-- **Logo & Branding**: "  iThinkLearn - Global Excellence in Education"
+- **Logo & Branding**: "  iThinkLearn - Global Excellence in Mathematics"
 - **Desktop Menu**: Home, Courses, Success Stories, Why Us
 - **Mobile Menu**: Hamburger menu with collapsible navigation
 - **CTA Button**: "Book Demo" in white with dark blue text

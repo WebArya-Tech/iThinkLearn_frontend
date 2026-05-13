@@ -88,9 +88,18 @@ export default function RunningClasses() {
     
     // Store enrollment in localStorage
     const enrollments = JSON.parse(localStorage.getItem('runningClassEnrollments') || '[]')
+    
+    // Generate enrollment number (ENROLL + timestamp + random suffix)
+    const enrollmentNo = `ENROLL${enrollments.length + 1}${Math.floor(Date.now() / 1000)}`
+    
     const newEnrollment = {
       id: `ENROLL${Date.now()}`,
-      ...enrollmentData,
+      enrollmentNo: enrollmentNo,
+      fullName: enrollmentData.fullName,
+      email: enrollmentData.email,
+      phone: enrollmentData.phone,
+      classSubject: enrollmentData.classSubject,
+      specialRequirements: enrollmentData.message, // Map message to specialRequirements
       enrollmentDate: new Date().toISOString(),
       status: 'Pending'
     }
@@ -257,7 +266,7 @@ export default function RunningClasses() {
             ) : runningClasses.length === 0 ? (
               <div className="col-span-full text-center py-12 text-gray-500">No active classes at the moment. Check back soon!</div>
             ) : runningClasses.map((classItem) => (
-              <div key={classItem.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition border-l-4 border-blue-600 h-full flex flex-col">
+              <div key={classItem.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition border-l-4 border-blue-600 h-full flex flex-col">
                 {/* Class image - only show if URL exists */}
                 {classItem.image && (
                   <img
@@ -271,21 +280,66 @@ export default function RunningClasses() {
                   <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 mb-2">
                     {classItem.subject}
                   </h3>
-                  <span className="inline-block bg-blue-100 text-blue-700 text-xs font-semibold px-2 sm:px-3 py-1 rounded-full mb-2 sm:mb-3 w-fit">
-                    {classItem.level}
-                  </span>
-                  <p className="text-gray-700 text-xs sm:text-sm mb-3 sm:mb-4">
+                  
+                  <div className="flex gap-2 mb-3 flex-wrap">
+                    <span className="inline-block bg-blue-100 text-blue-700 text-xs font-semibold px-2 sm:px-3 py-1 rounded-full">
+                      {classItem.level}
+                    </span>
+                    {classItem.difficultyLevel && (
+                      <span className={`inline-block text-white text-xs font-semibold px-2 sm:px-3 py-1 rounded-full ${
+                        classItem.difficultyLevel === 'Beginner' ? 'bg-green-600' :
+                        classItem.difficultyLevel === 'Intermediate' ? 'bg-blue-600' :
+                        classItem.difficultyLevel === 'Advanced' ? 'bg-orange-600' :
+                        'bg-red-600'
+                      }`}>
+                        {classItem.difficultyLevel}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-gray-700 text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-2">
                     {classItem.description}
                   </p>
 
-                  <div className="space-y-1.5 sm:space-y-2 mb-3 sm:mb-4 pt-3 sm:pt-4 border-t border-gray-100 text-xs sm:text-sm text-gray-600">
-                    <p><strong className="text-gray-900">Schedule:</strong> {classItem.schedule}</p>
-                    <p><strong className="text-gray-900">Students:</strong> {classItem.students}</p>
+                  {/* Topics */}
+                  {classItem.topics && (
+                    <div className="mb-2 pb-2 border-b border-gray-100">
+                      <p className="text-xs text-gray-600 font-semibold">Topics</p>
+                      <p className="text-xs text-gray-700 line-clamp-1">{classItem.topics}</p>
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5 sm:space-y-2 mb-3 sm:mb-4 pt-2 sm:pt-3 text-xs sm:text-sm text-gray-600">
                     <p><strong className="text-gray-900">Instructor:</strong> {classItem.instructor}</p>
+                    {classItem.schedule && <p><strong className="text-gray-900">Schedule:</strong> {classItem.schedule}</p>}
+                    {classItem.duration && <p><strong className="text-gray-900">Duration:</strong> {classItem.duration}</p>}
+                    {classItem.startDate && <p><strong className="text-gray-900">Start:</strong> {new Date(classItem.startDate).toLocaleDateString()}</p>}
                   </div>
 
+                  {/* Enrollment Status Bar */}
+                  {classItem.maxCapacity && (
+                    <div className="mb-3 sm:mb-4 pt-3 border-t border-gray-100">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs font-semibold text-gray-700">Availability:</span>
+                        <span className="text-xs font-bold text-gray-900">
+                          {classItem.currentEnrollment || 0}/{classItem.maxCapacity}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className={`h-2 rounded-full transition-all ${
+                            ((classItem.currentEnrollment || 0) / classItem.maxCapacity) > 0.8 ? 'bg-red-500' :
+                            ((classItem.currentEnrollment || 0) / classItem.maxCapacity) > 0.5 ? 'bg-yellow-500' :
+                            'bg-green-500'
+                          }`}
+                          style={{width: `${Math.min(((classItem.currentEnrollment || 0) / classItem.maxCapacity) * 100, 100)}%`}}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-gray-100 mt-auto">
-                    <span className="px-2 sm:px-3 py-1 rounded-full text-xs font-bold text-white bg-blue-700">
+                    <span className="px-2 sm:px-3 py-1 rounded-full text-xs font-bold text-white bg-green-700">
                       {classItem.status}
                     </span>
                     <button

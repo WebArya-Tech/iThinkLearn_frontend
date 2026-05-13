@@ -189,7 +189,7 @@ export default function Home() {
       <Header />
       <Hero />
       {/* Why   iThinkLearn Section */}
-      <section id="why-choose" className="py-12 md:py-18 bg-linear-to-b from-blue-50 to-white">
+      <section id="why-choose" className="py-12  md:py-18 bg-linear-to-b from-blue-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
@@ -263,7 +263,7 @@ export default function Home() {
         </div>
       </section>
       {/* Call to Action Section */}
-      <section className="py-12 md:py-16 bg-linear-to-r from-blue-900 via-blue-800 to-purple-900 text-white">
+      <section className="py-10 md:py-10 bg-linear-to-r from-blue-900 via-blue-800 to-purple-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 animate-fade-in-up leading-tight">
             Ready to Transform Your Academic Journey?
@@ -276,9 +276,7 @@ export default function Home() {
             <a href="https://wa.me/918197466607" target="_blank" rel="noopener noreferrer" className="btn-secondary text-white px-6 sm:px-10 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg flex items-center justify-center gap-2 hover:shadow-lg transition">
               ✨ Book Free Demo Class
             </a>
-            <a href="https://wa.me/918197466607" target="_blank" rel="noopener noreferrer" className="btn-secondary text-white px-6 sm:px-10 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg flex items-center justify-center gap-2 hover:shadow-lg transition">
-              📱 WhatsApp: +91 819 746 6607
-            </a>
+           
           </div>
          
         </div>
@@ -562,9 +560,7 @@ export default function Home() {
             We are committed to delivering real improvement, disciplined study habits, and strong foundations that last beyond school and into your career.
           </p>
           <div className="flex gap-4 flex-wrap justify-center">
-            <button className="btn-primary text-white px-10 py-4 rounded-lg font-bold text-lg">
-              🌟 Experience the Difference
-            </button>
+          
             <a href="https://wa.me/918197466607" target="_blank" rel="noopener noreferrer" className="btn-secondary text-white px-10 py-4 rounded-lg font-bold text-lg">
               📚 Join a Free Demo Class
             </a>

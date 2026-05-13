@@ -6,7 +6,7 @@ export default function FeePayment() {
   const [selectedFee, setSelectedFee] = useState(null)
   const [feePage, setFeePage] = useState(1)
   const [historyPage, setHistoryPage] = useState(1)
-  const itemsPerPage = 5
+  const itemsPerPage = 100
 
   const feeStructure = [
     {
@@ -185,6 +185,7 @@ export default function FeePayment() {
           onPageChange={setFeePage}
           totalItems={feeStructure.length}
           itemsPerPage={itemsPerPage}
+          alwaysShow={true}
         />
       </div>
 
@@ -232,6 +233,7 @@ export default function FeePayment() {
           onPageChange={setHistoryPage}
           totalItems={paymentHistory.length}
           itemsPerPage={itemsPerPage}
+          alwaysShow={true}
         />
       </div>
 

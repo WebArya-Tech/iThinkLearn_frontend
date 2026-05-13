@@ -113,19 +113,19 @@ export default function TeachingMethodology() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div className="text-center lg:text-left">
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">
                   Teaching Methodology
                 </h1>
-                <p className="text-lg md:text-xl text-gray-700 leading-relaxed mb-6">
+                <p className="text-base sm:text-lg md:text-xl text-gray-700 leading-relaxed mb-4 sm:mb-6">
                   At   iThinkLearn Tuitions, our teaching methodology is built on a simple belief:
                 </p>
-                <p className="text-xl md:text-2xl font-semibold text-blue-900">
+                <p className="text-lg sm:text-xl md:text-2xl font-semibold text-blue-900">
                   Strong concepts + consistent practice + personalized feedback = guaranteed academic success.
                 </p>
               </div>
-              <div className="hidden lg:block">
-                <img 
-                  src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&h=400&fit=crop" 
+              <div className="mt-2 lg:mt-0">
+                <img
+                  src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&h=400&fit=crop"
                   alt="Teaching Methodology"
                   className="rounded-2xl shadow-xl w-full"
                 />
@@ -135,25 +135,25 @@ export default function TeachingMethodology() {
         </section>
 
         {/* Introduction */}
-        <div className="py-12 lg:py-12 bg-white">
+        <div className="py-8 md:py-12 bg-white">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <p className="text-lg md:text-xl text-gray-700 leading-relaxed">
+            <p className="text-base sm:text-lg md:text-xl text-gray-700 leading-relaxed">
               Over <span className="font-bold text-blue-900">25 years</span>, we have developed a proven and structured learning framework that helps students understand deeply, retain confidence, and perform exceptionally in exams. Our approach <span className="font-semibold text-gray-900">eliminates fear</span>, <span className="font-semibold text-gray-900">builds discipline</span>, and makes learning <span className="font-semibold text-gray-900">meaningful and enjoyable</span>.
             </p>
           </div>
         </div>
 
         {/* Step-by-Step Process */}
-        <div id="steps" className="py-12 lg:py-12 bg-gray-50">
+        <div id="steps" className="py-10 md:py-12 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-blue-900 mb-4">
+            <div className="text-center mb-8 md:mb-12">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-blue-900 mb-3 md:mb-4">
                 Our Step-by-Step Learning Process
               </h2>
             </div>
 
-            {/* All Steps - 4 Cards per Row */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* All Steps - Responsive Grid */}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
               {steps.map((step) => (
                 <div 
                   key={step.id}
@@ -202,22 +202,22 @@ export default function TeachingMethodology() {
         </div>
 
         {/* Teaching Philosophy */}
-        <div className="py-12 lg:py-24 bg-linear-to-r from-blue-900 via-blue-800 to-blue-700 text-white relative overflow-hidden">
+        <div className="py-10 md:py-16 lg:py-24 bg-linear-to-r from-blue-900 via-blue-800 to-blue-700 text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-black/10"></div>
-          
+
           <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-8">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 md:mb-8">
               Teaching Philosophy at <span className="text-yellow-400">  iThinkLearn</span>
             </h2>
             
-            <div className="flex justify-center items-center gap-2 md:gap-3 mb-12 overflow-x-auto pb-2">
+            <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-3 mb-8 md:mb-12">
               {['Concept', 'Practice', 'Revision', 'Test', 'Feedback', 'Mastery'].map((item, idx, arr) => (
                 <React.Fragment key={item}>
-                  <div className="bg-white/10 backdrop-blur-sm px-3 md:px-5 py-2 md:py-3 rounded-lg border border-white/20 hover:bg-white/20 transition-all shrink-0">
-                    <span className="font-bold text-sm md:text-base">{item}</span>
+                  <div className="bg-white/10 backdrop-blur-sm px-3 sm:px-4 md:px-5 py-2 md:py-3 rounded-lg border border-white/20 hover:bg-white/20 transition-all">
+                    <span className="font-bold text-xs sm:text-sm md:text-base">{item}</span>
                   </div>
                   {idx < arr.length - 1 && (
-                    <svg className="w-4 h-4 md:w-5 md:h-5 text-yellow-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-yellow-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
                     </svg>
                   )}
@@ -225,23 +225,23 @@ export default function TeachingMethodology() {
               ))}
             </div>
             
-            <p className="text-xl text-blue-100">
+            <p className="text-lg sm:text-xl text-blue-100 px-2 sm:px-0">
               This cycle guarantees <span className="text-yellow-400 font-bold">measurable improvement</span> and <span className="text-yellow-400 font-bold">academic success</span>.
             </p>
           </div>
         </div>
 
         {/* Learning Outcomes */}
-        <div className="py-12 lg:py-24 bg-white">
+        <div className="py-10 md:py-16 lg:py-24 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <div className="text-center mb-10 md:mb-16">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4">
                 Learning Outcomes Expected from <span className="text-blue-900">  iThinkLearn Students</span>
               </h2>
-              <p className="text-gray-600 text-lg">What you can expect after joining our program</p>
+              <p className="text-gray-600 text-base sm:text-lg">What you can expect after joining our program</p>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {outcomes.map((outcome, idx) => (
                 <div 
                   key={idx}
@@ -261,25 +261,25 @@ export default function TeachingMethodology() {
         </div>
 
         {/*   iThinkLearn Commitment */}
-        <div className="py-12 lg:py-24 bg-linear-to-br from-yellow-50 to-orange-50">
+        <div className="py-10 md:py-16 lg:py-24 bg-linear-to-br from-yellow-50 to-orange-50">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
               <div className="order-2 lg:order-1">
-                <img 
-                  src="https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=600&h=400&fit=crop" 
+                <img
+                  src="https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=600&h=400&fit=crop"
                   alt="Student Success"
                   className="rounded-2xl shadow-2xl w-full"
                 />
               </div>
               <div className="order-1 lg:order-2 text-center lg:text-left">
-               
-                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 md:mb-6">
                   The   iThinkLearn <span className="text-orange-500">Commitment</span>
                 </h2>
-                <p className="text-xl md:text-2xl text-gray-700 leading-relaxed mb-4">
+                <p className="text-lg sm:text-xl md:text-2xl text-gray-700 leading-relaxed mb-3 md:mb-4">
                   We do not aim for average improvement — <span className="font-bold text-orange-600">we aim for transformation.</span>
                 </p>
-                <p className="text-lg text-gray-600">
+                <p className="text-base sm:text-lg text-gray-600">
                   Every child receives attention, support, and guidance to achieve their highest potential.
                 </p>
               </div>
@@ -288,23 +288,23 @@ export default function TeachingMethodology() {
         </div>
 
         {/* CTA - Book Demo */}
-        <div className="py-10 lg:py-10 bg-white text-blue-900">
+        <div className="py-8 md:py-10 bg-white text-blue-900">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 md:mb-6">
               Experience Our Methodology Firsthand
             </h2>
-            <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-10 px-4">
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-6 md:mb-10 px-2 sm:px-4">
               See how our proven teaching approach can transform your child's learning journey
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-              <button 
+              <button
                 onClick={() => setIsModalOpen(true)}
                 className="inline-flex items-center justify-center gap-2 sm:gap-3 bg-blue-900 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg hover:bg-blue-800 transition-all shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
               >
                 <span className="text-xl sm:text-2xl">📞</span>
                 Book Free Demo
               </button>
-              <a 
+              <a
                 href="https://wa.me/918197466607"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -314,7 +314,7 @@ export default function TeachingMethodology() {
                 WhatsApp Us
               </a>
             </div>
-            <div className="mt-8 flex flex-wrap justify-center gap-4 text-sm text-gray-600">
+            <div className="mt-6 md:mt-8 flex flex-wrap justify-center gap-3 md:gap-4 text-sm text-gray-600">
               <a href="tel:+917795010900" className="flex items-center gap-1 hover:text-blue-600 transition">
                 <span>📞</span> +91 779 501 0900
               </a>

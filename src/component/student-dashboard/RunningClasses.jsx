@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { runningClassesApi } from '../../api/runningClassesApi'
+import Pagination from '../ui/Pagination'
 
 const FALLBACK_CLASSES = [
   { id: 1, subject: 'UG Mathematics', level: 'Undergraduate', schedule: 'Mon, Wed, Fri - 6:00 PM IST', students: '12-15', instructor: 'Ms. Neha Aggarwal', description: 'Comprehensive mathematics coverage for B.Sc and B.Tech students', status: 'Active' },
@@ -16,6 +17,13 @@ export default function RunningClasses() {
   const [classes, setClasses] = useState([])
   const [loading, setLoading] = useState(true)
   const [filterLevel, setFilterLevel] = useState('All')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 100
+
+  const filtered = filterLevel === 'All' ? classes : classes.filter(c => c.level === filterLevel)
+  const totalPages = Math.ceil(filtered.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const paginatedClasses = filtered.slice(startIndex, startIndex + itemsPerPage)
 
   useEffect(() => {
     const fetchClasses = async () => {
@@ -50,7 +58,6 @@ export default function RunningClasses() {
   }, [])
 
   const levels = ['All', ...Array.from(new Set(classes.map(c => c.level).filter(Boolean)))]
-  const filtered = filterLevel === 'All' ? classes : classes.filter(c => c.level === filterLevel)
 
   return (
     <div className="space-y-6">
@@ -106,7 +113,7 @@ export default function RunningClasses() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filtered.map((classItem) => (
+          {paginatedClasses.map((classItem) => (
             <div
               key={classItem.id}
               className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 border-2 border-gray-100 hover:border-blue-900 flex flex-col"
@@ -159,6 +166,16 @@ export default function RunningClasses() {
           ))}
         </div>
       )}
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        totalItems={filtered.length}
+        itemsPerPage={itemsPerPage}
+        alwaysShow={true}
+      />
     </div>
   )
 }

@@ -167,13 +167,7 @@ export default function OurTutors() {
       <main>
         {/* Hero Section with Image */}
         <section className="bg-white py-8 sm:py-12 lg:py-12 border-b border-gray-100 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-1/3 h-full opacity-10 hidden lg:block">
-            <img 
-              src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&h=600&fit=crop" 
-              alt="" 
-              className="w-full h-full object-cover"
-            />
-          </div>
+          
           <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-12 items-center">
               <div className="text-center lg:text-left">
@@ -198,11 +192,11 @@ export default function OurTutors() {
                   </div>
                 </div>
               </div>
-              <div className="hidden lg:block">
+              <div className="block">
                 <img 
                   src="https://media.istockphoto.com/id/1429678950/photo/confident-mid-adult-male-professor-explaining-mature-adult-students-in-the-classroom.webp?a=1&b=1&s=612x612&w=0&k=20&c=abSkWxEPH-t5I1IjxwkbVsJNj2kRJThvBbbvNv5q0Z8=" 
                   alt="Expert Tutors" 
-                  className="rounded-2xl shadow-2xl w-full"
+                  className="rounded-2xl shadow-2xl w-full mt-6 lg:mt-0"
                 />
               </div>
             </div>
@@ -389,11 +383,11 @@ export default function OurTutors() {
                   </li>
                 </ul>
               </div>
-              <div className="hidden lg:block">
+              <div className="block">
                 <img 
                   src="https://plus.unsplash.com/premium_photo-1683121152928-787ececd7359?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8V2h5JTIwT3VyJTIwVHV0b3JzJTIwU3RhbmQlMjBPdXR8ZW58MHx8MHx8fDA%3D" 
                   alt="Expert Teaching" 
-                  className="rounded-2xl shadow-xl w-full"
+                  className="rounded-2xl shadow-xl w-full mt-6 lg:mt-0"
                 />
               </div>
             </div>

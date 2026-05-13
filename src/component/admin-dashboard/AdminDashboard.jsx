@@ -13,6 +13,8 @@ import FeedbackManagement from './FeedbackManagement'
 import PracticeTestManagement from './PracticeTestManagement'
 import HomeworkManagement from './HomeworkManagement'
 import TestimonialManagement from './TestimonialManagement'
+import TutorManagement from './TutorManagement'
+import ReviewManagement from './ReviewManagement'
 import AnnouncementManagement from './AnnouncementManagement'
 import { BlogModerationPage } from './BlogModerationPage'
 import { SubscribersPage } from './SubscribersPage'
@@ -75,6 +77,10 @@ export default function AdminDashboard() {
         return <FeedbackManagement />
       case 'testimonials':
         return <TestimonialManagement />
+      case 'tutors':
+        return <TutorManagement />
+      case 'reviews':
+        return <ReviewManagement />
       case 'announcements':
         return <AnnouncementManagement />
       case 'blog':
@@ -92,9 +98,9 @@ export default function AdminDashboard() {
     }
   }
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-linear-to-r from-blue-900 via-blue-800 to-indigo-900 shadow-xl sticky top-0 z-50">
+    <div className="h-screen bg-white flex flex-col overflow-hidden">
+      {/* Header - Fixed at top */}
+      <header className="bg-linear-to-r from-blue-900 via-blue-800 to-indigo-900 shadow-xl shrink-0 z-50">
         <div className="px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
@@ -137,16 +143,17 @@ export default function AdminDashboard() {
           </div>
         </div>
       </header>
-      {/* Sidebar */}
-      <AdminSidebar
-        currentView={currentView}
-        setCurrentView={setCurrentView}
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-      />
-      <div className="flex">
-        {/* Main Content */}
-        <main className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : ''}`}>
+      {/* Main Layout Area */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar */}
+        <AdminSidebar
+          currentView={currentView}
+          setCurrentView={setCurrentView}
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+        />
+        {/* Main Content - Scrollable */}
+        <main className={`flex-1 overflow-y-auto transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : ''}`}>
           <div className="p-4 md:p-6">
             {renderView()}
           </div>

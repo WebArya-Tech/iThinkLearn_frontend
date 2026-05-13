@@ -493,12 +493,12 @@ export default function Statistics() {
               >
                 Book a Free Demo Class
               </button>
-              <button
-                onClick={() => setIsContactOpen(true)}
-                className="w-full sm:w-auto bg-white/15 backdrop-blur-sm border-2 border-white/40 text-white font-bold py-3.5 px-10 rounded-lg hover:bg-white/25 transition-all text-sm sm:text-base"
+              <a
+                href="mailto:ithinklearn@ixpoe.com"
+                className="w-full sm:w-auto bg-white/15 backdrop-blur-sm border-2 border-white/40 text-white font-bold py-3.5 px-10 rounded-lg hover:bg-white/25 transition-all text-sm sm:text-base inline-flex items-center justify-center"
               >
                 Talk to an Expert
-              </button>
+              </a>
             </div>
           </div>
         </div>

@@ -22,8 +22,49 @@ export const SubmitBlogPage = () => {
     const [imagePreview, setImagePreview] = useState(null);
     const [imageLoading, setImageLoading] = useState(false);
     const [isDragOver, setIsDragOver] = useState(false);
+    const [errors, setErrors] = useState({});
     const autoSaveTimer = useRef(null);
     const fileInputRef = useRef(null);
+
+    // Form Validation Function
+    const validateForm = () => {
+        const newErrors = {};
+
+        // Name validation
+        if (!formData.authorName || formData.authorName.trim().length < 2) {
+            newErrors.authorName = 'Name must be at least 2 characters';
+        }
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!formData.authorEmail || !emailRegex.test(formData.authorEmail)) {
+            newErrors.authorEmail = 'Please enter a valid email address';
+        }
+
+        // Mobile validation - only 10 digits
+        const mobileRegex = /^[0-9]{10}$/;
+        if (!formData.authorMobile || !mobileRegex.test(formData.authorMobile)) {
+            newErrors.authorMobile = 'Mobile number must be exactly 10 digits';
+        }
+
+        // Title validation
+        if (!formData.title || formData.title.trim().length < 5) {
+            newErrors.title = 'Blog title must be at least 5 characters';
+        }
+
+        // Excerpt validation
+        if (!formData.excerpt || formData.excerpt.trim().length < 10) {
+            newErrors.excerpt = 'Excerpt must be at least 10 characters';
+        }
+
+        // Content validation
+        if (!formData.content || formData.content.trim().length < 50) {
+            newErrors.content = 'Blog content must be at least 50 characters';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
 
     
     // Check for saved draft on mount
@@ -98,7 +139,15 @@ export const SubmitBlogPage = () => {
     };
 
     const handleStep1 = async (e) => {
-        e.preventDefault(); setLoading(true);
+        e.preventDefault();
+        
+        // Validate form before submission
+        if (!validateForm()) {
+            toast.error('Please fix the errors in the form');
+            return;
+        }
+
+        setLoading(true);
         try {
             await blogApi.startSubmission({
                 authorName: formData.authorName, authorEmail: formData.authorEmail, authorMobile: formData.authorMobile,
@@ -133,6 +182,13 @@ export const SubmitBlogPage = () => {
     };
 
     const update = (f) => (e) => setFormData({ ...formData, [f]: e.target.value });
+
+    const handleMobileInput = (e) => {
+        // Only allow digits, max 10
+        let value = e.target.value.replace(/[^0-9]/g, '').slice(0, 10);
+        setFormData({ ...formData, authorMobile: value });
+        setErrors({...errors, authorMobile: ''});
+    };
 
     const handleImageUpload = (e) => {
         const file = e.target.files?.[0];
@@ -285,19 +341,36 @@ export const SubmitBlogPage = () => {
                     </div>
                     <form onSubmit={handleStep1} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Input label="Your Name *" placeholder="John Doe" value={formData.authorName} onChange={update('authorName')} required />
-                            <Input label="Email *" type="email" placeholder="john@example.com" value={formData.authorEmail} onChange={update('authorEmail')} required />
+                            <div>
+                                <Input label="Your Name *" placeholder="John Doe" value={formData.authorName} onChange={(e) => { update('authorName')(e); setErrors({...errors, authorName: ''}) }} required />
+                                {errors.authorName && <p className="text-red-500 text-xs mt-1">❌ {errors.authorName}</p>}
+                            </div>
+                            <div>
+                                <Input label="Email *" type="email" placeholder="john@example.com" value={formData.authorEmail} onChange={(e) => { update('authorEmail')(e); setErrors({...errors, authorEmail: ''}) }} required />
+                                {errors.authorEmail && <p className="text-red-500 text-xs mt-1">❌ {errors.authorEmail}</p>}
+                            </div>
                         </div>
-                        <Input label="Mobile *" placeholder="+919876543210" value={formData.authorMobile} onChange={update('authorMobile')} required />
-                        <Input label="Blog Title *" placeholder="An amazing title..." value={formData.title} onChange={update('title')} required />
-                        <TextArea label="Excerpt *" placeholder="Brief summary (2-3 sentences)" rows={2} value={formData.excerpt} onChange={update('excerpt')} required />
+                        <div>
+                            <Input label="Mobile * (10 digits)" placeholder="9876543210" value={formData.authorMobile} onChange={handleMobileInput} maxLength="10" inputMode="numeric" required />
+                            {errors.authorMobile && <p className="text-red-500 text-xs mt-1">❌ {errors.authorMobile}</p>}
+                            <p className="text-text-tertiary text-xs mt-1">Enter 10 digit mobile number</p>
+                        </div>
+                        <div>
+                            <Input label="Blog Title *" placeholder="An amazing title..." value={formData.title} onChange={(e) => { update('title')(e); setErrors({...errors, title: ''}) }} required />
+                            {errors.title && <p className="text-red-500 text-xs mt-1">❌ {errors.title}</p>}
+                        </div>
+                        <div>
+                            <TextArea label="Excerpt *" placeholder="Brief summary (2-3 sentences)" rows={2} value={formData.excerpt} onChange={(e) => { update('excerpt')(e); setErrors({...errors, excerpt: ''}) }} required />
+                            {errors.excerpt && <p className="text-red-500 text-xs mt-1">❌ {errors.excerpt}</p>}
+                        </div>
 
                         <div className="space-y-1.5">
                             <label className="block text-sm font-medium text-text-secondary">Content *</label>
                             <ContentEditor
                                 initialContent={formData.content}
-                                onChange={(html) => setFormData(prev => ({ ...prev, content: html }))}
+                                onChange={(html) => { setFormData(prev => ({ ...prev, content: html })); setErrors({...errors, content: ''}) }}
                             />
+                            {errors.content && <p className="text-red-500 text-xs mt-1">❌ {errors.content}</p>}
                         </div>
 
                         <Input label="Tags (comma separated)" placeholder="spring-boot, java, tutorial" value={formData.tags} onChange={update('tags')} />

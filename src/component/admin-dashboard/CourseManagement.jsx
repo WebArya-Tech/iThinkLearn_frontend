@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
+import Pagination from '../ui/Pagination';
 
 const DEFAULT_COURSES = [
   { id: 1, name: 'UG Mathematics', description: 'Comprehensive coverage for B.Sc and B.Tech students', instructor: 'Ms. Neha Aggarwal', duration: '6 months', price: 15000, category: 'Mathematics' },
@@ -19,6 +20,12 @@ export default function CourseManagement() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: '', description: '', instructor: '', duration: '', price: 0, category: '' });
   const [editId, setEditId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 100;
+
+  const totalPages = Math.ceil(courses.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedCourses = courses.slice(startIndex, startIndex + itemsPerPage);
 
   useEffect(() => { localStorage.setItem('icfy_courses', JSON.stringify(courses)) }, [courses])
 
@@ -130,7 +137,7 @@ export default function CourseManagement() {
           <div className="text-gray-600 text-center py-8">No courses found.</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {courses.map((c) => (
+            {paginatedCourses.map((c) => (
               <div key={c.id} className="border rounded-lg p-4 hover:shadow-lg transition">
                 <h3 className="font-bold text-lg mb-2">{c.name}</h3>
                 <p className="text-gray-600 text-sm mb-2">{c.description}</p>
@@ -154,6 +161,14 @@ export default function CourseManagement() {
             ))}
           </div>
         )}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={courses.length}
+          itemsPerPage={itemsPerPage}
+          alwaysShow={true}
+        />
       </div>
     </div>
   );

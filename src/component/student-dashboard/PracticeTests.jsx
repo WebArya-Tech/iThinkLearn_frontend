@@ -36,7 +36,7 @@ export default function PracticeTests() {
   const [currentPage, setCurrentPage]         = useState(1)
   const [tests, setTests]                     = useState(loadTests)
   const [completed, setCompleted]             = useState(loadCompleted)
-  const itemsPerPage = 6
+  const itemsPerPage = 100
 
   // Test player state
   const [activeTest, setActiveTest]   = useState(null)
@@ -210,7 +210,8 @@ export default function PracticeTests() {
         totalPages={totalPages}
         onPageChange={setCurrentPage}
         totalItems={filtered.length}
-        itemsPerPage={itemsPerPage}
+        itemsPerPage={100}
+        alwaysShow={true}
       />
 
       {/* ── TEST PLAYER MODAL ── */}

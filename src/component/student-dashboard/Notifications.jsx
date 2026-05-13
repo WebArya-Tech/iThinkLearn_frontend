@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
+import Pagination from '../ui/Pagination'
 
 export default function Notifications() {
   const [filter, setFilter] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 5
+  const itemsPerPage = 100
   const [notifications, setNotifications] = useState([
     {
       id: 1,
@@ -219,46 +220,14 @@ export default function Notifications() {
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-6">
-          <button
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ 
-              backgroundColor: currentPage === 1 ? '#e0e0e0' : '#1e3a8a',
-              color: currentPage === 1 ? '#666' : 'white'
-            }}
-          >
-            Previous
-          </button>
-          {[...Array(totalPages)].map((_, index) => (
-            <button
-              key={index + 1}
-              onClick={() => setCurrentPage(index + 1)}
-              className="px-4 py-2 rounded-lg font-semibold transition-all"
-              style={{
-                backgroundColor: currentPage === index + 1 ? '#1e3a8a' : 'white',
-                color: currentPage === index + 1 ? 'white' : '#1e3a8a',
-                border: '2px solid #1e3a8a'
-              }}
-            >
-              {index + 1}
-            </button>
-          ))}
-          <button
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ 
-              backgroundColor: currentPage === totalPages ? '#e0e0e0' : '#1e3a8a',
-              color: currentPage === totalPages ? '#666' : 'white'
-            }}
-          >
-            Next
-          </button>
-        </div>
-      )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        totalItems={filteredNotifications.length}
+        itemsPerPage={itemsPerPage}
+        alwaysShow={true}
+      />
 
     </div>
   )

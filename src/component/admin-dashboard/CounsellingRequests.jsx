@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react'
+import Pagination from '../ui/Pagination'
 
 const SAMPLE_COUNSELLING = [
   { id: 'COUN001', name: 'Anika Verma', email: 'anika@example.com', phone: '+91 98765 43213', topic: 'Career Guidance', message: 'Need help choosing between engineering and medical counselling', status: 'pending', requestedOn: '2026-02-20' },
@@ -16,7 +17,7 @@ export default function CounsellingRequests() {
   const [requests, setRequests] = useState(loadCounselling)
   const [filterStatus, setFilterStatus] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 100;
 
   // Reload from localStorage on mount
   useEffect(() => {
@@ -136,23 +137,14 @@ export default function CounsellingRequests() {
             )}
           </div>
 
-          {totalPages > 1 && (
-            <div className="flex justify-center gap-2 mt-6">
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`px-3 py-1 rounded ${ 
-                    currentPage === i + 1
-                      ? 'bg-blue-900 text-white'
-                      : 'bg-gray-200'
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
-          )}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            totalItems={requests.length}
+            itemsPerPage={itemsPerPage}
+            alwaysShow={true}
+          />
         </>
       ) : (
         <div className="text-center py-8 text-gray-600">No counselling requests found.</div>

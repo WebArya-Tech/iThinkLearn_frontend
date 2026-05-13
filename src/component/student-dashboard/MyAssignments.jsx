@@ -14,7 +14,7 @@ export default function MyAssignments() {
   const [showSubmitModal, setShowSubmitModal] = useState(false)
   const [showViewModal, setShowViewModal] = useState(false)
   const [selectedAssignment, setSelectedAssignment] = useState(null)
-  const itemsPerPage = 5
+  const itemsPerPage = 100
 
   useEffect(() => {
     fetchAssignments()
@@ -363,7 +363,14 @@ export default function MyAssignments() {
       </div>
 
       {/* Pagination */}
-      <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} totalItems={filteredAssignments.length} itemsPerPage={itemsPerPage} />
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        totalItems={filteredAssignments.length}
+        itemsPerPage={itemsPerPage}
+        alwaysShow={true}
+      />
 
       {/* Submit Modal */}
       {showSubmitModal && selectedAssignment && (

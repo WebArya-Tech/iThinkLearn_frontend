@@ -14,6 +14,8 @@ import Subscribe from './pages/Subscribe'
 import ContactUs from './pages/ContactUs'
 import RunningClasses from './pages/RunningClasses'
 import Reviews from './pages/Reviews'
+import WriteReview from './pages/WriteReview'
+import FeePayment from './pages/FeePayment'
 import OnlineClasses from './pages/OnlineClasses'
 import HowAreDifferent from './pages/HowAreDifferent'
 import TMUA from './pages/TMUA'
@@ -52,6 +54,8 @@ function App() {
         <Route path="/our-tutors" element={<OurTutors />} />
         <Route path="/testimonials" element={<Testimonials />} />
         <Route path="/reviews" element={<Reviews />} />
+        <Route path="/write-review" element={<WriteReview />} />
+        <Route path="/fee-payment" element={<FeePayment />} />
         <Route path="/courses" element={<Courses />} />
         <Route path="/blogs" element={<Blogs />} />
         <Route path="/blogs/all" element={<BlogAll />} />

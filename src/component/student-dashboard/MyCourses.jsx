@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext'
 import Pagination from '../ui/Pagination'
 import toast from 'react-hot-toast'
 
-const ITEMS_PER_PAGE = 4
+const ITEMS_PER_PAGE = 100
 
 const AVAILABLE_CLASSES = [
   { id: 1, subject: 'UG Mathematics', level: 'Undergraduate', schedule: 'Mon, Wed, Fri – 6:00 PM IST', instructor: 'Ms. Neha Aggarwal' },
@@ -200,7 +200,8 @@ export default function MyCourses() {
         totalPages={totalPages}
         onPageChange={setCurrentPage}
         totalItems={filteredCourses.length}
-        itemsPerPage={ITEMS_PER_PAGE}
+        itemsPerPage={100}
+        alwaysShow={true}
       />
 
       {/* ── Enroll Modal ── */}

@@ -449,12 +449,12 @@ export default function Calculus() {
             >
               Start AP Calculus Prep
             </button>
-            <button
-              onClick={() => setIsContactOpen(true)}
-              className="w-full sm:w-auto bg-white/10 border-2 border-white/40 text-white font-bold py-3.5 px-8 md:px-12 rounded-xl hover:bg-white/20 hover:border-white/60 transition-all text-sm sm:text-base md:text-lg backdrop-blur-sm hover:scale-105 active:scale-95"
+            <a
+              href="mailto:ithinklearn@ixpoe.com"
+              className="w-full sm:w-auto bg-white/10 border-2 border-white/40 text-white font-bold py-3.5 px-8 md:px-12 rounded-xl hover:bg-white/20 hover:border-white/60 transition-all text-sm sm:text-base md:text-lg backdrop-blur-sm hover:scale-105 active:scale-95 inline-flex items-center justify-center"
             >
               Talk to an Expert
-            </button>
+            </a>
           </div>
         </div>
       </section>

@@ -21,11 +21,12 @@ export default function Header() {
   const [signupOpen, setSignupOpen] = useState(false)
   const [forgotOpen, setForgotOpen] = useState(false)
   const [isSticky, setIsSticky] = useState(false)
-  const { user, logout, isAdmin } = useAuth()
+  const { user, isAdmin } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const whiteNavbarRef = useRef(null)
   const demoDropdownRef = useRef(null)
+  const mobileDemoDropdownRef = useRef(null)
   const whyDropdownRef = useRef(null)
   const collegeDropdownRef = useRef(null)
   const olympiadDropdownRef = useRef(null)
@@ -34,7 +35,11 @@ export default function Header() {
   // Close all dropdowns when clicking outside
   useEffect(() => {
     function handleClickOutside(e) {
-      if (demoDropdownRef.current && !demoDropdownRef.current.contains(e.target)) setDemoDropdownOpen(false)
+      // Only close demo dropdown if click is outside BOTH desktop and mobile refs
+      const isOutsideDemo = demoDropdownRef.current && !demoDropdownRef.current.contains(e.target)
+      const isOutsideMobileDemo = mobileDemoDropdownRef.current && !mobileDemoDropdownRef.current.contains(e.target)
+      if (isOutsideDemo && isOutsideMobileDemo) setDemoDropdownOpen(false)
+
       if (whyDropdownRef.current && !whyDropdownRef.current.contains(e.target)) setWhyDropdownOpen(false)
       if (collegeDropdownRef.current && !collegeDropdownRef.current.contains(e.target)) setCollegeDropdownOpen(false)
       if (olympiadDropdownRef.current && !olympiadDropdownRef.current.contains(e.target)) setOlympiadDropdownOpen(false)
@@ -94,8 +99,9 @@ export default function Header() {
 
             {/* Right Side - Navigation */}
             <div className="flex items-center gap-1 lg:gap-3">
-              <Link to="/blogs" className={`relative hover:text-yellow-300 transition font-semibold text-xs lg:text-sm px-2 lg:px-3 py-1 after:content-[''] after:absolute after:bottom-0 after:left-2 after:right-2 after:h-[2px] after:bg-yellow-400 after:transition-all ${location.pathname === '/blogs' ? 'after:w-full text-yellow-400' : 'after:w-0 hover:after:w-full'}`}>Blogs</Link>
               <Link to="/running-classes" className={`relative hover:text-yellow-300 transition font-semibold text-xs lg:text-sm px-2 lg:px-3 py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-2 after:right-2 after:h-[2px] after:bg-yellow-400 after:transition-all ${location.pathname === '/running-classes' ? 'after:w-full text-yellow-400' : 'after:w-0 hover:after:w-full'}`}>Running Classes</Link>
+              <Link to="/fee-payment" className={`relative hover:text-yellow-300 transition font-semibold text-xs lg:text-sm px-2 lg:px-3 py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-2 after:right-2 after:h-[2px] after:bg-yellow-400 after:transition-all ${location.pathname === '/fee-payment' ? 'after:w-full text-yellow-400' : 'after:w-0 hover:after:w-full'}`}>Pay Fees Online</Link>
+              <Link to="/blogs" className={`relative hover:text-yellow-300 transition font-semibold text-xs lg:text-sm px-2 lg:px-3 py-1 after:content-[''] after:absolute after:bottom-0 after:left-2 after:right-2 after:h-[2px] after:bg-yellow-400 after:transition-all ${location.pathname === '/blogs' ? 'after:w-full text-yellow-400' : 'after:w-0 hover:after:w-full'}`}>Blogs</Link>
               <Link to="/contact" className={`relative hover:text-yellow-300 transition font-semibold text-xs lg:text-sm px-2 lg:px-3 py-1 whitespace-nowrap after:content-[''] after:absolute after:bottom-0 after:left-2 after:right-2 after:h-[2px] after:bg-yellow-400 after:transition-all ${location.pathname === '/contact' ? 'after:w-full text-yellow-400' : 'after:w-0 hover:after:w-full'}`}>Contact Us</Link>
               
               {/* Book Demo Dropdown */}
@@ -114,15 +120,24 @@ export default function Header() {
                     </div>
                     <div className="p-4 space-y-3">
                       <div>
-                        <p className="text-xs text-gray-500 font-medium mb-1">📞 Call/WhatsApp:</p>
-                        <a href="tel:+918197466607" className="block text-blue-900 hover:text-blue-700 font-semibold text-sm">+91 819 746 6607</a>
+                        <p className="text-xs text-gray-500 font-medium mb-1">📞 Call:</p>
                         <a href="tel:+917795010900" className="block text-blue-900 hover:text-blue-700 font-semibold text-sm">+91 779 501 0900</a>
                       </div>
                       <div className="border-t pt-3">
+                        <p className="text-xs text-gray-500 font-medium mb-1">WhatsApp:</p>
+                        <a href="https://wa.me/917795010900?text=Hi%20iThinkLearn%20team!%20I%20would%20like%20to%20book%20a%20free%20demo%20class" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-900 hover:text-green-600 font-semibold text-sm transition">
+                          <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.885m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                          </svg>
+                          +91 779 501 0900
+                        </a>
+                      </div>
+                      <div className="border-t pt-3">
                         <p className="text-xs text-gray-500 font-medium mb-1">📧 Email:</p>
-                        <a href="mailto:ithinklearn@ixpoe.com" className="text-blue-900 hover:text-blue-700 font-semibold text-sm">ithinklearn@ixpoe.com</a>
+                        <Link to="/contact" className="text-blue-900 hover:text-blue-700 font-semibold text-sm">ithinklearn@ixpoe.com</Link>
                       </div>
                     </div>
+                    
                   </div>
                 )}
               </div>
@@ -131,7 +146,7 @@ export default function Header() {
         </div>
       </div>
       {/* Lower White Navbar - Becomes sticky after scrolling past blue navbar (ICFY style) */}
-      <div ref={whiteNavbarRef} className={`${isSticky ? 'fixed top-0 left-0 right-0 z-50 shadow-lg backdrop-blur-sm bg-white/95' : 'relative bg-white'} transition-all duration-300 ease-in-out`}>
+      <div ref={whiteNavbarRef} className={`${isSticky ? 'fixed top-0 left-0 right-0 z-50 shadow-lg backdrop-blur-sm bg-white/95' : 'relative bg-white'} transition-all duration-300 ease-in-out hidden md:block`}>
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
           <div className="flex items-center h-16 gap-2 md:gap-4 lg:gap-6">
             {/* Logo */}
@@ -139,7 +154,7 @@ export default function Header() {
             <img src="/logo.jpeg" alt="iThinkLearn Logo" className="h-10 md:h-11 lg:h-12 w-auto rounded-lg shadow-md group-hover:scale-105 transition-transform" />
             <div className="hidden lg:block">
               <h1 className="text-lg xl:text-xl font-bold text-blue-900">iThinkLearn</h1>
-              <p className="text-[9px] xl:text-[10px] text-gray-500">Global Excellence in Education</p>
+              <p className="text-[9px] xl:text-[10px] text-gray-500">Global Excellence in Mathematics</p>
             </div>
           </Link>
 
@@ -162,7 +177,7 @@ export default function Header() {
                   <div className="bg-blue-900 px-4 py-3">
                     <p className="font-bold text-sm text-white">Why iThinkLearn</p>
                   </div>
-                  <div className="py-1">
+                  <div className="py-0">
                     <Link to="/online-classes" onClick={() => setWhyDropdownOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-900 transition font-medium">Online Classes</Link>
                     <Link to="/how-are-we-different" onClick={() => setWhyDropdownOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-900 transition font-medium">How are we Different</Link>
                     <Link to="/teaching-methodology" onClick={() => setWhyDropdownOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-900 transition font-medium">Teaching Methodology</Link>
@@ -188,7 +203,7 @@ export default function Header() {
                   <div className="bg-blue-900 px-4 py-3">
                     <p className="font-bold text-sm text-white">Aptitude Tests</p>
                   </div>
-                  <div className="py-1">
+                  <div className="py-0">
                     {[{name:'TMUA',path:'/tmua'},{name:'ACT',path:'/act'},{name:'GRE',path:'/gre'},{name:'GMAT',path:'/gmat'}].map(c => (
                       <Link key={c.name} to={c.path} onClick={() => setCollegeDropdownOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-900 transition font-medium">{c.name}</Link>
                     ))}
@@ -211,7 +226,7 @@ export default function Header() {
                   <div className="bg-blue-900 px-4 py-3">
                     <p className="font-bold text-sm text-white">Olympiads</p>
                   </div>
-                  <div className="py-1">
+                  <div className="py-0">
                     {[{name:'AMC',path:'/amc'},{name:'IMO',path:'/imo'},{name:'AIME',path:'/aime'}].map(c => (
                       <Link key={c.name} to={c.path} onClick={() => setOlympiadDropdownOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-900 transition font-medium">{c.name}</Link>
                     ))}
@@ -234,7 +249,7 @@ export default function Header() {
                   <div className="bg-blue-900 px-4 py-3">
                     <p className="font-bold text-sm text-white">AP Exams</p>
                   </div>
-                  <div className="py-1">
+                  <div className="py-0">
                     {[{name:'Calculus',path:'/calculus'},{name:'Statistics',path:'/statistics'}].map(c => (
                       <Link key={c.name} to={c.path} onClick={() => setApExamsDropdownOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-900 transition font-medium">{c.name}</Link>
                     ))}
@@ -270,26 +285,30 @@ export default function Header() {
 
 
       {/* Mobile Menu Button - outside sticky for mobile */}
-      <div className="md:hidden max-w-7xl mx-auto px-3 sm:px-4">
-        <div className="flex items-center justify-between py-2">
-          <Link to="/" className="shrink-0 flex items-center gap-2">
-            <img src="/logo.jpeg" alt="iThinkLearn Logo" className="h-8 w-auto rounded-lg" />
-            <span className="text-lg font-bold text-blue-900">iThinkLearn</span>
-          </Link>
-          <button 
-            className="p-2 rounded-lg hover:bg-gray-100 transition"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className={`md:hidden ${isSticky ? 'fixed top-0 left-0 right-0 z-50 shadow-lg bg-white' : 'relative bg-white'} border-b border-gray-100`}>
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            <Link to="/" className="shrink-0 flex items-center gap-2">
+              <img src="/logo.jpeg" alt="iThinkLearn Logo" className="h-9 w-auto rounded-lg shadow-sm" />
+              <span className="text-xl font-bold text-blue-900 tracking-tight">iThinkLearn</span>
+            </Link>
+            <button 
+              className="p-2 rounded-xl text-blue-900 hover:bg-blue-50 transition-all active:scale-95"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle Menu"
+            >
               {mobileMenuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
               )}
-            </svg>
-          </button>
+            </button>
+          </div>
         </div>
-
       </div>
 
       {/* Spacer only when white navbar is sticky (white navbar height = 64px) */}
@@ -305,136 +324,177 @@ export default function Header() {
       <div className={`md:hidden fixed inset-y-0 right-0 w-80 max-w-[85vw] bg-gradient-to-b from-blue-900 via-blue-800 to-indigo-900 text-white z-50 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
 
         {/* Drawer Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-blue-700/50 shrink-0">
+        <div className="flex items-center justify-between px-4 py-4 border-b border-white/10 shrink-0 bg-blue-900/50">
           <div className="flex items-center gap-2">
-            <img src="/logo.jpeg" alt="iThinkLearn" className="h-7 w-auto rounded-md" />
-            <span className="font-bold text-sm">iThinkLearn</span>
+            <img src="/logo.jpeg" alt="Logo" className="h-7 w-auto rounded" />
+            <span className="font-bold text-base tracking-tight text-white">iThinkLearn</span>
           </div>
-          <button onClick={() => setMobileMenuOpen(false)} className="p-1.5 rounded-lg hover:bg-white/10 transition">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <button 
+            onClick={() => setMobileMenuOpen(false)} 
+            className="p-2 rounded-xl hover:bg-white/10 transition active:scale-95 text-white/80 hover:text-white"
+            aria-label="Close Menu"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         {/* Scrollable Nav Content */}
-        <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
-          <Link to="/" onClick={() => setMobileMenuOpen(false)} className={`block py-2.5 px-3 hover:bg-white/10 rounded-lg transition font-medium text-sm relative after:content-[''] after:absolute after:bottom-1 after:left-3 after:right-3 after:h-[2px] after:bg-yellow-400 after:transition-all after:duration-300 ${location.pathname === '/' ? 'bg-white/10 text-yellow-400 after:opacity-100' : 'after:opacity-0 hover:after:opacity-100'}`}>Home</Link>
-          <Link to="/about" onClick={() => setMobileMenuOpen(false)} className={`block py-2.5 px-3 hover:bg-white/10 rounded-lg transition font-medium text-sm ${location.pathname === '/about' ? 'bg-white/10 text-yellow-400' : ''}`}>About Us</Link>
+        <div className="flex-1 overflow-y-auto px-4 py-6 custom-scrollbar">
+          <div className="space-y-0">
+            <Link to="/" onClick={() => setMobileMenuOpen(false)} className={`flex items-center gap-3 py-3 px-4 hover:bg-white/10 rounded-xl transition-all font-semibold text-base ${location.pathname === '/' ? 'bg-white/15 text-yellow-400 shadow-inner' : 'text-white/90'}`}>
+              Home
+            </Link>
+            
+            <Link to="/about" onClick={() => setMobileMenuOpen(false)} className={`flex items-center gap-3 py-3 px-4 hover:bg-white/10 rounded-xl transition-all font-semibold text-base ${location.pathname === '/about' ? 'bg-white/15 text-yellow-400 shadow-inner' : 'text-white/90'}`}>
+              About Us
+            </Link>
 
-          {/* Mobile: Why iThinkLearn */}
-          <div>
-            <button onClick={() => setMobileWhyOpen(!mobileWhyOpen)} className="w-full flex items-center justify-between py-2.5 px-3 hover:bg-white/10 rounded-lg transition font-medium text-sm">
-              <span>Why iThinkLearn</span>
-              <svg className={`w-4 h-4 transition-transform ${mobileWhyOpen ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"/></svg>
-            </button>
-            {mobileWhyOpen && (
-              <div className="ml-3 space-y-1 border-l-2 border-blue-400/50 pl-2 mb-1">
-                <Link to="/online-classes" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 px-2 text-xs hover:bg-white/10 rounded-lg transition text-blue-200">Online Classes</Link>
-                <Link to="/how-are-we-different" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 px-2 text-xs hover:bg-white/10 rounded-lg transition text-blue-200">How are we Different</Link>
-                <Link to="/teaching-methodology" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 px-2 text-xs hover:bg-white/10 rounded-lg transition text-blue-200">Teaching Methodology</Link>
-                <Link to="/our-tutors" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 px-2 text-xs hover:bg-white/10 rounded-lg transition text-blue-200">Our Tutors</Link>
-                <Link to="/testimonials" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 px-2 text-xs hover:bg-white/10 rounded-lg transition text-blue-200">Testimonials &amp; Success Stories</Link>
-                <Link to="/reviews" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 px-2 text-xs hover:bg-white/10 rounded-lg transition text-blue-200">Reviews</Link>
+            {/* Mobile: Why iThinkLearn */}
+            <div className="py-0">
+              <button onClick={() => setMobileWhyOpen(!mobileWhyOpen)} className={`w-full flex items-center justify-between py-3 px-4 hover:bg-white/10 rounded-xl transition-all font-semibold text-base ${mobileWhyOpen ? 'text-yellow-400' : 'text-white/90'}`}>
+                <div className="flex items-center gap-3">
+                  Why iThinkLearn
+                </div>
+                <svg className={`w-5 h-5 transition-transform duration-300 ${mobileWhyOpen ? 'rotate-180 text-yellow-400' : 'text-white/40'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div className={`overflow-hidden transition-all duration-300 ${mobileWhyOpen ? 'max-h-96 mt-1 opacity-100' : 'max-h-0 opacity-0'}`}>
+                <div className="ml-10 space-y-1 border-l-2 border-white/10 pl-4">
+                  {[{ label: 'Online Classes', path: '/online-classes' },{ label: 'How are we Different', path: '/how-are-we-different' },{ label: 'Teaching Methodology', path: '/teaching-methodology' },{ label: 'Our Tutors', path: '/our-tutors' },{ label: 'Testimonials', path: '/testimonials' },{ label: 'Reviews', path: '/reviews' }].map(link => (
+                    <Link key={link.path} to={link.path} onClick={() => setMobileMenuOpen(false)} className="block py-1 text-sm text-white/70 hover:text-white transition-colors">{link.label}</Link>
+                  ))}
+                </div>
               </div>
-            )}
+            </div>
+
+            {/* Mobile: Aptitude Tests */}
+            <div className="py-0">
+              <button onClick={() => setMobileCollegeOpen(!mobileCollegeOpen)} className={`w-full flex items-center justify-between py-3 px-4 hover:bg-white/10 rounded-xl transition-all font-semibold text-base ${mobileCollegeOpen ? 'text-yellow-400' : 'text-white/90'}`}>
+                <div className="flex items-center gap-3">
+                  Aptitude Tests
+                </div>
+                <svg className={`w-5 h-5 transition-transform duration-300 ${mobileCollegeOpen ? 'rotate-180 text-yellow-400' : 'text-white/40'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div className={`overflow-hidden transition-all duration-300 ${mobileCollegeOpen ? 'max-h-64 mt-1 opacity-100' : 'max-h-0 opacity-0'}`}>
+                <div className="ml-10 space-y-0.5 border-l-2 border-white/10 pl-3">
+                  {[{name:'TMUA',path:'/tmua'},{name:'ACT',path:'/act'},{name:'GRE',path:'/gre'},{name:'GMAT',path:'/gmat'}].map(c => (
+                      <Link key={c.name} to={c.path} onClick={() => setMobileMenuOpen(false)} className="block py-1 text-sm text-white/70 hover:text-white transition-colors">{c.name}</Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="py-0">
+              <button onClick={() => setMobileOlympiadOpen(!mobileOlympiadOpen)} className={`w-full flex items-center justify-between py-3 px-4 hover:bg-white/10 rounded-xl transition-all font-semibold text-base ${mobileOlympiadOpen ? 'text-yellow-400' : 'text-white/90'}`}>
+                <div className="flex items-center gap-3">
+                  Olympiads
+                </div>
+                <svg className={`w-5 h-5 transition-transform duration-300 ${mobileOlympiadOpen ? 'rotate-180 text-yellow-400' : 'text-white/40'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div className={`overflow-hidden transition-all duration-300 ${mobileOlympiadOpen ? 'max-h-48 mt-1 opacity-100' : 'max-h-0 opacity-0'}`}>
+                <div className="ml-10 space-y-1 border-l-2 border-white/10 pl-4">
+                  {[{name:'AMC',path:'/amc'},{name:'IMO',path:'/imo'},{name:'AIME',path:'/aime'}].map(c => (
+                    <Link key={c.name} to={c.path} onClick={() => setMobileMenuOpen(false)} className="block py-1 text-sm text-white/70 hover:text-white transition-colors">{c.name}</Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile: AP Exams */}
+            <div className="py-0">
+              <button onClick={() => setMobileApOpen(!mobileApOpen)} className={`w-full flex items-center justify-between py-3 px-4 hover:bg-white/10 rounded-xl transition-all font-semibold text-base ${mobileApOpen ? 'text-yellow-400' : 'text-white/90'}`}>
+                <div className="flex items-center gap-3">
+                  AP Exams
+                </div>
+                <svg className={`w-5 h-5 transition-transform duration-300 ${mobileApOpen ? 'rotate-180 text-yellow-400' : 'text-white/40'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div className={`overflow-hidden transition-all duration-300 ${mobileApOpen ? 'max-h-48 mt-1 opacity-100' : 'max-h-0 opacity-0'}`}>
+                <div className="ml-10 space-y-1 border-l-2 border-white/10 pl-4">
+                  {[{name:'Calculus',path:'/calculus'},{name:'Statistics',path:'/statistics'}].map(c => (
+                    <Link key={c.name} to={c.path} onClick={() => setMobileMenuOpen(false)} className="block py-1 text-sm text-white/70 hover:text-white transition-colors">{c.name}</Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <Link to="/running-classes" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 py-3 px-4 hover:bg-white/10 rounded-xl transition-all font-semibold text-base text-white/90">
+              Running Classes
+            </Link>
+            <Link to="/fee-payment" onClick={() => setMobileMenuOpen(false)} className={`flex items-center gap-3 py-3 px-4 hover:bg-white/10 rounded-xl transition-all font-semibold text-base ${location.pathname === '/fee-payment' ? 'bg-white/15 text-yellow-400 shadow-inner' : 'text-white/90'}`}>
+              Pay Fees Online
+            </Link>
+            <Link to="/blogs" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 py-3 px-4 hover:bg-white/10 rounded-xl transition-all font-semibold text-base text-white/90">
+              Blogs
+            </Link>
+            <Link to="/contact" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 py-3 px-4 hover:bg-white/10 rounded-xl transition-all font-semibold text-base text-white/90">
+              Contact Us
+            </Link>
           </div>
 
-          {/* Mobile: Aptitude Tests */}
-          <div>
-            <button onClick={() => setMobileCollegeOpen(!mobileCollegeOpen)} className="w-full flex items-center justify-between py-2.5 px-3 hover:bg-white/10 rounded-lg transition font-medium text-sm">
-              <span>Aptitude Tests</span>
-              <svg className={`w-4 h-4 transition-transform ${mobileCollegeOpen ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"/></svg>
-            </button>
-            {mobileCollegeOpen && (
-              <div className="ml-3 space-y-1 border-l-2 border-blue-400/50 pl-2 mb-1">
-                {[{name:'TMUA',path:'/tmua'},{name:'ACT',path:'/act'},{name:'GRE',path:'/gre'},{name:'GMAT',path:'/gmat'}].map(c => (
-                  <Link key={c.name} to={c.path} onClick={() => setMobileMenuOpen(false)} className="block py-1.5 px-2 text-xs hover:bg-white/10 rounded-lg transition text-blue-200">{c.name}</Link>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Mobile: Olympiads */}
-          <div>
-            <button onClick={() => setMobileOlympiadOpen(!mobileOlympiadOpen)} className="w-full flex items-center justify-between py-2.5 px-3 hover:bg-white/10 rounded-lg transition font-medium text-sm">
-              <span>Olympiads</span>
-              <svg className={`w-4 h-4 transition-transform ${mobileOlympiadOpen ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"/></svg>
-            </button>
-            {mobileOlympiadOpen && (
-              <div className="ml-3 space-y-1 border-l-2 border-blue-400/50 pl-2 mb-1">
-                {[{name:'AMC',path:'/amc'},{name:'IMO',path:'/imo'},{name:'AIME',path:'/aime'}].map(c => (
-                  <Link key={c.name} to={c.path} onClick={() => setMobileMenuOpen(false)} className="block py-1.5 px-2 text-xs hover:bg-white/10 rounded-lg transition text-blue-200">{c.name}</Link>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Mobile: AP Exams */}
-          <div>
-            <button onClick={() => setMobileApOpen(!mobileApOpen)} className="w-full flex items-center justify-between py-2.5 px-3 hover:bg-white/10 rounded-lg transition font-medium text-sm">
-              <span>AP Exams</span>
-              <svg className={`w-4 h-4 transition-transform ${mobileApOpen ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"/></svg>
-            </button>
-            {mobileApOpen && (
-              <div className="ml-3 space-y-1 border-l-2 border-blue-400/50 pl-2 mb-1">
-                {[{name:'Calculus',path:'/calculus'},{name:'Statistics',path:'/statistics'},{name:'Biology',path:'/courses#ap-biology'},{name:'Economics',path:'/courses#ap-economics'}].map(c => (
-                  <Link key={c.name} to={c.path} onClick={() => setMobileMenuOpen(false)} className="block py-1.5 px-2 text-xs hover:bg-white/10 rounded-lg transition text-blue-200">{c.name}</Link>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <Link to="/blogs" onClick={() => setMobileMenuOpen(false)} className={`block py-2.5 px-3 hover:bg-white/10 rounded-lg transition font-medium text-sm ${location.pathname === '/blogs' ? 'bg-white/10 text-yellow-400' : ''}`}>Blogs</Link>
-          <Link to="/running-classes" onClick={() => setMobileMenuOpen(false)} className={`block py-2.5 px-3 hover:bg-white/10 rounded-lg transition font-medium text-sm ${location.pathname === '/running-classes' ? 'bg-white/10 text-yellow-400' : ''}`}>Running Classes</Link>
-          <Link to="/contact" onClick={() => setMobileMenuOpen(false)} className={`block py-2.5 px-3 hover:bg-white/10 rounded-lg transition font-medium text-sm ${location.pathname === '/contact' ? 'bg-white/10 text-yellow-400' : ''}`}>Contact Us</Link>
-
-          {/* Mobile Book Demo - collapsible */}
-          <div className="mt-3">
+          <div className="mt-8  border-t border-white/10 space-y-4">
+            {/* Mobile Book Demo */}
             <button
               onClick={() => setDemoDropdownOpen(!demoDropdownOpen)}
-              className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-blue-900 font-bold rounded-xl px-4 py-2.5 flex items-center justify-between shadow-lg text-sm"
+              className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-blue-900 font-bold rounded-2xl px-5 py-4 flex items-center justify-between shadow-xl active:scale-[0.98] transition-all text-base"
             >
-              <span>Book a Free Demo Class</span>
-              <svg className={`w-4 h-4 transition-transform ${demoDropdownOpen ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"/></svg>
+              <span>Book Free Demo Class</span>
+              <svg className={`w-5 h-5 transition-transform duration-300 ${demoDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+              </svg>
             </button>
-            {demoDropdownOpen && (
-              <div className="mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white px-4 py-3">
-                  <p className="font-bold text-sm">Book a Free Demo Class</p>
-                </div>
-                <div className="p-4 space-y-3">
+            
+            <div className={`overflow-hidden transition-all duration-300 ${demoDropdownOpen ? 'max-h-96 mt-2' : 'max-h-0'}`} ref={mobileDemoDropdownRef}>
+              <div className="bg-white rounded-2xl p-5 space-y-3 shadow-inner" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-start gap-3">
+                  <span className="text-xl">📞</span>
                   <div>
-                    <p className="text-xs text-gray-500 font-medium mb-1">Call/WhatsApp:</p>
-                    <a href="tel:+918197466607" className="block text-blue-900 hover:text-blue-700 font-semibold text-sm">+91 819 746 6607</a>
-                    <a href="tel:+917795010900" className="block text-blue-900 hover:text-blue-700 font-semibold text-sm">+91 779 501 0900</a>
+                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">Phone</p>
+                    <a href="tel:+917795010900" onClick={(e) => e.stopPropagation()} className="block text-blue-900 font-bold text-sm hover:text-blue-600">+91 779 501 0900</a>
                   </div>
-                  <div className="border-t pt-3">
-                    <p className="text-xs text-gray-500 font-medium mb-1">Email:</p>
-                    <a href="mailto:ithinklearn@ixpoe.com" className="text-blue-900 hover:text-blue-700 font-semibold text-sm">ithinklearn@ixpoe.com</a>
+                </div>
+                
+                <div className="flex items-start gap-3 border-t pt-3">
+                  <svg className="w-5 h-5 text-green-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                  </svg>
+                  <div>
+                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">WhatsApp</p>
+                    <a href="https://wa.me/917795010900?text=Hi%20iThinkLearn%20team!%20I%20would%20like%20to%20book%20a%20free%20demo%20class" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="block text-blue-900 font-bold text-sm hover:text-green-600">+91 779 501 0900</a>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3 border-t pt-3">
+                  <span className="text-xl">📧</span>
+                  <div>
+                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">Email</p>
+                    <Link to="/contact" onClick={(e) => { e.stopPropagation(); setMobileMenuOpen(false); }} className="block text-blue-900 font-bold text-sm hover:text-blue-600 break-all">ithinklearn@ixpoe.com</Link>
                   </div>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
 
-          {/* Mobile Login Button */}
-          <div className="mt-2 mb-3">
+            {/* Mobile Login Button */}
             {user ? (
-              <div className="bg-white/10 rounded-xl px-4 py-2.5 text-center">
-                <button
-                  onClick={() => { navigate(isAdmin ? '/admin-dashboard' : '/student-dashboard'); setMobileMenuOpen(false) }}
-                  className="text-blue-200 text-sm font-semibold hover:text-yellow-400 transition"
-                >
-                  👤 {user.name}
-                </button>
-              </div>
+              <button
+                onClick={() => { navigate(isAdmin ? '/admin-dashboard' : '/student-dashboard'); setMobileMenuOpen(false) }}
+                className="w-full py-4 rounded-2xl font-bold text-white bg-white/10 hover:bg-white/20 transition-all text-center text-base border border-white/10 flex items-center justify-center gap-3"
+              >
+                <span>👤</span> {user.name}
+              </button>
             ) : (
               <button
                 onClick={() => { setLoginOpen(true); setMobileMenuOpen(false) }}
-                className="w-full py-2.5 rounded-xl font-bold text-white border-2 border-white/60 hover:bg-white/10 transition text-center text-sm"
+                className="w-full py-4 rounded-2xl font-bold text-white bg-blue-600 hover:bg-blue-500 transition-all text-center text-base border border-blue-400/30 flex items-center justify-center gap-3 shadow-lg active:scale-[0.98]"
               >
-                🔐 Login
+                 Login
               </button>
             )}
           </div>
@@ -461,4 +521,3 @@ export default function Header() {
     </>
   )
 }
-

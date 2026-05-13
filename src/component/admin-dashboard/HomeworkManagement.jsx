@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
+import Pagination from '../ui/Pagination';
 
 const DEFAULT_HOMEWORK = [
   { id: 1, title: 'Calculus Assignment 1', subject: 'Mathematics', dueDate: '2026-03-10', assignedDate: 'Feb 28, 2026', marks: 25, description: 'Solve all integration problems from chapter 5. Show all working steps.' },
@@ -18,6 +19,12 @@ export default function HomeworkManagement() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: '', subject: '', dueDate: '', marks: 10, description: '', assignedDate: '' });
   const [editId, setEditId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 100;
+
+  const totalPages = Math.ceil(homework.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedHomework = homework.slice(startIndex, startIndex + itemsPerPage);
 
   // Save to localStorage so student Homework.jsx can read them
   useEffect(() => { localStorage.setItem('icfy_homework', JSON.stringify(homework)) }, [homework])
@@ -112,7 +119,7 @@ export default function HomeworkManagement() {
           <div className="text-gray-600 text-center py-8">No homework found.</div>
         ) : (
           <div className="space-y-4">
-            {homework.map((h) => (
+            {paginatedHomework.map((h) => (
               <div key={h.id} className="border rounded-lg p-4 hover:shadow-md transition">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                   <div className="flex-1">
@@ -136,6 +143,14 @@ export default function HomeworkManagement() {
             ))}
           </div>
         )}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={homework.length}
+          itemsPerPage={itemsPerPage}
+          alwaysShow={true}
+        />
       </div>
     </div>
   );

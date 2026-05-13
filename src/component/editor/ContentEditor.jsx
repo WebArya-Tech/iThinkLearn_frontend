@@ -8,22 +8,22 @@ import {
 import React from 'react';
 /* ─── Toolbar config ─── */
 const TOOLBAR = [
-    { key: 'undo', icon: Undo, label: 'Undo', command: 'undo' },
-    { key: 'redo', icon: Redo, label: 'Redo', command: 'redo' },
+    { key: 'undo', icon: Undo, label: 'Undo (Ctrl+Z)', command: 'undo' },
+    { key: 'redo', icon: Redo, label: 'Redo (Ctrl+Y)', command: 'redo' },
     { key: 'sep0', separator: true },
     { key: 'bold', icon: Bold, label: 'Bold (Ctrl+B)', command: 'bold' },
     { key: 'italic', icon: Italic, label: 'Italic (Ctrl+I)', command: 'italic' },
     { key: 'underline', icon: Underline, label: 'Underline (Ctrl+U)', command: 'underline' },
     { key: 'strikethrough', icon: Strikethrough, label: 'Strikethrough', command: 'strikeThrough' },
     { key: 'sep1', separator: true },
-    { key: 'h1', icon: Heading1, label: 'Heading 1', command: 'formatBlock', value: 'H1' },
-    { key: 'h2', icon: Heading2, label: 'Heading 2', command: 'formatBlock', value: 'H2' },
-    { key: 'h3', icon: Heading3, label: 'Heading 3', command: 'formatBlock', value: 'H3' },
-    { key: 'paragraph', icon: Type, label: 'Normal Text', command: 'formatBlock', value: 'P' },
+    { key: 'h1', icon: Heading1, label: 'Heading 1', command: 'formatBlock', value: '<h1>' },
+    { key: 'h2', icon: Heading2, label: 'Heading 2', command: 'formatBlock', value: '<h2>' },
+    { key: 'h3', icon: Heading3, label: 'Heading 3', command: 'formatBlock', value: '<h3>' },
+    { key: 'paragraph', icon: Type, label: 'Normal Text', command: 'formatBlock', value: '<p>' },
     { key: 'sep2', separator: true },
     { key: 'ul', icon: List, label: 'Bullet List', command: 'insertUnorderedList' },
     { key: 'ol', icon: ListOrdered, label: 'Numbered List', command: 'insertOrderedList' },
-    { key: 'blockquote', icon: Quote, label: 'Blockquote', command: 'formatBlock', value: 'BLOCKQUOTE' },
+    { key: 'blockquote', icon: Quote, label: 'Blockquote', command: 'formatBlock', value: '<blockquote>' },
     { key: 'sep3', separator: true },
     { key: 'code', icon: Code, label: 'Code Block', special: 'code' },
     { key: 'hr', icon: Minus, label: 'Horizontal Rule', command: 'insertHorizontalRule' },
@@ -38,7 +38,8 @@ const TOOLBAR = [
 
 export const ContentEditor = ({ initialContent, onChange }) => {
     const editorRef = useRef(null);
-    const [mode, setMode] = useState('edit'); // 'edit' | 'preview'
+    const fileInputRef = useRef(null);
+    const [mode, setMode] = useState('edit');
     const [htmlContent, setHtmlContent] = useState(initialContent || '');
     const [showImageDialog, setShowImageDialog] = useState(false);
     const [showLinkDialog, setShowLinkDialog] = useState(false);
@@ -48,6 +49,7 @@ export const ContentEditor = ({ initialContent, onChange }) => {
     const [linkText, setLinkText] = useState('');
     const [savedSelection, setSavedSelection] = useState(null);
     const [wordCount, setWordCount] = useState(0);
+    const [imageLoading, setImageLoading] = useState(false);
 
     // Restore content into editor when switching back to edit mode
     useEffect(() => {
@@ -68,17 +70,38 @@ export const ContentEditor = ({ initialContent, onChange }) => {
 
     const saveSelection = () => {
         const sel = window.getSelection();
-        if (sel.rangeCount > 0) {
+        if (sel && sel.rangeCount > 0) {
             setSavedSelection(sel.getRangeAt(0).cloneRange());
         }
     };
 
     const restoreSelection = () => {
-        if (savedSelection) {
+        if (savedSelection && editorRef.current) {
             const sel = window.getSelection();
+            if (!sel) return;
             sel.removeAllRanges();
-            sel.addRange(savedSelection);
+            sel.addRange(savedSelection.cloneRange());
         }
+    };
+
+    const focusEditorWithSelection = () => {
+        const editor = editorRef.current;
+        if (!editor) return;
+
+        editor.focus();
+        const sel = window.getSelection();
+        if (!sel) return;
+
+        // If we have a previously saved selection, restore it
+        if (savedSelection) {
+            try {
+                sel.removeAllRanges();
+                sel.addRange(savedSelection.cloneRange());
+            } catch (e) {
+                console.error('Failed to restore selection:', e);
+            }
+        }
+        // Otherwise, just ensure editor is focused - don't manipulate selection
     };
 
     const updateWordCount = () => {
@@ -107,51 +130,135 @@ export const ContentEditor = ({ initialContent, onChange }) => {
     };
 
     const execCommand = (command, value = null) => {
-        editorRef.current?.focus();
-        document.execCommand(command, false, value);
+        const editor = editorRef.current;
+        if (!editor) return;
+
+        // Get current selection before any focus changes
+        const sel = window.getSelection();
+        let currentRange = null;
+        if (sel && sel.rangeCount > 0) {
+            currentRange = sel.getRangeAt(0).cloneRange();
+        }
+
+        // Focus editor
+        editor.focus();
+
+        // Restore selection if we have it
+        if (currentRange) {
+            sel?.removeAllRanges();
+            sel?.addRange(currentRange);
+        }
+
+        // Execute the command
+        try {
+            if (command === 'formatBlock' && value) {
+                // Remove < and > if present
+                const cleanValue = value.replace(/[<>]/g, '');
+                document.execCommand(command, false, cleanValue);
+            } else if (value) {
+                document.execCommand(command, false, value);
+            } else {
+                document.execCommand(command, false);
+            }
+        } catch (e) {
+            console.error(`Command '${command}' failed:`, e);
+        }
+
+        // Save new selection state
+        saveSelection();
         handleInput();
     };
 
     const handleToolbar = useCallback((item) => {
+        const editor = editorRef.current;
+        if (!editor) return;
+
+        const sel = window.getSelection();
+        if (!sel) return;
+
+        // Save current selection before any focus changes
+        const savedRange = sel.rangeCount > 0 ? sel.getRangeAt(0).cloneRange() : null;
+        setSavedSelection(savedRange);
+
         if (item.special === 'image') {
-            saveSelection();
             setShowImageDialog(true);
             return;
         }
         if (item.special === 'link') {
-            saveSelection();
-            const sel = window.getSelection();
-            setLinkText(sel.toString() || '');
+            const linkTextContent = sel.toString();
+            setLinkText(linkTextContent);
             setShowLinkDialog(true);
             return;
         }
         if (item.special === 'code') {
-            // Insert a code block
-            const sel = window.getSelection();
-            const selected = sel.toString();
+            const selectedText = sel.toString();
             const pre = document.createElement('pre');
             const code = document.createElement('code');
-            code.textContent = selected || 'code here';
+            code.textContent = selectedText || 'code here';
             pre.appendChild(code);
-            if (sel.rangeCount > 0) {
-                const range = sel.getRangeAt(0);
-                range.deleteContents();
-                range.insertNode(pre);
-                // Move cursor after the code block
-                range.setStartAfter(pre);
-                range.collapse(true);
+
+            if (savedRange) {
+                savedRange.deleteContents();
+                savedRange.insertNode(pre);
+                savedRange.setStartAfter(pre);
+                savedRange.collapse(true);
                 sel.removeAllRanges();
-                sel.addRange(range);
+                sel.addRange(savedRange);
+            } else {
+                editor.appendChild(pre);
             }
+            saveSelection();
             handleInput();
             return;
         }
-        if (item.command === 'formatBlock') {
-            execCommand(item.command, `<${item.value}>`);
-        } else {
-            execCommand(item.command, item.value || null);
+
+        // For all other commands, execute directly
+        if (item.command) {
+            if (item.command === 'formatBlock') {
+                execCommand(item.command, item.value);
+            } else {
+                execCommand(item.command, null);
+            }
         }
     }, [handleInput]);
+
+    const handleFileUpload = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            alert('❌ Please select a valid image file (JPG, PNG, GIF, WebP)');
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        const fileSizeMB = file.size / (1024 * 1024);
+        if (fileSizeMB > 5) {
+            alert(`❌ File size is ${fileSizeMB.toFixed(1)}MB. Max allowed is 5MB`);
+            return;
+        }
+
+        setImageLoading(true);
+
+        // Convert to base64/data URL
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const dataUrl = event.target?.result;
+            if (typeof dataUrl === 'string') {
+                setImageUrl(dataUrl);
+                setImageLoading(false);
+            }
+        };
+        reader.onerror = () => {
+            alert('❌ Failed to read image file');
+            setImageLoading(false);
+        };
+        reader.readAsDataURL(file);
+
+        // Reset file input for re-upload
+        e.target.value = '';
+    };
 
     const handleInsertImage = () => {
         if (!imageUrl.trim()) { setShowImageDialog(false); return; }
@@ -166,17 +273,10 @@ export const ContentEditor = ({ initialContent, onChange }) => {
         img.alt = imageAlt.trim() || 'image';
         img.className = 'blog-img';
         img.onerror = function () {
-            this.style.display = 'none';
-            this.nextElementSibling.style.display = 'flex';
+            this.remove();
         };
 
-        const fallback = document.createElement('div');
-        fallback.className = 'blog-img-fallback';
-        fallback.style.display = 'none';
-        fallback.innerHTML = `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline><line x1="2" y1="2" x2="22" y2="22"></line></svg><span>Image not available</span>`;
-
         figure.appendChild(img);
-        figure.appendChild(fallback);
 
         if (imageAlt.trim()) {
             const caption = document.createElement('figcaption');
@@ -257,6 +357,29 @@ export const ContentEditor = ({ initialContent, onChange }) => {
     };
 
     const handleKeyDown = (e) => {
+        // Handle keyboard shortcuts for formatting
+        if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
+            const editor = editorRef.current;
+            if (!editor) return;
+            saveSelection();
+
+            switch (e.key.toLowerCase()) {
+                case 'b':
+                    e.preventDefault();
+                    execCommand('bold');
+                    return;
+                case 'i':
+                    e.preventDefault();
+                    execCommand('italic');
+                    return;
+                case 'u':
+                    e.preventDefault();
+                    execCommand('underline');
+                    return;
+                default:
+                    break;
+            }
+        }
         // Tab key inserts spaces in code blocks
         if (e.key === 'Tab') {
             e.preventDefault();
@@ -275,6 +398,11 @@ export const ContentEditor = ({ initialContent, onChange }) => {
                         <button
                             key={item.key}
                             type="button"
+                            onMouseDown={(e) => {
+                                // Keep text selection in contentEditable while clicking toolbar buttons.
+                                e.preventDefault();
+                                saveSelection();
+                            }}
                             onClick={() => handleToolbar(item)}
                             className="p-1.5 rounded-md text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors"
                             title={item.label}
@@ -333,10 +461,7 @@ Just select text and click a formatting button!"
                         // Apply image fallback handlers to preview
                         el.querySelectorAll('img').forEach(img => {
                             img.onerror = function () {
-                                const fallback = document.createElement('div');
-                                fallback.className = 'blog-img-fallback';
-                                fallback.innerHTML = `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline><line x1="2" y1="2" x2="22" y2="22"></line></svg><span>Image not available</span>`;
-                                this.replaceWith(fallback);
+                                this.remove();
                             };
                         });
                     }}
@@ -347,35 +472,125 @@ Just select text and click a formatting button!"
             {/* Image Dialog */}
             {showImageDialog && (
                 <div className="fixed inset-0 bg-bg-overlay z-50 flex items-center justify-center p-4" onClick={() => setShowImageDialog(false)}>
-                    <div className="bg-bg-card border border-border-primary rounded-xl p-6 w-full max-w-md shadow-lg animate-scale-in" onClick={e => e.stopPropagation()}>
+                    <div className="bg-bg-card border border-border-primary rounded-xl p-6 w-full max-w-md shadow-lg animate-scale-in" onClick={(e) => e.stopPropagation()}>
                         <h3 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
                             <ImageIcon size={20} /> Insert Image
                         </h3>
-                        <div className="space-y-3">
-                            <div>
-                                <label className="block text-sm font-medium text-text-secondary mb-1">Image URL *</label>
-                                <input type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)}
-                                    placeholder="https://example.com/photo.jpg" className="input-clean w-full" autoFocus />
+                        <div className="space-y-4">
+                            {/* Method 1: Upload from Device */}
+                            <div className="border-2 border-dashed border-border-primary rounded-lg p-4 text-center bg-bg-secondary hover:border-text-secondary transition-colors">
+                                <button
+                                    type="button"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={imageLoading}
+                                    className="w-full flex flex-col items-center gap-2 text-text-secondary hover:text-text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <ImageIcon size={28} />
+                                    <span className="text-sm font-medium">
+                                        {imageLoading ? 'Uploading...' : 'Click to upload from device'}
+                                    </span>
+                                    <span className="text-xs text-text-tertiary">Max 5MB • JPG, PNG, GIF, WebP</span>
+                                </button>
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleFileUpload}
+                                    className="hidden"
+                                    disabled={imageLoading}
+                                />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-text-secondary mb-1">Caption / Alt Text</label>
-                                <input type="text" value={imageAlt} onChange={e => setImageAlt(e.target.value)}
-                                    placeholder="Describe the image" className="input-clean w-full" />
+
+                            {/* Divider */}
+                            <div className="flex items-center gap-3">
+                                <div className="flex-1 h-px bg-border-primary"></div>
+                                <span className="text-xs text-text-tertiary font-medium">OR</span>
+                                <div className="flex-1 h-px bg-border-primary"></div>
                             </div>
+
+                            {/* Method 2: Paste URL */}
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-text-secondary">Image URL</label>
+                                <input 
+                                    type="url" 
+                                    value={imageUrl} 
+                                    onChange={(e) => setImageUrl(e.target.value)}
+                                    placeholder="https://example.com/photo.jpg" 
+                                    className="input-clean w-full" 
+                                    disabled={imageLoading}
+                                />
+                            </div>
+
+                            {/* Alt Text / Caption */}
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-text-secondary">Caption / Alt Text</label>
+                                <input 
+                                    type="text" 
+                                    value={imageAlt} 
+                                    onChange={(e) => setImageAlt(e.target.value)}
+                                    placeholder="Describe the image" 
+                                    className="input-clean w-full" 
+                                    disabled={imageLoading}
+                                />
+                            </div>
+
+                            {/* Image Preview */}
                             {imageUrl && (
-                                <div className="border border-border-secondary rounded-lg p-3 bg-bg-secondary">
-                                    <p className="text-xs text-text-tertiary mb-2">Preview:</p>
-                                    <img src={imageUrl} alt={imageAlt || 'preview'} className="max-h-32 rounded-md object-cover mx-auto"
-                                        onError={e => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'flex'; }} />
-                                    <div className="blog-img-fallback" style={{ display: 'none', padding: '1rem' }}>
-                                        <ImageOff size={24} /><span className="text-sm">Could not load preview</span>
+                                <div className="border border-border-secondary rounded-lg p-3 bg-bg-secondary relative">
+                                    <p className="text-xs text-text-tertiary mb-2 font-medium">Preview:</p>
+                                    <img 
+                                        src={imageUrl} 
+                                        alt={imageAlt || 'preview'} 
+                                        className="max-h-40 rounded-md object-cover mx-auto"
+                                        onError={(e) => {
+                                            e.currentTarget.style.display = 'none';
+                                            const sibling = e.currentTarget.nextElementSibling;
+                                            if (sibling) {
+                                                sibling.style.display = 'flex';
+                                            }
+                                        }} 
+                                    />
+                                    <div className="blog-img-fallback hidden flex-col items-center justify-center gap-2 py-4 text-text-tertiary">
+                                        <ImageOff size={24} />
+                                        <span className="text-sm">Could not load preview</span>
                                     </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setImageUrl('');
+                                            setImageAlt('');
+                                            if (fileInputRef.current) fileInputRef.current.value = '';
+                                        }}
+                                        className="absolute top-2 right-2 px-2 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded font-medium transition-colors"
+                                        title="Remove image"
+                                    >
+                                        ✕ Remove
+                                    </button>
                                 </div>
                             )}
                         </div>
-                        <div className="flex gap-2 mt-5">
-                            <button type="button" onClick={() => setShowImageDialog(false)} className="btn-secondary flex-1 text-sm py-2">Cancel</button>
-                            <button type="button" onClick={handleInsertImage} disabled={!imageUrl.trim()} className="btn-primary flex-1 text-sm py-2 disabled:opacity-40">Insert</button>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-2 mt-6">
+                            <button 
+                                type="button" 
+                                onClick={() => {
+                                    setShowImageDialog(false);
+                                    setImageUrl('');
+                                    setImageAlt('');
+                                }} 
+                                className="btn-secondary flex-1 text-sm py-2"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                type="button" 
+                                onClick={handleInsertImage} 
+                                disabled={!imageUrl.trim() || imageLoading} 
+                                className="btn-primary flex-1 text-sm py-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                Insert Image
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -384,19 +599,19 @@ Just select text and click a formatting button!"
             {/* Link Dialog */}
             {showLinkDialog && (
                 <div className="fixed inset-0 bg-bg-overlay z-50 flex items-center justify-center p-4" onClick={() => setShowLinkDialog(false)}>
-                    <div className="bg-bg-card border border-border-primary rounded-xl p-6 w-full max-w-md shadow-lg animate-scale-in" onClick={e => e.stopPropagation()}>
+                    <div className="bg-bg-card border border-border-primary rounded-xl p-6 w-full max-w-md shadow-lg animate-scale-in" onClick={(e) => e.stopPropagation()}>
                         <h3 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
                             <LinkIcon size={20} /> Insert Link
                         </h3>
                         <div className="space-y-3">
                             <div>
                                 <label className="block text-sm font-medium text-text-secondary mb-1">URL *</label>
-                                <input type="url" value={linkUrl} onChange={e => setLinkUrl(e.target.value)}
+                                <input type="url" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)}
                                     placeholder="https://example.com" className="input-clean w-full" autoFocus />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-text-secondary mb-1">Link Text</label>
-                                <input type="text" value={linkText} onChange={e => setLinkText(e.target.value)}
+                                <input type="text" value={linkText} onChange={(e) => setLinkText(e.target.value)}
                                     placeholder="Click here" className="input-clean w-full" />
                             </div>
                         </div>
