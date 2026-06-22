@@ -1,17 +1,20 @@
 import React, { useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { authApi } from '../../api/authApi'
+import { authApi, adminAuthApi } from '../../api/authApi'
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 
-export default function LoginModal({ isOpen, onClose, onOpenSignup, onOpenForgotPassword, onOpenAdminLogin }) {
+export default function LoginModal({ isOpen, onClose, onOpenSignup, onOpenForgotPassword }) {
   const { refreshUser } = useAuth()
   const navigate = useNavigate()
   const [loginData, setLoginData] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+
+  const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_USERNAME || 'ithinklearn@gmail.com'
+  const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'SecureAdmin@2026'
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -22,33 +25,26 @@ export default function LoginModal({ isOpen, onClose, onOpenSignup, onOpenForgot
       return
     }
 
+    const isAdminLogin = loginData.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() &&
+                         loginData.password === ADMIN_PASSWORD
+
     setIsLoading(true)
     try {
-      const response = await authApi.loginWithPassword({
-        email: loginData.email,
-        password: loginData.password
-      })
-      
-      if (response.data && response.data.token) {
-        localStorage.setItem('icfy_token', response.data.token)
-        localStorage.setItem('icfy_user', JSON.stringify(response.data.user))
-        localStorage.setItem('icfy_role', response.data.user.role || 'student')
-        
-        console.log('✅ Login successful:', {
-          token: response.data.token.substring(0, 20) + '...',
-          user: response.data.user,
-          role: response.data.user.role || 'student'
-        })
-        
+      const response = isAdminLogin
+        ? await adminAuthApi.login({ email: loginData.email, password: loginData.password })
+        : await authApi.loginWithPassword({ email: loginData.email, password: loginData.password })
+
+      const data = response.data
+      if (data && data.token) {
+        localStorage.setItem('icfy_token', data.token)
+        localStorage.setItem('icfy_user', JSON.stringify(data.user || data))
+        localStorage.setItem('icfy_role', isAdminLogin ? 'admin' : 'student')
+
         toast.success('Login successful!')
         setLoginData({ email: '', password: '' })
         onClose()
         refreshUser()
-        
-        const isAdmin = response.data.user.role === 'admin'
-        const redirectPath = isAdmin ? '/admin-dashboard' : '/student-dashboard'
-        console.log('🔄 Redirecting to:', redirectPath)
-        navigate(redirectPath)
+        navigate(isAdminLogin ? '/admin-dashboard' : '/student-dashboard')
       } else {
         setError('Invalid response from server')
       }
@@ -142,17 +138,11 @@ export default function LoginModal({ isOpen, onClose, onOpenSignup, onOpenForgot
               ) : 'Login'}
             </button>
 
-            <div className="text-center pt-3 border-t border-gray-100 space-y-2">
+            <div className="text-center pt-3 border-t border-gray-100">
               <p className="text-sm text-gray-500">
                 Don't have an account?{' '}
                 <button type="button" onClick={() => { onClose(); onOpenSignup() }} className="font-bold text-blue-900 hover:text-blue-700 hover:underline transition">
                   Sign Up
-                </button>
-              </p>
-              <p className="text-xs text-gray-400">
-                Administrator?{' '}
-                <button type="button" onClick={() => { onClose(); onOpenAdminLogin() }} className="font-bold text-red-600 hover:text-red-700 hover:underline transition">
-                  Admin Login
                 </button>
               </p>
             </div>

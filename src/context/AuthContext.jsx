@@ -203,17 +203,13 @@ export function AuthProvider({ children }) {
   }
 
   const logout = () => {
-    const role = localStorage.getItem('icfy_role')
-    if (role === 'admin') {
-      adminAuthApi.logout().catch(() => {})
-    } else {
-      authApi.logout().catch(() => {})
-    }
     setUser(null)
     localStorage.removeItem('auth_user')
     localStorage.removeItem('icfy_token')
     localStorage.removeItem('icfy_user')
     localStorage.removeItem('icfy_role')
+    adminAuthApi.logout().catch(() => {})
+    authApi.logout().catch(() => {})
   }
 
   return (

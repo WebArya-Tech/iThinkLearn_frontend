@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
-import { authApi } from '../../api/authApi'
+import { adminAuthApi } from '../../api/authApi'
 import toast from 'react-hot-toast'
 
 const OTP_DURATION = 300
@@ -49,7 +49,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin }) {
     
     setIsLoading(true)
     try {
-      await authApi.forgotPassword({ email })
+      await adminAuthApi.forgotPassword({ email })
       toast.success('OTP sent to your email!')
       setOtpInput('')
       setOtpError('')
@@ -66,7 +66,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin }) {
   const handleResendOtp = async () => {
     setIsLoading(true)
     try {
-      await authApi.forgotPassword({ email })
+      await adminAuthApi.forgotPassword({ email })
       toast.success('OTP resent to your email!')
       setOtpInput('')
       setOtpError('')
@@ -103,7 +103,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin }) {
     setIsLoading(true)
     try {
       // Backend will verify OTP and reset password in one call
-      await authApi.resetPassword({ 
+      await adminAuthApi.resetPassword({ 
         email, 
         otp: otpInput,
         newPassword

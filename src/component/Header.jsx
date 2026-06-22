@@ -4,8 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import LoginModal from './auth/LoginModal'
 import SignupModal from './auth/SignupModal'
 import ForgotPasswordModal from './auth/ForgotPasswordModal'
-import AdminLoginModal from './auth/AdminLoginModal'
-import AdminForgotPasswordModal from './auth/AdminForgotPasswordModal'
+
 import { useAuth } from '../context/AuthContext'
 import { useDemoModal } from '../context/DemoModalContext'
 
@@ -23,8 +22,6 @@ export default function Header() {
   const [loginOpen, setLoginOpen] = useState(false)
   const [signupOpen, setSignupOpen] = useState(false)
   const [forgotOpen, setForgotOpen] = useState(false)
-  const [adminLoginOpen, setAdminLoginOpen] = useState(false)
-  const [adminForgotOpen, setAdminForgotOpen] = useState(false)
   const [isSticky, setIsSticky] = useState(false)
   const [userDropdownOpen, setUserDropdownOpen] = useState(false)
   const { user, isAdmin, logout } = useAuth()
@@ -483,7 +480,6 @@ export default function Header() {
         onClose={() => setLoginOpen(false)}
         onOpenSignup={() => setSignupOpen(true)}
         onOpenForgotPassword={() => setForgotOpen(true)}
-        onOpenAdminLogin={() => setAdminLoginOpen(true)}
       />
       <SignupModal
         isOpen={signupOpen}
@@ -494,16 +490,6 @@ export default function Header() {
         isOpen={forgotOpen}
         onClose={() => setForgotOpen(false)}
         onOpenLogin={() => setLoginOpen(true)}
-      />
-      <AdminLoginModal
-        isOpen={adminLoginOpen}
-        onClose={() => setAdminLoginOpen(false)}
-        onOpenForgotPassword={() => setAdminForgotOpen(true)}
-      />
-      <AdminForgotPasswordModal
-        isOpen={adminForgotOpen}
-        onClose={() => setAdminForgotOpen(false)}
-        onOpenLogin={() => setAdminLoginOpen(true)}
       />
     </>
   )
