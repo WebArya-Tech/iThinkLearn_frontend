@@ -1,10 +1,13 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { blogApi } from '../../api/blogApi';
 import { Card, Input, TextArea, Button } from '../ui';
 import { ContentEditor } from '../editor/ContentEditor';
-import { PenTool, Mail, CheckCircle, ArrowRight, Save, Trash2, RotateCcw, Upload, X, Image as ImageIcon } from 'lucide-react';
+import { PenTool, Mail, CheckCircle, ArrowRight, ArrowLeft, Save, Upload, X, Image as ImageIcon, Loader, RotateCcw } from 'lucide-react';
+import { requestUserOTP, verifyUserOTP } from '../../api/authApi';
+import { compressImage } from '../../utils/imageCompress';
 import toast from 'react-hot-toast';
-import React from 'react';
+
 const DRAFT_KEY = 'blogpost_draft';
 
 const emptyForm = {
@@ -12,62 +15,45 @@ const emptyForm = {
     title: '', excerpt: '', content: '', tags: '', featuredImageUrl: '',
 };
 
+const TOTAL_STEPS = 4;
+
+const stepLabels = {
+    1: 'Write',
+    2: 'Verify',
+    3: 'Upload',
+    4: 'Submit',
+};
+
+const getApiErrorMessage = (error, fallback) => {
+    if (typeof error === 'object' && error !== null) {
+        if ('response' in error) {
+            const response = error.response;
+            if (response?.data?.message) return response.data.message;
+        }
+        if ('message' in error && typeof error.message === 'string') {
+            return error.message;
+        }
+    }
+    if (error instanceof Error && error.message) {
+        return error.message;
+    }
+    return fallback;
+};
+
 export const SubmitBlogPage = () => {
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState(emptyForm);
     const [otp, setOtp] = useState('');
-    const [hasDraft, setHasDraft] = useState(false);
     const [draftSavedAt, setDraftSavedAt] = useState(null);
+    const [hasDraft, setHasDraft] = useState(false);
     const [imagePreview, setImagePreview] = useState(null);
     const [imageLoading, setImageLoading] = useState(false);
     const [isDragOver, setIsDragOver] = useState(false);
-    const [errors, setErrors] = useState({});
+    const [otpTimer, setOtpTimer] = useState(0);
     const autoSaveTimer = useRef(null);
     const fileInputRef = useRef(null);
 
-    // Form Validation Function
-    const validateForm = () => {
-        const newErrors = {};
-
-        // Name validation
-        if (!formData.authorName || formData.authorName.trim().length < 2) {
-            newErrors.authorName = 'Name must be at least 2 characters';
-        }
-
-        // Email validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!formData.authorEmail || !emailRegex.test(formData.authorEmail)) {
-            newErrors.authorEmail = 'Please enter a valid email address';
-        }
-
-        // Mobile validation - only 10 digits
-        const mobileRegex = /^[0-9]{10}$/;
-        if (!formData.authorMobile || !mobileRegex.test(formData.authorMobile)) {
-            newErrors.authorMobile = 'Mobile number must be exactly 10 digits';
-        }
-
-        // Title validation
-        if (!formData.title || formData.title.trim().length < 5) {
-            newErrors.title = 'Blog title must be at least 5 characters';
-        }
-
-        // Excerpt validation
-        if (!formData.excerpt || formData.excerpt.trim().length < 10) {
-            newErrors.excerpt = 'Excerpt must be at least 10 characters';
-        }
-
-        // Content validation
-        if (!formData.content || formData.content.trim().length < 50) {
-            newErrors.content = 'Blog content must be at least 50 characters';
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    
-    // Check for saved draft on mount
     useEffect(() => {
         try {
             const saved = localStorage.getItem(DRAFT_KEY);
@@ -81,7 +67,16 @@ export const SubmitBlogPage = () => {
         } catch { /* ignore corrupt data */ }
     }, []);
 
-    // Auto-save every 30 seconds when on step 1
+    useEffect(() => {
+        let interval;
+        if (otpTimer > 0) {
+            interval = setInterval(() => {
+                setOtpTimer((prev) => prev - 1);
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [otpTimer]);
+
     useEffect(() => {
         if (step !== 1) return;
         autoSaveTimer.current = setInterval(() => {
@@ -90,17 +85,18 @@ export const SubmitBlogPage = () => {
                 saveDraft(true);
             }
         }, 30000);
-        return () => clearInterval(autoSaveTimer.current);
+        return () => {
+            if (autoSaveTimer.current) {
+                clearInterval(autoSaveTimer.current);
+            }
+        };
     }, [step, formData]);
 
-    // Sync image preview with form data
-    useEffect(() => {
-        if (formData.featuredImageUrl) {
-            setImagePreview(formData.featuredImageUrl);
-        } else {
-            setImagePreview(null);
-        }
-    }, [formData.featuredImageUrl]);
+    const formatResendTimer = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
 
     const saveDraft = useCallback((silent = false) => {
         try {
@@ -138,105 +134,157 @@ export const SubmitBlogPage = () => {
         setDraftSavedAt(null);
     };
 
+    const sendOtp = async (isResend = false) => {
+        try {
+            const result = await requestUserOTP(formData.authorEmail, isResend);
+            if (result.success === false) {
+                toast.error(result.message || 'Failed to send OTP');
+                return;
+            }
+            toast.success('OTP sent to your email!');
+            setOtpTimer(300);
+        } catch (err) {
+            toast.error(getApiErrorMessage(err, 'Failed to send OTP'));
+        }
+    };
+
     const handleStep1 = async (e) => {
         e.preventDefault();
-        
-        // Validate form before submission
-        if (!validateForm()) {
-            toast.error('Please fix the errors in the form');
+
+        if (!formData.authorName.trim()) {
+            toast.error('Please enter your name.');
+            return;
+        }
+        if (!formData.authorMobile || formData.authorMobile.length !== 10) {
+            toast.error('Mobile number must be exactly 10 digits.');
+            return;
+        }
+        if (!/^\d{10}$/.test(formData.authorMobile)) {
+            toast.error('Please enter a valid 10-digit mobile number (digits only).');
+            return;
+        }
+        if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.authorEmail)) {
+            toast.error('Please enter a valid email address.');
+            return;
+        }
+        if (!formData.title.trim()) {
+            toast.error('Please enter a blog title.');
+            return;
+        }
+        if (!formData.excerpt.trim()) {
+            toast.error('Please enter an excerpt.');
+            return;
+        }
+        if (!formData.content.trim()) {
+            toast.error('Please write some content.');
             return;
         }
 
+        setStep(2);
+        await sendOtp(false);
+    };
+
+    const handleOtpSubmit = async (e) => {
+        e.preventDefault();
+        if (!otp || otp.length !== 6) {
+            toast.error('Please enter a valid 6-digit OTP.');
+            return;
+        }
         setLoading(true);
         try {
-            await blogApi.startSubmission({
-                authorName: formData.authorName, authorEmail: formData.authorEmail, authorMobile: formData.authorMobile,
-                title: formData.title, excerpt: formData.excerpt, contentHtml: formData.content,
-                tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean),
-                featuredImageUrl: formData.featuredImageUrl || null,
+            await verifyUserOTP({
+                email: formData.authorEmail,
+                otp,
+                name: formData.authorName,
+                mobile: formData.authorMobile,
             });
-            toast.success('OTP sent to your email!'); setStep(2);
-        } catch (err) { toast.error(err.response?.data?.message || 'Submission failed'); }
-        finally { setLoading(false); }
-    };
-
-    const handleStep2 = async (e) => {
-        e.preventDefault(); setLoading(true);
-        try {
-            await blogApi.verifySubmission({ email: formData.authorEmail, otp });
-            toast.success('Email verified!'); setStep(3);
+            toast.success('Email verified! You can now upload images.');
+            setStep(3);
+        } catch (err) {
+            const msg = getApiErrorMessage(err, 'Verification failed');
+            toast.error(msg);
+        } finally {
+            setLoading(false);
         }
-        catch (err) { toast.error(err.response?.data?.message || 'Invalid OTP'); }
-        finally { setLoading(false); }
     };
 
-    const handleStep3 = async () => {
+    const handleResendOtp = async () => {
+        if (otpTimer > 0) return;
+        await sendOtp(true);
+    };
+
+    const handleImageStepNext = (e) => {
+        e.preventDefault();
+        setStep(4);
+    };
+
+    const handleFinalSubmit = async () => {
         setLoading(true);
         try {
-            await blogApi.finishSubmission({ email: formData.authorEmail });
-            clearDraft(); // Clear draft on successful submission
-            toast.success('Blog submitted!'); setStep(4);
+            await blogApi.finishSubmission({
+                ...formData,
+                email: formData.authorEmail,
+                contentHtml: formData.content,
+                tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean),
+                featuredImageUrl: formData.featuredImageUrl || '',
+            });
+            clearDraft();
+            toast.success('Blog submitted!');
+            setStep(5);
+        } catch (err) {
+            toast.error(getApiErrorMessage(err, 'Failed to finalize'));
+        } finally {
+            setLoading(false);
         }
-        catch (err) { toast.error(err.response?.data?.message || 'Failed to finalize'); }
-        finally { setLoading(false); }
     };
 
-    const update = (f) => (e) => setFormData({ ...formData, [f]: e.target.value });
-
-    const handleMobileInput = (e) => {
-        // Only allow digits, max 10
-        let value = e.target.value.replace(/[^0-9]/g, '').slice(0, 10);
-        setFormData({ ...formData, authorMobile: value });
-        setErrors({...errors, authorMobile: ''});
+    const update = (field) => (e) => {
+        let value = e.target.value;
+        if (field === 'authorMobile') {
+            value = value.replace(/\D/g, '').slice(0, 10);
+        }
+        setFormData({ ...formData, [field]: value });
     };
 
     const handleImageUpload = (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
         processImageFile(file);
-
-        // Reset file input for re-upload
         e.target.value = '';
     };
 
-    const processImageFile = (file) => {
-        // Validate file type
+    const processImageFile = async (file) => {
         if (!file.type.startsWith('image/')) {
-            toast.error('❌ Please select a valid image file (JPG, PNG, GIF, WebP)');
+            toast.error('Please select a valid image file (JPG, PNG, GIF, WebP)');
             return;
         }
 
-        // Validate file size (max 5MB)
         const fileSizeMB = file.size / (1024 * 1024);
         if (fileSizeMB > 5) {
-            toast.error(`❌ File size is ${fileSizeMB.toFixed(1)}MB. Max allowed is 5MB`);
+            toast.error(`File size is ${fileSizeMB.toFixed(2)}MB. Maximum allowed is 5MB`);
             return;
         }
 
         setImageLoading(true);
 
-        // Convert to base64/data URL
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const dataUrl = event.target?.result;
-            if (typeof dataUrl === 'string') {
-                setFormData(prev => ({ ...prev, featuredImageUrl: dataUrl }));
-                setImagePreview(dataUrl);
-                toast.success(`✅ Image uploaded! (${fileSizeMB.toFixed(1)}MB)`);
-            }
+        try {
+            const { dataUrl, width, height } = await compressImage(file, { maxWidth: 1920, minWidth: 640, minHeight: 400 });
+
+            setFormData(prev => ({ ...prev, featuredImageUrl: dataUrl }));
+            setImagePreview(dataUrl);
+
+            const compressedSize = Math.round((dataUrl.length * 3 / 4) / (1024 * 1024) * 100) / 100;
+            toast.success(`Image ready! (${compressedSize}MB | ${width}x${height}px)`);
+        } catch (err) {
+            toast.error(err.message || 'Failed to process image');
+        } finally {
             setImageLoading(false);
-        };
-        reader.onerror = () => {
-            toast.error('❌ Failed to read image file');
-            setImageLoading(false);
-        };
-        reader.readAsDataURL(file);
+        }
     };
 
     const handleUrlChange = (url) => {
         setFormData(prev => ({ ...prev, featuredImageUrl: url }));
         if (url && url.trim()) {
-            // Validate URL format
             try {
                 new URL(url);
                 setImagePreview(url);
@@ -273,32 +321,47 @@ export const SubmitBlogPage = () => {
         e.preventDefault();
         e.stopPropagation();
         setIsDragOver(false);
-
         const files = e.dataTransfer?.files;
         if (files && files.length > 0) {
-            const file = files[0];
-            processImageFile(file);
+            processImageFile(files[0]);
         }
     };
 
-    const formatTime = (date) => {
+    const formatDraftTime = (date) => {
         if (!date) return '';
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
     return (
-        <div className="max-w-4xl mx-auto px-6 py-10">
-            <h1 className="text-3xl font-bold text-text-primary mb-2">Submit Your Blog</h1>
-            <p className="text-text-secondary mb-8">Share your knowledge. 3 simple steps.</p>
+        <div className="max-w-5xl mx-auto px-6 pt-14 pb-10 md:pt-16">
+            <Link to="/blogs" className="inline-flex items-center gap-2 text-base font-medium text-[#4f6079] hover:text-text-primary transition-colors mb-6">
+                <ArrowLeft className="w-4 h-4" /> Back to Blog
+            </Link>
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-[-0.03em] text-text-primary mb-2">
+                Submit Your Blog
+            </h1>
+            <p className="text-lg text-text-secondary mb-6">Share your knowledge with our community</p>
 
-            {/* Draft restore banner */}
+            <div className="flex items-center justify-center gap-0.5 sm:gap-5 mb-12 overflow-hidden px-0">
+                {[1, 2, 3, 4].map((s) => (
+                    <div key={s} className="flex items-center gap-px sm:gap-3 shrink-0">
+                        <div className={`w-5 h-5 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-[9px] sm:text-[17px] font-bold transition-all ${step > s ? 'bg-[#19788f] text-white' : step === s ? 'bg-[#19788f] text-white' : 'bg-[#d9dde3] text-[#667085]'
+                            }`}>{step > s ? '\u2713' : s}</div>
+                        <span className={`text-[8px] sm:text-base font-semibold ${step >= s ? 'text-[#19788f]' : 'text-[#667085]'}`}>
+                            {stepLabels[s]}
+                        </span>
+                        {s < TOTAL_STEPS && <div className={`w-1.5 sm:w-16 h-[2px] ${step > s ? 'bg-[#19788f]' : 'bg-[#c9ced6]'}`} />}
+                    </div>
+                ))}
+            </div>
+
             {hasDraft && step === 1 && (
                 <div className="mb-6 p-4 bg-bg-secondary border border-border-primary rounded-xl flex flex-wrap items-center justify-between gap-3 animate-fade-in">
                     <div className="flex items-center gap-2">
                         <RotateCcw className="w-5 h-5 text-text-secondary" />
                         <div>
                             <p className="text-sm font-medium text-text-primary">You have a saved draft</p>
-                            {draftSavedAt && <p className="text-xs text-text-tertiary">Last saved at {formatTime(draftSavedAt)}</p>}
+                            {draftSavedAt && <p className="text-xs text-text-tertiary">Last saved at {formatDraftTime(draftSavedAt)}</p>}
                         </div>
                     </div>
                     <div className="flex gap-2">
@@ -308,19 +371,8 @@ export const SubmitBlogPage = () => {
                 </div>
             )}
 
-            {/* Steps */}
-            <div className="flex items-center justify-center gap-3 mb-10">
-                {[1, 2, 3].map((s) => (
-                    <div key={s} className="flex items-center gap-2">
-                        <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${step >= s ? 'bg-text-primary text-bg-primary' : 'bg-bg-tertiary text-text-tertiary'
-                            }`}>{step > s ? '✓' : s}</div>
-                        {s < 3 && <div className={`w-12 h-0.5 ${step > s ? 'bg-text-primary' : 'bg-border-primary'}`} />}
-                    </div>
-                ))}
-            </div>
-
             {step === 1 && (
-                <Card>
+                <Card className="rounded-2xl border border-[#d7dce3] shadow-sm">
                     <div className="flex items-center justify-between mb-5">
                         <div className="flex items-center gap-2">
                             <PenTool className="w-5 h-5 text-text-secondary" />
@@ -329,56 +381,99 @@ export const SubmitBlogPage = () => {
                         <div className="flex items-center gap-2">
                             {draftSavedAt && (
                                 <span className="text-xs text-text-tertiary hidden sm:inline">
-                                    Saved {formatTime(draftSavedAt)}
+                                    Saved {formatDraftTime(draftSavedAt)}
                                 </span>
                             )}
                             <button type="button" onClick={() => saveDraft(false)}
-                                className="flex items-center gap-1.5 text-xs font-medium text-text-secondary hover:text-text-primary bg-bg-tertiary hover:bg-bg-hover px-3 py-1.5 rounded-lg transition-colors"
-                                title="Save as draft (auto-saves every 30s)">
+                                className="flex items-center gap-1.5 text-xs font-medium text-text-secondary hover:text-text-primary bg-bg-tertiary hover:bg-bg-hover px-3 py-1.5 rounded-lg transition-colors">
                                 <Save size={14} /> Save Draft
                             </button>
                         </div>
                     </div>
                     <form onSubmit={handleStep1} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <Input label="Your Name *" placeholder="John Doe" value={formData.authorName} onChange={(e) => { update('authorName')(e); setErrors({...errors, authorName: ''}) }} required />
-                                {errors.authorName && <p className="text-red-500 text-xs mt-1">❌ {errors.authorName}</p>}
-                            </div>
-                            <div>
-                                <Input label="Email *" type="email" placeholder="john@example.com" value={formData.authorEmail} onChange={(e) => { update('authorEmail')(e); setErrors({...errors, authorEmail: ''}) }} required />
-                                {errors.authorEmail && <p className="text-red-500 text-xs mt-1">❌ {errors.authorEmail}</p>}
-                            </div>
+                            <Input label="Your Name *" placeholder="John Doe" value={formData.authorName} onChange={update('authorName')} required />
+                            <Input label="Email *" type="email" placeholder="john@example.com" value={formData.authorEmail} onChange={update('authorEmail')} required />
                         </div>
-                        <div>
-                            <Input label="Mobile * (10 digits)" placeholder="9876543210" value={formData.authorMobile} onChange={handleMobileInput} maxLength="10" inputMode="numeric" required />
-                            {errors.authorMobile && <p className="text-red-500 text-xs mt-1">❌ {errors.authorMobile}</p>}
-                            <p className="text-text-tertiary text-xs mt-1">Enter 10 digit mobile number</p>
-                        </div>
-                        <div>
-                            <Input label="Blog Title *" placeholder="An amazing title..." value={formData.title} onChange={(e) => { update('title')(e); setErrors({...errors, title: ''}) }} required />
-                            {errors.title && <p className="text-red-500 text-xs mt-1">❌ {errors.title}</p>}
-                        </div>
-                        <div>
-                            <TextArea label="Excerpt *" placeholder="Brief summary (2-3 sentences)" rows={2} value={formData.excerpt} onChange={(e) => { update('excerpt')(e); setErrors({...errors, excerpt: ''}) }} required />
-                            {errors.excerpt && <p className="text-red-500 text-xs mt-1">❌ {errors.excerpt}</p>}
-                        </div>
+                        <Input label="Mobile *" placeholder="9876543210" value={formData.authorMobile} onChange={update('authorMobile')} maxLength={10} required />
+                        <div className="text-xs text-text-tertiary mt-1">Enter 10-digit phone number</div>
+                        <Input label="Blog Title *" placeholder="An amazing title..." value={formData.title} onChange={update('title')} required />
+                        <TextArea label="Excerpt *" placeholder="Brief summary (2-3 sentences)" rows={2} value={formData.excerpt} onChange={update('excerpt')} required />
 
                         <div className="space-y-1.5">
                             <label className="block text-sm font-medium text-text-secondary">Content *</label>
                             <ContentEditor
                                 initialContent={formData.content}
-                                onChange={(html) => { setFormData(prev => ({ ...prev, content: html })); setErrors({...errors, content: ''}) }}
+                                onChange={(html) => setFormData(prev => ({ ...prev, content: html }))}
                             />
-                            {errors.content && <p className="text-red-500 text-xs mt-1">❌ {errors.content}</p>}
                         </div>
 
                         <Input label="Tags (comma separated)" placeholder="spring-boot, java, tutorial" value={formData.tags} onChange={update('tags')} />
-                        
-                        {/* Featured Image Upload Section */}
+
+                        <div className="rounded-xl bg-bg-secondary border border-border-primary p-4">
+                            <div className="flex items-center gap-2 text-sm text-text-secondary">
+                                <ImageIcon size={18} />
+                                <span>Images can be uploaded after verification.</span>
+                            </div>
+                        </div>
+
+                        <Button type="submit" disabled={loading} className="w-full">
+                            {loading ? 'Sending OTP...' : 'Continue \u2014 Verify Email'} <ArrowRight className="w-4 h-4 inline ml-1" />
+                        </Button>
+                    </form>
+                </Card>
+            )}
+
+            {step === 2 && (
+                <Card className="text-center">
+                    <Mail className="w-12 h-12 mx-auto text-text-tertiary mb-3" />
+                    <h2 className="text-xl font-bold text-text-primary mb-1">Verify Your Email</h2>
+                    <p className="text-text-secondary mb-2 text-sm">OTP sent to <strong>{formData.authorEmail}</strong></p>
+                    <form onSubmit={handleOtpSubmit} className="max-w-xs mx-auto space-y-4">
+                        <Input
+                            placeholder="Enter 6-digit OTP"
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={otp}
+                            onChange={(e) => {
+                                const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                                setOtp(val);
+                            }}
+                            className="text-center text-xl tracking-widest"
+                            maxLength={6}
+                            required
+                        />
+                        <Button type="submit" disabled={loading} className="w-full">
+                            {loading ? 'Verifying...' : 'Verify & Continue'}
+                        </Button>
+                        <div className="text-center">
+                            <button
+                                type="button"
+                                onClick={handleResendOtp}
+                                disabled={otpTimer > 0}
+                                className={`text-sm font-semibold transition-colors ${otpTimer > 0 ? 'text-gray-400 cursor-not-allowed' : 'text-[#19788f] hover:text-[#166b7f] underline'}`}
+                            >
+                                {otpTimer > 0 ? `Resend OTP in ${formatResendTimer(otpTimer)}` : 'Resend OTP'}
+                            </button>
+                        </div>
+                        <button type="button" onClick={() => setStep(1)} className="w-full pt-2 text-sm text-text-tertiary hover:text-text-primary font-medium flex items-center justify-center gap-1 transition-colors">
+                            <ArrowLeft className="w-4 h-4" /> Back to Writing
+                        </button>
+                    </form>
+                </Card>
+            )}
+
+            {step === 3 && (
+                <Card className="rounded-2xl border border-[#d7dce3] shadow-sm">
+                    <form onSubmit={handleImageStepNext} className="space-y-4">
+                        <div className="flex items-center gap-2">
+                            <ImageIcon className="w-5 h-5 text-text-secondary" />
+                            <h2 className="text-xl font-bold text-text-primary">Featured Image (optional)</h2>
+                        </div>
+                        <p className="text-sm text-text-secondary">Upload one featured image or paste a URL.</p>
+
                         <div className="space-y-3">
-                            <label className="block text-sm font-medium text-text-secondary">Featured Image (optional)</label>
-                            
                             {/* Image Preview */}
                             {imagePreview && (
                                 <div className="relative w-full rounded-lg overflow-hidden bg-bg-tertiary border-2 border-bg-hover">
@@ -388,7 +483,7 @@ export const SubmitBlogPage = () => {
                                         className="w-full h-48 object-cover"
                                         onError={(e) => {
                                             e.target.style.display = 'none';
-                                            toast.error('❌ Invalid image URL');
+                                            toast.error('Invalid image URL');
                                         }}
                                     />
                                     <button
@@ -400,11 +495,11 @@ export const SubmitBlogPage = () => {
                                         <X size={18} />
                                     </button>
                                     <div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white px-3 py-1 rounded text-xs">
-                                        ✅ Image Ready
+                                        Image Ready
                                     </div>
                                 </div>
                             )}
-                            
+
                             {/* Upload Area - Drag & Drop */}
                             <div
                                 onDragOver={handleDragOver}
@@ -431,7 +526,6 @@ export const SubmitBlogPage = () => {
 
                             {/* Upload Options */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {/* File Upload Button */}
                                 <button
                                     type="button"
                                     onClick={() => fileInputRef.current?.click()}
@@ -450,22 +544,25 @@ export const SubmitBlogPage = () => {
                                         </>
                                     )}
                                 </button>
-                                
-                                {/* Hidden File Input */}
+
                                 <input
                                     ref={fileInputRef}
                                     type="file"
                                     accept="image/*"
                                     onChange={handleImageUpload}
                                     className="hidden"
-                                    aria-label="Upload featured image"
                                     disabled={imageLoading}
                                 />
-                                
-                                {/* Gallery Info */}
-                                <div className="px-4 py-3 bg-bg-secondary border border-border-primary rounded-lg flex items-center justify-center text-text-tertiary font-medium text-sm">
-                                    <ImageIcon size={16} className="mr-2" />
-                                    Gallery Ready
+
+                                <div className="px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg flex flex-col justify-center text-blue-700 font-medium text-xs">
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="font-bold">Requirements:</span>
+                                    </div>
+                                    <div className="text-xs mt-1.5 space-y-1">
+                                        <p>\u2713 Min: 640x400px | Max: 4000x4000px</p>
+                                        <p>\u2713 Size: Up to 5MB</p>
+                                        <p>\u2713 Formats: JPG, PNG, GIF, WebP</p>
+                                    </div>
                                 </div>
                             </div>
 
@@ -475,7 +572,7 @@ export const SubmitBlogPage = () => {
                                 <input
                                     type="url"
                                     placeholder="https://example.com/image.jpg"
-                                    value={formData.featuredImageUrl.startsWith('data:') ? '' : formData.featuredImageUrl}
+                                    value={formData.featuredImageUrl?.startsWith('data:') ? '' : formData.featuredImageUrl || ''}
                                     onChange={(e) => handleUrlChange(e.target.value)}
                                     disabled={imageLoading}
                                     className="w-full px-4 py-2.5 text-sm border border-border-primary rounded-lg bg-bg-primary text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-text-secondary focus:border-transparent transition-all disabled:opacity-50"
@@ -483,7 +580,7 @@ export const SubmitBlogPage = () => {
                             </div>
 
                             <div className="bg-bg-secondary rounded-lg p-3 space-y-1">
-                                <p className="text-xs font-medium text-text-primary">✨ Supported Formats & Tips:</p>
+                                <p className="text-xs font-medium text-text-primary">Supported Formats & Tips:</p>
                                 <ul className="text-xs text-text-tertiary space-y-1 list-disc list-inside">
                                     <li>JPG, PNG, GIF, WebP</li>
                                     <li>Max size: 5MB</li>
@@ -492,42 +589,47 @@ export const SubmitBlogPage = () => {
                                 </ul>
                             </div>
                         </div>
-                        
-                        <Button type="submit" disabled={loading} className="w-full">
-                            {loading ? 'Sending OTP...' : 'Submit & Verify Email'} <ArrowRight className="w-4 h-4 inline ml-1" />
-                        </Button>
-                    </form>
-                </Card>
-            )}
 
-            {step === 2 && (
-                <Card className="text-center">
-                    <Mail className="w-12 h-12 mx-auto text-text-tertiary mb-3" />
-                    <h2 className="text-xl font-bold text-text-primary mb-1">Verify Your Email</h2>
-                    <p className="text-text-secondary mb-6 text-sm">OTP sent to <strong>{formData.authorEmail}</strong></p>
-                    <form onSubmit={handleStep2} className="max-w-xs mx-auto space-y-4">
-                        <Input placeholder="Enter 6-digit OTP" value={otp} onChange={(e) => setOtp(e.target.value)}
-                            className="text-center text-xl tracking-widest" maxLength={6} required />
-                        <Button type="submit" disabled={loading} className="w-full">{loading ? 'Verifying...' : 'Verify OTP'}</Button>
+                        <div className="flex gap-3">
+                            <button type="button" onClick={() => setStep(2)} className="px-4 py-2 bg-bg-tertiary hover:bg-bg-hover text-text-secondary text-sm font-medium rounded-lg transition-colors border border-border-primary">
+                                <ArrowLeft className="w-4 h-4 inline mr-1" /> Back
+                            </button>
+                            <Button type="submit" className="flex-1">
+                                Continue to Submit <ArrowRight className="w-4 h-4 inline ml-1" />
+                            </Button>
+                        </div>
                     </form>
-                </Card>
-            )}
-
-            {step === 3 && (
-                <Card className="text-center">
-                    <CheckCircle className="w-12 h-12 mx-auto text-emerald-500 mb-3" />
-                    <h2 className="text-xl font-bold text-text-primary mb-1">Email Verified!</h2>
-                    <p className="text-text-secondary mb-6 text-sm">Click below to submit for admin review</p>
-                    <Button onClick={handleStep3} disabled={loading}>{loading ? 'Submitting...' : 'Finalize Submission'}</Button>
                 </Card>
             )}
 
             {step === 4 && (
                 <Card className="text-center">
+                    <CheckCircle className="w-12 h-12 mx-auto text-emerald-500 mb-3" />
+                    <h2 className="text-xl font-bold text-text-primary mb-1">Ready to Submit!</h2>
+                    <p className="text-text-secondary mb-2 text-sm">
+                        {imagePreview
+                            ? 'Featured image attached.'
+                            : 'No image \u2014 will be submitted without image.'}
+                    </p>
+                    <p className="text-text-secondary mb-6 text-sm">Click below to submit for admin review</p>
+                    <Button
+                        onClick={handleFinalSubmit}
+                        disabled={loading}
+                    >
+                        {loading ? 'Submitting...' : 'Finalize Submission'}
+                    </Button>
+                    <button type="button" onClick={() => setStep(3)} className="w-full pt-3 text-sm text-text-tertiary hover:text-text-primary font-medium flex items-center justify-center gap-1 transition-colors">
+                        <ArrowLeft className="w-4 h-4" /> Back to Images
+                    </button>
+                </Card>
+            )}
+
+            {step === 5 && (
+                <Card className="text-center">
                     <div className="text-5xl mb-3">🎉</div>
                     <h2 className="text-2xl font-bold text-text-primary mb-1">Blog Submitted!</h2>
                     <p className="text-text-secondary text-sm mb-6">Pending admin review. You'll get an email once approved.</p>
-                    <Button variant="secondary" onClick={() => { setStep(1); setFormData(emptyForm); }}>
+                    <Button variant="secondary" onClick={() => { setStep(1); setFormData(emptyForm); setImagePreview(null); setOtp(''); }}>
                         Submit Another
                     </Button>
                 </Card>

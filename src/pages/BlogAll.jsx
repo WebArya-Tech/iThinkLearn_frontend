@@ -1,5 +1,4 @@
 import React from 'react'
-import { Toaster } from 'react-hot-toast'
 import Header from '../component/Header'
 import Footer from '../component/Footer'
 import { BlogListPage } from '../component/blog/BlogListPage'
@@ -12,7 +11,6 @@ export default function BlogAll() {
         <BlogListPage />
       </main>
       <Footer />
-      <Toaster position="top-right" />
     </div>
   )
 }

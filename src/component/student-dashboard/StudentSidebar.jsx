@@ -1,31 +1,22 @@
 ﻿import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { studentMenuItems } from '../../config/dashboardModules'
 
 export default function StudentSidebar({ currentView, setCurrentView, sidebarOpen, setSidebarOpen }) {
+  const navigate = useNavigate()
   const { logout } = useAuth()
-
-  const menuItems = [
-    { id: 'home',             label: 'Dashboard'         },
-    { id: 'courses',          label: 'My Courses'         },
-    { id: 'homework',         label: 'Homework'           },
-    { id: 'assignments',      label: 'Assignments'        },
-    { id: 'practice-tests',   label: 'Practice Tests'     },
-    { id: 'running-classes',  label: 'Running Classes'    },
-    { id: 'ask-question',     label: 'Ask a Question'     },
-    { id: 'announcements',    label: 'Announcements'      },
-    { id: 'notifications',    label: 'Notifications'      },
-    { id: 'fee-payment',      label: 'Fee Payment'        },
-    { id: 'feedback',         label: 'Feedback & Reviews' },
-    { id: 'testimonials',     label: 'Success Stories'    },
-    { id: 'support',          label: 'Support & Help'     },
-  ]
+  const menuItems = studentMenuItems
 
   const handleLogout = () => {
     if (confirm('Are you sure you want to logout?')) {
+      localStorage.removeItem('icfy_token')
+      localStorage.removeItem('icfy_role')
+      localStorage.removeItem('icfy_user')
       logout()
+      navigate('/')
     }
   }
-
   const handleItemClick = (id) => {
     setCurrentView(id)
     // Close sidebar on mobile after selecting
@@ -33,7 +24,6 @@ export default function StudentSidebar({ currentView, setCurrentView, sidebarOpe
       setSidebarOpen(false)
     }
   }
-
   return (
     <>
       {/* Mobile overlay backdrop */}
@@ -43,7 +33,6 @@ export default function StudentSidebar({ currentView, setCurrentView, sidebarOpe
           onClick={() => setSidebarOpen(false)}
         />
       )}
-
       <aside
         className={`fixed left-0 top-0 h-full w-64 bg-white shadow-xl border-r border-gray-200 flex flex-col z-40 transition-transform duration-300 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -64,7 +53,6 @@ export default function StudentSidebar({ currentView, setCurrentView, sidebarOpe
             </svg>
           </button>
         </div>
-
         {/* Menu Items */}
         <nav className="flex-1 overflow-y-auto py-2">
           {menuItems.map((item) => (
@@ -81,7 +69,6 @@ export default function StudentSidebar({ currentView, setCurrentView, sidebarOpe
             </button>
           ))}
         </nav>
-
         {/* Logout */}
         <div className="px-4 py-4 border-t border-gray-200 shrink-0">
           <button

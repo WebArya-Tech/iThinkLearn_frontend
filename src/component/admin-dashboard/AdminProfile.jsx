@@ -1,7 +1,26 @@
 ﻿import React, { useState } from 'react'
 import { Lock, Mail, Phone, MapPin, Save, X, Eye, EyeOff, Upload } from 'lucide-react'
+import { authApi } from '../../api/authApi'
+import toast from 'react-hot-toast'
+
+// Format ISO timestamp to IST display string
+const formatIST = (isoString) => {
+  if (!isoString) return 'Not available'
+  try {
+    return new Date(isoString).toLocaleString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    }) + ' IST'
+  } catch { return 'Not available' }
+}
 
 export default function AdminProfile({ adminData }) {
+  const lastLogin = localStorage.getItem('admin_last_login')
   const [isEditing, setIsEditing] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [showChangePasswordForm, setShowChangePasswordForm] = useState(false)
@@ -47,66 +66,72 @@ export default function AdminProfile({ adminData }) {
 
   const handleSaveProfile = () => {
     if (!formData.name.trim() || !formData.phone.trim()) {
-      alert('Please fill all required fields')
+      toast.error('Please fill all required fields')
       return
     }
-    alert('Profile updated successfully!')
+    toast.success('Profile updated successfully!')
     setIsEditing(false)
   }
 
-  const handleUpdatePassword = () => {
+  const [passwordLoading, setPasswordLoading] = useState(false)
+
+  const handleUpdatePassword = async () => {
     if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
-      alert('Please fill all password fields')
+      toast.error('Please fill all password fields')
       return
     }
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert('New passwords do not match')
+      toast.error('New passwords do not match')
       return
     }
     if (passwordData.newPassword.length < 8) {
-      alert('Password must be at least 8 characters long')
+      toast.error('Password must be at least 8 characters long')
       return
     }
-    alert('Password updated successfully!')
-    setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
-    setShowChangePasswordForm(false)
+    if (passwordData.newPassword === passwordData.currentPassword) {
+      toast.error('New password must be different from current password')
+      return
+    }
+    setPasswordLoading(true)
+    try {
+      await authApi.changePassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
+      })
+      toast.success('Password updated successfully!')
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      setShowChangePasswordForm(false)
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to update password')
+    } finally {
+      setPasswordLoading(false)
+    }
   }
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0]
     if (!file) return
-
-    // Validate file type
     if (!file.type.startsWith('image/')) {
-      alert('Please select an image file')
+      toast.error('Please select an image file')
       return
     }
-
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert('Image size should be less than 5MB')
+      toast.error('Image size should be less than 5MB')
       return
     }
-
-    // Simulate upload progress
     setUploadProgress(0)
     const interval = setInterval(() => {
       setUploadProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval)
-          return 100
-        }
+        if (prev >= 100) { clearInterval(interval); return 100 }
         return prev + 30
       })
     }, 300)
-
-    // Convert to base64 and store
     const reader = new FileReader()
     reader.onload = (event) => {
       setProfileImage(event.target.result)
       setTimeout(() => {
         setUploadProgress(0)
-        alert('Profile picture uploaded successfully!')
+        toast.success('Profile picture updated!')
       }, 1000)
     }
     reader.readAsDataURL(file)
@@ -393,16 +418,18 @@ export default function AdminProfile({ adminData }) {
                 <div className="flex gap-3 pt-4">
                   <button
                     onClick={handleUpdatePassword}
-                    className="flex-1 px-6 py-3 rounded-lg text-white font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-all"
+                    disabled={passwordLoading}
+                    className="flex-1 px-6 py-3 rounded-lg text-white font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-all disabled:opacity-50"
                     style={{ backgroundColor: '#28a745' }}
                   >
-                    <Save size={20} /> Update Password
+                    {passwordLoading ? 'Updating...' : <><Save size={20} /> Update Password</>}
                   </button>
                   <button
                     onClick={() => {
                       setShowChangePasswordForm(false)
                       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
                     }}
+                    disabled={passwordLoading}
                     className="flex-1 px-6 py-3 rounded-lg bg-gray-300 text-gray-700 font-semibold flex items-center justify-center gap-2 hover:bg-gray-400 transition-all"
                   >
                     <X size={20} /> Cancel
@@ -441,7 +468,7 @@ export default function AdminProfile({ adminData }) {
           </div>
           <div className="md:col-span-2">
             <p className="text-sm text-gray-600 font-semibold mb-1">Last Login</p>
-            <p className="text-lg font-semibold">Today at 10:45 AM IST</p>
+            <p className="text-lg font-semibold">{formatIST(lastLogin)}</p>
           </div>
         </div>
       </div>

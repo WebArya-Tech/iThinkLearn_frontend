@@ -12,6 +12,15 @@ const getVisitorKey = () => {
     return key;
 };
 
+const hasHtml = (str) => /<[a-z][\s\S]*>/i.test(str);
+
+const formatContent = (html, text) => {
+    const raw = html || text || '';
+    if (!raw) return '<p class="text-gray-400 italic">No content available</p>';
+    if (hasHtml(raw)) return raw;
+    return raw.split('\n').map(line => line.trim() ? `<p>${line}</p>` : '<br/>').join('\n');
+};
+
 export const BlogDetailPage = () => {
     const { slug } = useParams();
     const [blog, setBlog] = useState(null);
@@ -27,9 +36,9 @@ export const BlogDetailPage = () => {
             setLoading(true);
             try {
                 const response = await blogApi.getBlogBySlug(slug);
-                setBlog(response.data);
-                loadComments(response.data.id);
-                loadReactions(response.data.id);
+                setBlog(response);
+                loadComments(response.id);
+                loadReactions(response.id);
             } catch (err) { toast.error('Blog not found'); }
             finally { setLoading(false); }
         };
@@ -38,13 +47,13 @@ export const BlogDetailPage = () => {
 
     const loadComments = async (blogId) => {
         setCommentsLoading(true);
-        try { const r = await blogApi.getComments(blogId, { size: 50 }); setComments(r.data.content); }
+        try { const r = await blogApi.getComments(blogId, { size: 50 }); setComments(r.content); }
         catch (err) { console.error('Failed to load comments'); }
         finally { setCommentsLoading(false); }
     };
 
     const loadReactions = async (blogId) => {
-        try { const r = await blogApi.getReactionStatus(blogId, getVisitorKey()); setReactionStatus(r.data); }
+        try { const r = await blogApi.getReactionStatus(blogId, getVisitorKey()); setReactionStatus(r); }
         catch (err) { console.error('Failed to load reactions'); }
     };
 
@@ -52,8 +61,8 @@ export const BlogDetailPage = () => {
         if (!blog) return;
         try {
             const r = await blogApi.toggleReaction(blog.id, { reactionType, visitorKey: getVisitorKey() });
-            setReactionStatus(r.data);
-            setBlog(prev => ({ ...prev, likesCount: r.data.likesCount, dislikesCount: r.data.dislikesCount }));
+            setReactionStatus(r);
+            setBlog(prev => ({ ...prev, likesCount: r.likesCount, dislikesCount: r.dislikesCount }));
         } catch (err) { toast.error('Failed to react'); }
     };
 
@@ -107,7 +116,7 @@ export const BlogDetailPage = () => {
                             };
                         });
                     }}
-                    dangerouslySetInnerHTML={{ __html: blog.contentHtml || '' }} />
+                    dangerouslySetInnerHTML={{ __html: formatContent(blog.contentHtml, blog.content) }} />
 
                 {/* Reactions */}
                 <div className="flex items-center gap-3 mb-10 pb-8 border-b border-border-secondary">

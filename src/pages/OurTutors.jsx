@@ -1,8 +1,41 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Header from '../component/Header'
 import Footer from '../component/Footer'
+import { getPublicTeachers } from '../api/api/teacherApi'
+
 export default function OurTutors() {
   const [expandedExpertise, setExpandedExpertise] = useState({})
+  const [tutors, setTutors] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  const normalizeTeacher = (t) => ({
+    id: t.id || t._id,
+    name: t.fullName || t.name || '',
+    title: t.speciality || t.position || '',
+    qualification: t.mainSubject || t.qualification || '',
+    expertise: Array.isArray(t.expertise) ? t.expertise : String(t.mainSubject || '').split(',').map(s => s.trim()).filter(Boolean),
+    image: t.photoUrl || t.image || '',
+    description: t.bio || t.description || '',
+    initial: (t.fullName || t.name || 'T').replace(/^(Mr\.|Ms\.|Mrs\.|Dr\.|Prof\.)\s*/i, '').trim().split(' ').filter(Boolean).map(w => w[0]).join('').substring(0, 2).toUpperCase(),
+  })
+
+  useEffect(() => {
+    const fetchTutors = async () => {
+      setLoading(true)
+      try {
+        const data = await getPublicTeachers()
+        const list = Array.isArray(data) ? data : data?.content || data?.data || []
+        setTutors(list.map(normalizeTeacher))
+        setError(null)
+      } catch (err) {
+        setError('Failed to load tutors')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchTutors()
+  }, [])
 
   const toggleExpertise = (tutorId) => {
     setExpandedExpertise(prev => ({
@@ -10,135 +43,8 @@ export default function OurTutors() {
       [tutorId]: !prev[tutorId]
     }))
   }
-  const tutors = [
-    {
-      id: 1,
-      name: 'B. Aishwarya',
-      image: '/tutors/AISHWARYA_Professional Photo.png',
-      title: 'Chemistry Expert | SAT Subject Test & AP Chemistry Trainer',
-      qualification: 'M.Sc. in Chemistry from NIT Rourkela | GATE (Chemistry) AIR 390',
-      expertise: ['Chemistry', 'SAT Subject Test', 'AP Chemistry', 'GRE', 'GMAT Quant'],
-      description: 'B. Aishwarya is an accomplished Chemistry educator specializing in preparing students for global standardized exams such as SAT Subject Tests, AP Chemistry, and foundational Chemistry sections relevant to GRE and GMAT Quant. An expert with a M.Sc. in Chemistry from NIT Rourkela, she further distinguished herself by clearing GATE (Chemistry) with an impressive AIR 390. Aishwarya has extensive experience designing curriculum-aligned study material, structured notes, and exam-focused summaries for international learners. Her deep conceptual clarity and ability to simplify challenging topics make her highly effective in preparing students for competitive aptitude-based tests. She uses visual explanations, digital tools, and analytical teaching methods to strengthen students\' conceptual understanding, reasoning skills, and problem-solving speed—skills crucial for exams like SAT, AP, GRE, and GMAT. Aishwarya remains committed to helping learners build confidence, overcome weaknesses, and achieve high scores in international Chemistry and Quantitative exams.',
-      initial: 'BA'
-    },
-    {
-      id: 2,
-      name: 'Mr. Vijay Kalyan',
-      image: '/tutors/Vijay Kalyan_Professional Photo.PNG',
-      title: 'Mathematics, Physics & Quant Faculty | SAT, ACT, GRE, GMAT, AMC and IMO Trainer',
-      qualification: 'B.E. in Electrical Engineering from Kalyani Government Engineering College',
-      expertise: ['Mathematics', 'Physics', 'SAT', 'ACT', 'GRE', 'GMAT', 'AMC', 'IMO'],
-      description: 'Mr. A. Vijay Kalyan is a dedicated educator with strong conceptual command across Mathematics, Physics, and Quantitative Reasoning, offering specialized coaching for SAT, ACT, AP Calculus, and GRE/GMAT Quant. An Electrical Engineering graduate from Kalyani Government Engineering College, he combines analytical depth with an engaging teaching style. His experience includes guiding global test-prep students to build solid foundations in algebra, arithmetic, data interpretation, and physics-based reasoning. His structured sessions reflect the rigor and patterns of exams like SAT Math, ACT Math & Science, GRE Quant, GMAT Quant, and AP Physics. With additional professional experience in a multinational company, Mr. Vijay incorporates real-world engineering logic into his teaching, helping students develop intuition and accuracy for high-stakes standardized tests.',
-      initial: 'VK'
-    },
-    {
-      id: 3,
-      name: 'Ms. Balasaritha P',
-      image: '/tutors/Saritha_Professional Photo.png',
-      title: 'Physics & Mathematics Educator | SAT, ACT & AP Physics Specialist',
-      qualification: 'Ph.D. in Physics | NET Qualified (AIR 132)',
-      expertise: ['Physics', 'Mathematics', 'SAT', 'ACT', 'AP Physics', 'GRE Quant'],
-      description: 'Ms. Balasaritha P is a highly qualified Physics and Mathematics faculty member with a Ph.D. in Physics and NET qualification (AIR 132). She now focuses exclusively on mentoring students for SAT Math, SAT Subject Tests, ACT Math & Science, AP Physics, and GRE Quant preparation. Her experience spans both digital learning platforms and personalized coaching. She specializes in curriculum mapping, high-yield concept reinforcement, and pattern-based problem-solving, perfectly aligned with international test formats. Her clarity, patience, and step-by-step explanations help learners master challenging topics such as mechanics, electricity, calculus-based reasoning, and data interpretation. With a student-first approach, she ensures students consistently perform with confidence in global competitive exams.',
-      initial: 'BP'
-    },
-    {
-      id: 4,
-      name: 'Mr. Sant Kumar Verma',
-      image: '/tutors/Sant Kumar_Professional Photo.png',
-      title: 'Quantitative Reasoning & Physics Specialist | SAT, ACT, AMC, IMO, GRE Trainer',
-      qualification: 'Engineering Graduate | 10+ Years Experience',
-      expertise: ['Algebra & Functions', 'Trigonometry', 'Probability & Statistics', 'Arithmetic & Data Interpretation', 'Physics Numerical & Applied Concepts'],
-      description: 'Mr. Sant Kumar Verma brings over a decade of experience in preparing learners for SAT Math, ACT Math & Science, GRE Quant, and AP-level Physics and Math content. An engineering graduate, he combines theoretical clarity with strong analytical reasoning skills. He specializes in key quantitative domains such as Algebra & Functions, Trigonometry, Probability & Statistics, Arithmetic & Data Interpretation, and Physics Numerical & Applied Concepts. Mr. Sant is known for simplifying complex reasoning processes, improving student accuracy, and helping learners sharpen their test-taking strategy for time-bound international exams. His structured lessons focus on high-frequency topics, rigorous practice, and exam-focused mastery—making him a trusted mentor for competitive test aspirants worldwide.',
-      initial: 'SV'
-    },
-    {
-      id: 5,
-      name: 'Ms. Ramya Rajamani',
-      image: '/tutors/Ramya_Professional Photo.PNG',
-      title: 'Mathematics, Statistics & Quant Trainer | SAT, ACT, IMO, TMUA, GRE, GMAT Specialist',
-      qualification: '19+ Years of Teaching Experience | Research Analyst Background',
-      expertise: ['Algebra & Advanced Functions', 'Calculus (School & AP Level)', 'Statistics & Probability', 'Graphical/Data Interpretation', 'Quantitative Comparison & Analytical Skills'],
-      description: 'With over 19 years of experience, Ms. Ramya Rajamani is a senior educator specializing in SAT Math, ACT Math, TMUA, GRE Quantitative Reasoning, GMAT Quant, AP Statistics, and AP Calculus fundamentals. She teaches with exceptional clarity and ensures students build strong fundamentals needed for high performance in quantitative sections. Her expertise covers Algebra & Advanced Functions, Calculus (School & AP Level), Statistics & Probability, Graphical/Data Interpretation, and Quantitative Comparison & Analytical Skills. Her background as a Research Analyst enables her to connect theoretical math with real-world logic—making her training highly effective for GRE, GMAT, and SAT-style reasoning questions. With her calm, encouraging, and structured approach, she helps students achieve competitive international exam scores.',
-      initial: 'RR'
-    },
-    {
-      id: 6,
-      name: 'Mr. Ram G. Mohan',
-      image: '/tutors/Ram Mohan_Professional Photo.PNG',
-      title: 'Physics & Quant Educator | IIT Delhi | SAT, ACT, AP & GRE Tutor',
-      qualification: 'M.Tech from IIT Delhi | 10+ Years Teaching Experience',
-      expertise: ['AP Physics (Mechanics & Electricity)', 'SAT/ACT problem-solving', 'GRE/GMAT Quant', 'Data-driven assessment'],
-      description: 'Mr. Ram G. Mohan, with an M.Tech from IIT Delhi, is an accomplished educator specializing in Physics and Quantitative Reasoning for SAT, ACT, AP Physics, GRE, and GMAT Quant. His academic depth and more than a decade of teaching experience make him a highly respected trainer. His test-prep experience includes AP Physics (Mechanics & Electricity) coaching, SAT/ACT problem-solving strategies, GRE/GMAT Quant strengthening, and Data-driven assessment and feedback. His prior work in top software companies enriches his approach, helping students relate abstract concepts to real-world logic—a key requirement for global standardized exams. Known for his disciplined teaching and conceptual clarity, he helps learners achieve exceptional results.',
-      initial: 'RM'
-    },
-    {
-      id: 7,
-      name: 'Mr. K. V. Bala Subramanyam',
-      image: '/tutors/Balu_Professional Photo.PNG',
-      title: 'Physics Faculty | SAT, ACT & AP Physics Mentor',
-      qualification: 'Physics Educator | 15+ Years Experience',
-      expertise: ['Conceptual clarity for Physics-based reasoning', 'Numerical problem-solving', 'Test-taking techniques for SAT/ACT', 'Analytical thinking for AP Physics'],
-      description: 'Mr. Balu is a dedicated Physics educator with 15+ years of experience, now specializing in SAT Physics, ACT Science, AP Physics, and GRE Physics fundamentals. Renowned for his structured teaching, he excels in breaking down complex Physics concepts into simple, manageable frameworks. His training emphasizes conceptual clarity for Physics-based reasoning, numerical problem-solving for standardized tests, test-taking techniques for SAT/ACT, and analytical thinking needed in AP Physics exams. His student-centered and supportive teaching style helps learners overcome fear, build confidence, and achieve top scores in international Physics assessments.',
-      initial: 'KB'
-    },
-    {
-      id: 8,
-      name: 'Mr. Ashwin Jain',
-      title: 'Computer Science & Quantitative Logic Trainer | SAT, AP CS, GRE/GMAT Mentor',
-      qualification: '12+ Years Industry Experience at Top MNCs (JP Morgan, VISA, SAP Labs, Barclays)',
-      expertise: ['Logic building & algorithmic thinking', 'AP Computer Science (Java/Python)', 'SAT/ACT analytical reasoning', 'GRE/GMAT Quant strategies', 'Real-life coding applications'],
-      description: 'With 12+ years of industry experience at top multinational companies, Mr. Ashwin Jain now focuses on preparing students for SAT, ACT, AP Computer Science (Java/Python), GRE Quant, and GMAT Quant. His teaching emphasizes logic building & algorithmic thinking, syllabus-aligned AP Computer Science preparation, SAT/ACT-style analytical reasoning, GRE/GMAT Quant strategies, and real-life coding applications for conceptual clarity. His structured and practical approach helps students confidently solve coding problems, logic-based questions, and quantitative comparisons in global certification exams.',
-      initial: 'AJ'
-    },
-    {
-      id: 9,
-      name: 'Mr. Shambhu M. G.',
-      image: '/tutors/Shambhu_Professional Photo.PNG',
-      title: 'Biology Expert | AP Biology & SAT Biology Mentor',
-      qualification: 'M.Sc. Biotechnology | IISc Bengaluru Research Experience | 15+ Years',
-      expertise: ['High-yield AP Biology themes', 'SAT Biology pattern-based preparation', 'Visual learning and memory techniques', 'Exam-focused chapter prioritization', 'Practice with advanced problems and diagrams'],
-      description: 'Mr. Shambhu is a senior Biology educator with 15+ years of experience, specializing in AP Biology, SAT Biology (E/M), and foundational biological reasoning for GRE subject-level preparation. He excels in simplifying complex biological processes, using real-life examples to strengthen conceptual understanding essential for standardized tests. His lessons emphasize high-yield AP Biology themes, SAT Biology pattern-based preparation, visual learning and memory techniques, exam-focused chapter prioritization, and practice with advanced problems and diagrams. Mr. Shambhu\'s student-friendly, clear, and motivational teaching style consistently helps learners achieve strong results in international Biology exams.',
-      initial: 'SM'
-    },
-    {
-      id: 10,
-      name: 'Mr. Rakesh',
-      title: 'Chemistry, Math & Quantitative Aptitude Trainer | SAT, ACT, AP, GRE Mentor',
-      qualification: 'M.Sc. Chemistry (Gold Medalist) from University of Mysore',
-      expertise: ['Concept-focused Chemistry for AP & SAT', 'Quantitative reasoning for GRE/GMAT', 'Algebra, geometry, and calculus foundations', 'Real-life examples to simplify complex concepts'],
-      description: 'Mr. Rakesh, a gold medallist from the University of Mysore, is an accomplished educator specializing in SAT Math, ACT Math & Science, AP Chemistry, and GRE/GMAT Quant. His core strengths include concept-focused Chemistry for AP & SAT, quantitative reasoning for GRE/GMAT, algebra, geometry, and calculus foundations for SAT/ACT, and real-life examples to simplify complex concepts. His friendly and structured teaching style helps students confidently approach high-level test problems and consistently improve their scores.',
-      initial: 'R'
-    },
-    {
-      id: 11,
-      name: 'Ms. Salai Kulamani Birlasekar',
-      image: '/tutors/Salai_Profesional Photo.png',
-      title: 'English Language & Verbal Reasoning Expert | SAT, ACT, GRE, GMAT Tutor',
-      qualification: 'Content Writing & Editing Background | 12+ Years Experience',
-      expertise: ['Grammar & usage mastery for standardized tests', 'Critical reading strategies for SAT/ACT', 'Analytical Writing training for GRE/GMAT', 'Essay writing for SAT & AP English', 'Vocabulary-building through structured methods'],
-      description: 'With 12+ years of experience, Ms. Birlasekar specializes in English Language, Reading Comprehension, Writing Skills, and Verbal Reasoning for exams like SAT, ACT, AP English, GRE, GMAT, and TOEFL-level communication skills. Her expertise includes grammar & usage mastery for standardized tests, critical reading strategies for SAT/ACT, analytical writing training for GRE/GMAT, essay writing for SAT & AP English, and vocabulary-building through structured methods. Her precision in language instruction and strong command over English enable students to achieve significant improvements in verbal scores.',
-      initial: 'SB'
-    },
-    {
-      id: 12,
-      name: 'Mr. Arvind',
-      title: 'Physics & Quantitative Skills Mentor | IIT Bombay | SAT, ACT, AP Physics Trainer',
-      qualification: 'IIT Bombay Postgraduate | GATE 2010 AIR 11 | 14+ Years Experience',
-      expertise: ['SAT Physics preparation', 'ACT Science coaching', 'AP Physics mentoring', 'GRE/GMAT Quant reasoning', 'F=ma Preparation'],
-      description: 'Mr. Arvind, an IIT Bombay alumnus with AIR 11 in GATE 2010, is a highly respected Physics educator specializing in SAT Physics, ACT Science, AP Physics, and foundational Quant reasoning for GRE/GMAT. His teaching style is logical, clear, and student-friendly. He uses real-world examples and interactive methods to help learners understand complex physics concepts and solve high-level reasoning questions with ease. His guidance consistently helps students excel in global Physics assessments and build strong analytical reasoning skills.',
-      initial: 'A'
-    },
-    {
-      id: 13,
-      name: 'Ms. Neha Aggarwal',
-      image: '/tutors/Neha Aggarwal_Professional Photo.png',
-      title: 'Mathematics Faculty | SAT, ACT, GRE/GMAT, TMUA Quant & AP Math Trainer',
-      qualification: 'CSIR NET Qualified | Mathematics Instructor',
-      expertise: ['Strong conceptual foundations', 'Problem-solving strategies for competitive exams', 'Logical reasoning using math + programming insights', 'Confidence-building through guided practice'],
-      description: 'Ms. Neha Aggarwal is a committed Maths educator specializing in SAT Math, ACT Math, GRE Quant, TMUA, GMAT Quant, and AP-level mathematical foundations. Having qualified CSIR NET, she brings academic rigor and conceptual clarity to her training. Her teaching focuses on strong conceptual foundations, problem-solving strategies for competitive exams, logical reasoning using math + programming insights, and confidence-building through guided practice. Her goal is to make mathematics intuitive and enjoyable for students preparing for global standardized tests.',
-      initial: 'NA'
-    }
-  ]
+
+
   const highlights = [
     {
       icon: '🎓',
@@ -209,8 +115,28 @@ export default function OurTutors() {
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">Meet Our Expert Faculty</h2>
               <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-2">Each tutor brings specialized expertise and a passion for helping students achieve their academic goals.</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
-              {tutors.map((tutor) => (
+
+            {/* Loading State */}
+            {loading && (
+              <div className="flex justify-center py-16">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500"></div>
+              </div>
+            )}
+
+            {/* Error State */}
+            {!loading && error && (
+              <div className="text-center py-16 text-red-500">{error}</div>
+            )}
+
+            {/* Empty State */}
+            {!loading && !error && tutors.length === 0 && (
+              <div className="text-center py-16 text-gray-400">No tutors found.</div>
+            )}
+
+            {/* Tutors Grid */}
+            {!loading && tutors && tutors.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+                {tutors.map((tutor) => (
                 <div 
                   key={tutor.id}
                   className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group border border-gray-100 hover:border-blue-200"
@@ -221,7 +147,7 @@ export default function OurTutors() {
                       <img
                         src={tutor.image}
                         alt={tutor.name}
-                        className="w-20 sm:w-24 h-20 sm:h-24 rounded-full mx-auto mb-3 sm:mb-4 object-cover shadow-lg group-hover:scale-105 transition-transform border-4 border-blue-100"
+                        className="w-40 sm:w-52 md:w-56 h-40 sm:h-52 md:h-56 rounded-full mx-auto mb-4 sm:mb-6 object-contain shadow-lg group-hover:scale-105 transition-transform border-4 border-blue-100"
                         onError={(e) => {
                           e.target.style.display = 'none';
                           e.target.nextSibling.style.display = 'flex';
@@ -229,7 +155,7 @@ export default function OurTutors() {
                       />
                     ) : null}
                     <div
-                      className="w-20 sm:w-24 h-20 sm:h-24 bg-linear-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 text-2xl sm:text-3xl font-bold text-white shadow-lg group-hover:scale-105 transition-transform"
+                      className="w-32 sm:w-40 md:w-44 h-32 sm:h-40 md:h-44 bg-linear-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 text-4xl sm:text-5xl font-bold text-white shadow-lg group-hover:scale-105 transition-transform"
                       style={{ display: tutor.image ? 'none' : 'flex' }}
                     >
                       {tutor.initial}
@@ -265,7 +191,7 @@ export default function OurTutors() {
                         {tutor.expertise.length > 4 && (
                           <button 
                             onClick={() => toggleExpertise(tutor.id)}
-                            className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 rounded-full hover:shadow-md transition-all cursor-pointer font-medium"
+                            className="bg-linear-to-r from-blue-500 to-indigo-600 text-white text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 rounded-full hover:shadow-md transition-all cursor-pointer font-medium"
                           >
                             {expandedExpertise[tutor.id] ? '- Show less' : `+${tutor.expertise.length - 4} more`}
                           </button>
@@ -280,7 +206,8 @@ export default function OurTutors() {
                   </div>
                 </div>
               ))}
-            </div>
+              </div>
+            )}
           </div>
         </section>
         {/* Teaching Approach Section with Images */}
@@ -370,15 +297,15 @@ export default function OurTutors() {
                 </p>
                 <ul className="space-y-2 sm:space-y-3">
                   <li className="flex items-start gap-2 sm:gap-3 text-gray-700 text-xs sm:text-base">
-                    <span className="w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5">✓</span>
+                    <span className="w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs shrink-0 mt-0.5">✓</span>
                     <span>Proven track record of student success</span>
                   </li>
                   <li className="flex items-start gap-2 sm:gap-3 text-gray-700 text-xs sm:text-base">
-                    <span className="w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5">✓</span>
+                    <span className="w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs shrink-0 mt-0.5">✓</span>
                     <span>Personalized attention in small batches</span>
                   </li>
                   <li className="flex items-start gap-2 sm:gap-3 text-gray-700 text-xs sm:text-base">
-                    <span className="w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs flex-shrink-0 mt-0.5">✓</span>
+                    <span className="w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs shrink-0 mt-0.5">✓</span>
                     <span>Regular feedback and progress tracking</span>
                   </li>
                 </ul>

@@ -1,101 +1,121 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Pagination from '../ui/Pagination'
+
+const DEFAULT_NOTIFICATIONS = [
+  {
+    id: 1,
+    type: 'assignment',
+    title: 'New Assignment Posted',
+    message: 'Calculus Problem Set 3 has been posted. Due date: Jan 25, 2026',
+    createdAt: '2026-01-20T10:00:00Z',
+    status: 'sent'
+  },
+  {
+    id: 2,
+    type: 'announcement',
+    title: 'Important Announcement',
+    message: 'Physics Midterm exam scheduled for Jan 28, 2026 at 2:00 PM',
+    createdAt: '2026-01-19T10:00:00Z',
+    status: 'sent'
+  }
+]
+
+const getReadMap = () => {
+  try {
+    return JSON.parse(localStorage.getItem('icfy_notification_reads') || '{}')
+  } catch {
+    return {}
+  }
+}
+
+const saveReadMap = (readMap) => {
+  localStorage.setItem('icfy_notification_reads', JSON.stringify(readMap))
+}
+
+const formatTime = (dateValue) => {
+  if (!dateValue) return 'Recent'
+  const date = new Date(dateValue)
+  if (Number.isNaN(date.getTime())) return 'Recent'
+  return date.toLocaleString('en-IN')
+}
+
+const loadNotifications = () => {
+  const readMap = getReadMap()
+  let source = DEFAULT_NOTIFICATIONS
+
+  try {
+    const saved = JSON.parse(localStorage.getItem('icfy_notifications') || 'null')
+    if (saved && saved.length > 0) source = saved
+  } catch {
+    source = DEFAULT_NOTIFICATIONS
+  }
+
+  return source
+    .filter(notification => notification.status === 'sent')
+    .map(notification => ({
+      ...notification,
+      time: formatTime(notification.sentAt || notification.createdAt),
+      color: getTypeColor(notification.type),
+      read: Boolean(readMap[notification.id])
+    }))
+}
+
+const getTypeColor = (type) => {
+  switch (type) {
+    case 'assignment': return '#1e3a8a'
+    case 'reminder': return '#f59e0b'
+    case 'announcement': return '#dc3545'
+    case 'class': return '#1e3a8a'
+    default: return '#28a745'
+  }
+}
 
 export default function Notifications() {
   const [filter, setFilter] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
+  const [notifications, setNotifications] = useState(loadNotifications)
   const itemsPerPage = 100
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      type: 'assignment',
-      title: 'New Assignment Posted',
-      message: 'Calculus Problem Set 3 has been posted. Due date: Jan 25, 2026',
-      time: '2 hours ago',
-      icon: '📝',
-      color: '#1e3a8a',
-      read: false
-    },
-    {
-      id: 3,
-      type: 'class',
-      title: 'Class Reminder',
-      message: 'Mathematics class starting in 30 minutes at 4:00 PM',
-      time: '6 hours ago',
-      icon: '⏰',
-      color: '#f59e0b',
-      read: false
-    },
-    {
-      id: 4,
-      type: 'material',
-      title: 'New Study Material',
-      message: 'Chemistry notes for Chapter 5 have been uploaded',
-      time: '1 day ago',
-      icon: '📄',
-      color: '#1e3a8a',
-      read: true
-    },
-    {
-      id: 5,
-      type: 'announcement',
-      title: 'Important Announcement',
-      message: 'Physics Midterm exam scheduled for Jan 28, 2026 at 2:00 PM',
-      time: '1 day ago',
-      icon: '📢',
-      color: '#dc3545',
-      read: true
-    },
-    {
-      id: 6,
-      type: 'class',
-      title: 'Class Cancelled',
-      message: 'Computer Science class on Jan 18 has been cancelled',
-      time: '3 days ago',
-      icon: '🚫',
-      color: '#ffc107',
-      read: true
-    },
-    {
-      id: 7,
-      type: 'event',
-      title: 'Upcoming Workshop',
-      message: 'Join our Python Programming workshop on Jan 30, 2026',
-      time: '3 days ago',
-      icon: '🛠️',
-      color: '#f59e0b',
-      read: true
+
+  useEffect(() => {
+    const refresh = () => setNotifications(loadNotifications())
+
+    window.addEventListener('storage', refresh)
+    window.addEventListener('icfy_notifications_updated', refresh)
+    return () => {
+      window.removeEventListener('storage', refresh)
+      window.removeEventListener('icfy_notifications_updated', refresh)
     }
-  ])
+  }, [])
+
   const filteredNotifications = filter === 'all'
     ? notifications
     : filter === 'unread'
     ? notifications.filter(n => !n.read)
     : notifications.filter(n => n.type === filter)
 
-  // Pagination
   const totalPages = Math.ceil(filteredNotifications.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
   const paginatedNotifications = filteredNotifications.slice(startIndex, startIndex + itemsPerPage)
-
   const unreadCount = notifications.filter(n => !n.read).length
+
   const markAsRead = (id) => {
-    setNotifications(notifications.map(notification => 
-      notification.id === id 
-        ? { ...notification, read: true }
-        : notification
-    ))
+    const readMap = { ...getReadMap(), [id]: true }
+    saveReadMap(readMap)
+    setNotifications(loadNotifications())
   }
+
   const markAllAsRead = () => {
-    setNotifications(notifications.map(notification => ({
-      ...notification,
-      read: true
-    })))
+    const readMap = notifications.reduce((acc, notification) => {
+      acc[notification.id] = true
+      return acc
+    }, getReadMap())
+    saveReadMap(readMap)
+    setNotifications(loadNotifications())
   }
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-white border-b-2 border-blue-900 rounded-xl p-6 flex items-center justify-between">
+      <div className="bg-white border-b-2 border-blue-900 rounded-xl p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold text-blue-900">Notifications</h2>
           <p className="text-gray-500 text-sm">
@@ -110,64 +130,36 @@ export default function Notifications() {
         </button>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-wrap gap-3 bg-white p-4 rounded-xl shadow-md">
-        <button
-          onClick={() => setFilter('all')}
-          className={`px-4 py-2 rounded-lg font-semibold transition-all text-sm ${
-            filter === 'all' ? 'text-white shadow-md' : 'text-gray-700 hover:bg-white'
-          }`}
-          style={{ backgroundColor: filter === 'all' ? '#1e3a8a' : 'transparent' }}
-        >
-          All ({notifications.length})
-        </button>
-        <button
-          onClick={() => setFilter('unread')}
-          className={`px-4 py-2 rounded-lg font-semibold transition-all text-sm ${
-            filter === 'unread' ? 'text-white shadow-md' : 'text-gray-700 hover:bg-white'
-          }`}
-          style={{ backgroundColor: filter === 'unread' ? '#dc3545' : 'transparent' }}
-        >
-          Unread ({unreadCount})
-        </button>
-        <button
-          onClick={() => setFilter('assignment')}
-          className={`px-4 py-2 rounded-lg font-semibold transition-all text-sm ${
-            filter === 'assignment' ? 'text-white shadow-md' : 'text-gray-700 hover:bg-white'
-          }`}
-          style={{ backgroundColor: filter === 'assignment' ? '#f59e0b' : 'transparent' }}
-        >
-          Assignments
-        </button>
-        <button
-          onClick={() => setFilter('class')}
-          className={`px-4 py-2 rounded-lg font-semibold transition-all text-sm ${
-            filter === 'class' ? 'text-white shadow-md' : 'text-gray-700 hover:bg-white'
-          }`}
-          style={{ backgroundColor: filter === 'class' ? '#1e3a8a' : 'transparent' }}
-        >
-          Classes
-        </button>
-        <button
-          onClick={() => setFilter('announcement')}
-          className={`px-4 py-2 rounded-lg font-semibold transition-all text-sm ${
-            filter === 'announcement' ? 'text-white shadow-md' : 'text-gray-700 hover:bg-white'
-          }`}
-          style={{ backgroundColor: filter === 'announcement' ? '#dc3545' : 'transparent' }}
-        >
-          Announcements
-        </button>
+        {[
+          ['all', `All (${notifications.length})`],
+          ['unread', `Unread (${unreadCount})`],
+          ['assignment', 'Assignments'],
+          ['reminder', 'Reminders'],
+          ['announcement', 'Announcements']
+        ].map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => {
+              setFilter(key)
+              setCurrentPage(1)
+            }}
+            className={`px-4 py-2 rounded-lg font-semibold transition-all text-sm ${
+              filter === key ? 'text-white shadow-md' : 'text-gray-700 hover:bg-white'
+            }`}
+            style={{ backgroundColor: filter === key ? (key === 'unread' ? '#dc3545' : '#1e3a8a') : 'transparent' }}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
-      {/* Notifications List */}
       <div className="space-y-3">
         {paginatedNotifications.length > 0 ? (
           paginatedNotifications.map((notification) => (
             <div
               key={notification.id}
-              className={`bg-white rounded-xl shadow-md hover:shadow-lg transition-all p-6 border-l-4 ${
-                !notification.read ? 'border-l-4' : ''
-              }`}
+              className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all p-6 border-l-4"
               style={{
                 borderLeftColor: !notification.read ? notification.color : '#e0e0e0',
                 backgroundColor: 'white'
@@ -180,10 +172,7 @@ export default function Notifications() {
                       <h3 className="text-lg font-bold mb-1" style={{ color: '#1e3a8a' }}>
                         {notification.title}
                         {!notification.read && (
-                          <span
-                            className="ml-3 px-2 py-1 rounded-full text-xs font-bold text-white"
-                            style={{ backgroundColor: '#dc3545' }}
-                          >
+                          <span className="ml-3 px-2 py-1 rounded-full text-xs font-bold text-white" style={{ backgroundColor: '#dc3545' }}>
                             NEW
                           </span>
                         )}
@@ -196,11 +185,7 @@ export default function Notifications() {
                     <button
                       onClick={() => markAsRead(notification.id)}
                       className="mt-3 px-4 py-2 rounded-lg text-sm font-semibold transition-all border-2"
-                      style={{
-                        borderColor: notification.color,
-                        color: notification.color,
-                        backgroundColor: 'transparent'
-                      }}
+                      style={{ borderColor: notification.color, color: notification.color, backgroundColor: 'transparent' }}
                     >
                       Mark as Read
                     </button>
@@ -219,7 +204,6 @@ export default function Notifications() {
         )}
       </div>
 
-      {/* Pagination */}
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
@@ -228,7 +212,6 @@ export default function Notifications() {
         itemsPerPage={itemsPerPage}
         alwaysShow={true}
       />
-
     </div>
   )
 }

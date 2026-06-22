@@ -47,7 +47,7 @@
 **Contact Information Integrated:**
 - 📧 Email:   ithinklearn@ixpoe.com
 - 📞 Phones: +91 819 746 6607 | +91 779 501 0900
-- 💬 WhatsApp: +91 779 501 0900
+- 💬 WhatsApp: +91 8197 466 607
 
 ### 5. **Blogs Page (Blogs.jsx)** ✅
 - ✅ 9 Static Blog Articles

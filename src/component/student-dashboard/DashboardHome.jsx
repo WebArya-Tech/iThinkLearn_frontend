@@ -1,4 +1,5 @@
 import React from 'react'
+import { studentMenuItems } from '../../config/dashboardModules'
 
 export default function DashboardHome({ studentData, setCurrentView }) {
   const stats = [
@@ -32,7 +33,7 @@ export default function DashboardHome({ studentData, setCurrentView }) {
 
       {/* Welcome Banner */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-2xl font-bold text-blue-900 mb-1">Welcome back, {studentData.name.split(' ')[0]}!</h2>
+        <h2 className="text-2xl font-bold text-blue-900 mb-1">Welcome back, {(studentData.name || 'Student').split(' ')[0]}!</h2>
         <p className="text-gray-500 text-sm mb-4">Ready to continue your learning journey with iThinkLearn?</p>
         <div className="flex flex-wrap gap-3">
           <button
@@ -81,6 +82,26 @@ export default function DashboardHome({ studentData, setCurrentView }) {
         >
           Get Support
         </button>
+      </div>
+
+      {/* Management Sections */}
+      <div>
+        <h2 className="text-lg font-bold mb-4 text-blue-900">Management Sections</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+          {studentMenuItems.filter(m => m.id !== 'home').map(card => {
+            const Icon = card.icon
+            return (
+              <button key={card.id} onClick={() => setCurrentView(card.id)}
+                className="bg-white rounded-xl shadow-sm p-4 text-left hover:shadow-md hover:border-blue-900 border-2 border-transparent transition-all">
+                <div className="p-2 rounded-lg mb-3 w-fit bg-blue-50">
+                  {Icon && <Icon className="w-5 h-5 text-blue-900" />}
+                </div>
+                <h3 className="font-semibold text-sm mb-1 text-blue-900">{card.label}</h3>
+                <p className="text-xs text-gray-500 leading-tight">{card.description}</p>
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

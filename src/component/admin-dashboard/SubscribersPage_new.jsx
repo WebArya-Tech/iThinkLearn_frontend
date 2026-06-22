@@ -13,7 +13,7 @@ const Spinner = ({ size = 'md' }) => (
     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
   </svg>
 );
-import { blogApi, adminApi } from '../../api/blogApi';
+import { adminApi } from '../../api/blogApi';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 
@@ -36,30 +36,22 @@ export const SubscribersPage = ({ setCurrentView }) => {
     const [pagination, setPagination] = useState({ page: 0, totalPages: 0, totalElements: 0 });
     const [pageSize, setPageSize] = useState(20);
 
-    const fetchSubscribers = async (params = {}, showLoader = true) => {
+    const fetchSubscribers = (params = {}, showLoader = true) => {
         try {
             if (showLoader) setLoading(true);
             const currentSize = params.size !== undefined ? params.size : pageSize;
             
-            // Add 6 second timeout
-            const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Timeout')), 6000)
-            );
+            const response = adminApi.getSubscribers({
+                status: params.status !== undefined ? params.status : statusFilter,
+                page: params.page || 0,
+                size: currentSize,
+            });
             
-            const response = await Promise.race([
-                adminApi.getSubscribers({
-                    status: params.status !== undefined ? params.status : statusFilter,
-                    page: params.page || 0,
-                    size: currentSize,
-                }),
-                timeoutPromise
-            ]);
-            
-            setSubscribers(response.data?.content || []);
+            setSubscribers(response?.content || []);
             setPagination({
-                page: response.data?.page || 0,
-                totalPages: response.data?.totalPages || 0,
-                totalElements: response.data?.totalElements || 0
+                page: response?.page || 0,
+                totalPages: response?.totalPages || 0,
+                totalElements: response?.totalElements || 0
             });
             setIsInitial(false);
         } catch (err) {
@@ -71,9 +63,7 @@ export const SubscribersPage = ({ setCurrentView }) => {
     };
 
     useEffect(() => {
-        // Load in background without blocking UI
-        const timer = setTimeout(() => fetchSubscribers({}, !isInitial), 100);
-        return () => clearTimeout(timer);
+        fetchSubscribers({}, !isInitial);
     }, [statusFilter, pageSize]);
 
     const handleStatusFilter = (s) => {
@@ -104,7 +94,7 @@ export const SubscribersPage = ({ setCurrentView }) => {
                     Manage Subscribers
                 </h1>
             </div>
-            <div className="max-w-6xl mx-auto px-6 py-10">
+            <div className="px-6 py-10">
             <div className="mb-8 flex items-center justify-between">
                 <div>
                     <p className="text-gray-600">Manage newsletter subscribers and their status</p>
@@ -179,22 +169,34 @@ export const SubscribersPage = ({ setCurrentView }) => {
 
             {/* Pagination */}
             {pagination.totalPages > 1 && (
-                <div className="mt-8 flex items-center justify-between">
-                    <button
-                        onClick={() => fetchSubscribers({ page: pagination.page - 1 })}
+                <div className="mt-8 flex items-center justify-center gap-1.5 flex-wrap">
+                    <button onClick={() => fetchSubscribers({ page: pagination.page - 1 })}
                         disabled={pagination.page === 0}
-                        className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50"
-                    >
-                        Previous
+                        className="px-3 py-1.5 text-sm font-medium border border-gray-300 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition">
+                        Prev
                     </button>
-                    <span className="text-sm text-gray-600">
-                        Page {pagination.page + 1} of {pagination.totalPages}
-                    </span>
-                    <button
-                        onClick={() => fetchSubscribers({ page: pagination.page + 1 })}
+                    {Array.from({ length: pagination.totalPages }, (_, i) => {
+                        const p = i;
+                        if (pagination.totalPages > 7) {
+                            if (p === 0 || p === pagination.totalPages - 1 || (p >= pagination.page - 1 && p <= pagination.page + 1)) {
+                                return <button key={p} onClick={() => fetchSubscribers({ page: p })}
+                                    className={`w-9 h-9 text-sm font-semibold rounded-lg transition ${pagination.page === p ? 'bg-blue-900 text-white' : 'border border-gray-300 text-gray-600 hover:bg-gray-50'}`}>
+                                    {p + 1}
+                                </button>;
+                            }
+                            if (p === pagination.page - 2 || p === pagination.page + 2) {
+                                return <span key={p} className="text-gray-400 text-sm px-1">...</span>;
+                            }
+                            return null;
+                        }
+                        return <button key={p} onClick={() => fetchSubscribers({ page: p })}
+                            className={`w-9 h-9 text-sm font-semibold rounded-lg transition ${pagination.page === p ? 'bg-blue-900 text-white' : 'border border-gray-300 text-gray-600 hover:bg-gray-50'}`}>
+                            {p + 1}
+                        </button>;
+                    })}
+                    <button onClick={() => fetchSubscribers({ page: pagination.page + 1 })}
                         disabled={pagination.page >= pagination.totalPages - 1}
-                        className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50"
-                    >
+                        className="px-3 py-1.5 text-sm font-medium border border-gray-300 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition">
                         Next
                     </button>
                 </div>

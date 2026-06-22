@@ -1,30 +1,31 @@
-﻿import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import AdminSidebar from './AdminSidebar'
 import AdminHome from './AdminHome'
 import StudentManagement from './StudentManagement'
 import QuestionManagement from './QuestionManagement'
-import DemoClassRequests from './DemoClassRequests'
+import DemoRequestsManagement from './DemoRequestsManagement'
 import CourseManagement from './CourseManagement'
 import RunningClassesManagement from './RunningClassesManagement'
 import FeePaymentManagement from './FeePaymentManagement'
 import FeedbackManagement from './FeedbackManagement'
 import PracticeTestManagement from './PracticeTestManagement'
 import HomeworkManagement from './HomeworkManagement'
-import TestimonialManagement from './TestimonialManagement'
 import TutorManagement from './TutorManagement'
 import ReviewManagement from './ReviewManagement'
 import AnnouncementManagement from './AnnouncementManagement'
+import AdminProfile from './AdminProfile'
+import AdminNotifications from './AdminNotifications'
+import TestimonialManagement from './TestimonialManagement'
+import BlogDashboard from './BlogDashboard'
 import { BlogModerationPage } from './BlogModerationPage'
 import { SubscribersPage } from './SubscribersPage'
 import { CommentManagement } from './CommentManagement'
-import BlogDashboard from './BlogDashboard'
-import AdminProfile from './AdminProfile'
-import AdminNotifications from './AdminNotifications'
+import DemoSettings from './DemoSettings'
 
 export default function AdminDashboard() {
-  const { user, isAuthenticated, isLoading, isAdmin } = useAuth()
+  const { user, isLoading } = useAuth()
   const { section } = useParams()
   const navigate = useNavigate()
   const currentView = section || 'home'
@@ -62,7 +63,9 @@ export default function AdminDashboard() {
       case 'questions':
         return <QuestionManagement />
       case 'demo-requests':
-        return <DemoClassRequests />
+        return <DemoRequestsManagement />
+      case 'free-demo-requests':
+        return <DemoRequestsManagement />
       case 'running-classes':
         return <RunningClassesManagement />
       case 'homework':
@@ -75,22 +78,24 @@ export default function AdminDashboard() {
         return <FeePaymentManagement />
       case 'feedback':
         return <FeedbackManagement />
-      case 'testimonials':
-        return <TestimonialManagement />
       case 'tutors':
         return <TutorManagement />
       case 'reviews':
         return <ReviewManagement />
       case 'announcements':
         return <AnnouncementManagement />
-      case 'blog':
-        return <BlogDashboard setCurrentView={setCurrentView} />
+      case 'testimonials':
+        return <TestimonialManagement />
       case 'blogs':
-        return <BlogModerationPage onBack={() => setCurrentView('blog')} />
+        return <BlogDashboard setCurrentView={setCurrentView} />
+      case 'blog-moderation':
+        return <BlogModerationPage onBack={() => setCurrentView('blogs')} />
       case 'subscribers':
-        return <SubscribersPage onBack={() => setCurrentView('blog')} />
+        return <SubscribersPage onBack={() => setCurrentView('blogs')} />
       case 'comment-management':
-        return <CommentManagement onBack={() => setCurrentView('blog')} />
+        return <CommentManagement onBack={() => setCurrentView('blogs')} />
+      case 'demo-settings':
+        return <DemoSettings />
       case 'profile':
         return <AdminProfile adminData={adminData} />
       default:
@@ -154,7 +159,7 @@ export default function AdminDashboard() {
         />
         {/* Main Content - Scrollable */}
         <main className={`flex-1 overflow-y-auto transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : ''}`}>
-          <div className="p-4 md:p-6">
+          <div>
             {renderView()}
           </div>
         </main>

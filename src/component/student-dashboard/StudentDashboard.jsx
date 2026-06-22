@@ -18,13 +18,20 @@ import FeedbackReviews from './FeedbackReviews'
 import Testimonials from './Testimonials'
 
 export default function StudentDashboard() {
-  const { user, isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading } = useAuth()
   const { section } = useParams()
   const navigate = useNavigate()
   const currentView = section || 'home'
   const setCurrentView = (view) =>
     navigate(view === 'home' ? '/student-dashboard' : `/student-dashboard/${view}`)
   const [sidebarOpen, setSidebarOpen] = useState(true)
+
+  // Read user from localStorage (set by LoginModal via API auth)
+  const localUser = (() => {
+    try { return JSON.parse(localStorage.getItem('icfy_user')) } catch { return null }
+  })()
+
+  const user = localUser
 
   // Show loading screen while auth is being verified
   if (isLoading) {
@@ -40,11 +47,11 @@ export default function StudentDashboard() {
 
   // Student data from auth context
   const studentData = {
-    name: user.fullName || user.name || user.email?.split('@')[0] || 'Student',
-    email: user.email,
-    phone: user.phone || '',
-    studentId: user.studentId,
-    enrollmentDate: user.enrollmentDate,
+    name: user?.fullName || user?.name || user?.email?.split('@')[0] || 'Student',
+    email: user?.email,
+    phone: user?.phone || '',
+    studentId: user?.studentId,
+    enrollmentDate: user?.enrollmentDate,
     profileImage: '',
     courses: 5,
     assignments: 12,

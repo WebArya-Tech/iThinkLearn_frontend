@@ -1,25 +1,25 @@
 import React, { useState } from 'react';
-import { X, Star, Upload, Send, AlertCircle } from 'lucide-react';
+import { X, Star, Upload, Video, Camera, Send, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { submitTestimonial } from '../api/api/testimonialApi';
-import { uploadToCloudinary } from '../utils/cloudinaryUpload';
+import { submitTestimonial } from '../api/testimonialApi';
 
-const dummyTeachers = [
-  { id: 'teacher-1', fullName: 'Rohit Sir', subject: 'Math' },
-  { id: 'teacher-2', fullName: 'A Star Classes Faculty', subject: 'Science' },
+const localTeachers = [
+  { id: 'teacher-1', fullName: 'Mr. Rohit Gupta', subject: 'Mathematics & Statistics' },
+  { id: 'teacher-2', fullName: 'Ms. Priya Sharma', subject: 'Physics' },
+  { id: 'teacher-3', fullName: 'Mr. Amit Kumar', subject: 'Chemistry' },
 ];
 
 const TestimonialFormModal = ({ isOpen, onClose }) => {
-  const [teachers] = useState(dummyTeachers);
+  const [teachers] = useState(localTeachers);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     teacherId: '',
     reviewerName: '',
-    role: 'Student', // Student or Parent
+    role: 'Student',
     rating: 5,
-    content: '', // This will hold the review text or media URL
-    type: 'text', // text, video, or audio (based on what's submitted)
+    content: '',
+    type: 'text',
   });
   const [mediaFile, setMediaFile] = useState(null);
   const [mediaPreview, setMediaPreview] = useState(null);
@@ -67,17 +67,14 @@ const TestimonialFormModal = ({ isOpen, onClose }) => {
     try {
       let finalContent = formData.content;
 
-      // 1. If media exists, upload to Cloudinary first
       if (mediaFile) {
         setUploading(true);
-        toast.loading('Uploading media...', { id: 'upload-toast' });
-        const mediaUrl = await uploadToCloudinary(mediaFile);
-        finalContent = mediaUrl; // For media testimonials, content is the URL
-        toast.success('Media uploaded!', { id: 'upload-toast' });
+        toast.loading('Preparing media...', { id: 'upload-toast' });
+        finalContent = mediaPreview || formData.content;
+        toast.success('Media ready!', { id: 'upload-toast' });
         setUploading(false);
       }
 
-      // 2. Submit to backend
       await submitTestimonial({
         ...formData,
         content: finalContent

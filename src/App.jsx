@@ -1,5 +1,6 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import DemoModalProvider from './context/DemoModalContext'
 import Home from './pages/Home'
 import About from './pages/About'
 import TeachingMethodology from './pages/TeachingMethodology'
@@ -29,24 +30,31 @@ import Calculus from './pages/Calculus'
 import Statistics from './pages/Statics'
 import AdminDashboard from './component/admin-dashboard/AdminDashboard'
 import StudentDashboard from './component/student-dashboard/StudentDashboard'
-import { useAuth } from './context/AuthContext'
+import AuthApiTester from './component/auth/AuthApiTester'
 
 function ProtectedAdminRoute() {
-  const { isAuthenticated, isAdmin } = useAuth()
-  if (!isAuthenticated || !isAdmin) return <Navigate to="/" replace />
+  // Check token directly from localStorage since we're using API-based auth
+  const token = localStorage.getItem('icfy_token')
+  const role = localStorage.getItem('icfy_role')
+  
+  if (!token || role !== 'admin') return <Navigate to="/" replace />
   return <AdminDashboard />
 }
 
 function ProtectedStudentRoute() {
-  const { isAuthenticated, isAdmin } = useAuth()
-  if (!isAuthenticated) return <Navigate to="/" replace />
-  if (isAdmin) return <Navigate to="/admin-dashboard" replace />
+  // Check token directly from localStorage since we're using API-based auth
+  const token = localStorage.getItem('icfy_token')
+  const role = localStorage.getItem('icfy_role')
+  
+  if (!token) return <Navigate to="/" replace />
+  if (role === 'admin') return <Navigate to="/admin-dashboard" replace />
   return <StudentDashboard />
 }
 
 function App() {
   return (
     <Router>
+      <DemoModalProvider>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
@@ -80,7 +88,9 @@ function App() {
         <Route path="/admin-dashboard/:section" element={<ProtectedAdminRoute />} />
         <Route path="/student-dashboard" element={<ProtectedStudentRoute />} />
         <Route path="/student-dashboard/:section" element={<ProtectedStudentRoute />} />
+        <Route path="/test-auth-api" element={<AuthApiTester />} />
       </Routes>
+      </DemoModalProvider>
     </Router>
   )
 }

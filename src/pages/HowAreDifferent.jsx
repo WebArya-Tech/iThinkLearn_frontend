@@ -382,22 +382,13 @@ export default function HowAreDifferent() {
       </section>
 
       {/* CTA */}
-      <section className="bg-white py-10 px-4 md:px-8 ">
+      <section className="bg-white py-8 px-4 md:px-8 ">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-blue-900 mb-4">Experience the Difference Yourself</h2>
           <p className="text-gray-600 text-lg mb-3 leading-relaxed">
             Join a Free Demo Class and see why students and parents trust iThinkLearn.
           </p>
-          <div className="text-blue-900 font-semibold text-lg mb-8 space-y-2">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
-              <span>📞 Call:</span>
-              <a href="tel:+917795010900" className="text-blue-600 hover:text-blue-800 underline">+91 779 501 0900</a>
-            </div>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
-              <span>💬 WhatsApp:</span>
-              <a href="https://wa.me/918197466607" target="_blank" rel="noopener noreferrer" className="text-green-600 hover:text-green-800 underline">+91 819 746 6607</a>
-            </div>
-          </div>
+          
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={() => setIsModalOpen(true)}

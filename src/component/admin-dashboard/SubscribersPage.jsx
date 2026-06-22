@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { Users, Clock, AlertCircle, ChevronLeft } from 'lucide-react';
+import { Users, Clock, AlertCircle, ChevronLeft, Trash2 } from 'lucide-react';
 
 const Card = ({ className = '', children }) => (
   <div className={`bg-white rounded-xl shadow border border-gray-200 ${className}`}>{children}</div>
@@ -40,8 +40,8 @@ export const SubscribersPage = ({ onBack }) => {
                 page: params.page || 0,
                 size: currentSize,
             });
-            setSubscribers(r.data.content || []);
-            setPagination({ page: r.data.page || 0, totalPages: r.data.totalPages || 0, totalElements: r.data.totalElements || 0 });
+            setSubscribers(r.content || []);
+            setPagination({ page: r.page || 0, totalPages: r.totalPages || 0, totalElements: r.totalElements || 0 });
         } catch (err) {
             console.error('Failed to load subscribers', err);
             toast.error('Failed to load subscribers');
@@ -58,8 +58,19 @@ export const SubscribersPage = ({ onBack }) => {
         setStatusFilter(s);
     };
 
+    const handleDelete = async (id, email) => {
+        if (!window.confirm(`Delete subscriber "${email}"? This action cannot be undone.`)) return;
+        try {
+            await adminApi.deleteSubscriber(id);
+            toast.success('Subscriber deleted');
+            fetchSubscribers();
+        } catch {
+            toast.error('Failed to delete subscriber');
+        }
+    };
+
     return (
-        <div className="max-w-6xl mx-auto px-6 py-10">
+        <div className="px-6 py-10">
             {onBack && (
                 <button onClick={onBack}
                     className="flex items-center gap-2 text-sm font-semibold mb-4 hover:opacity-75 transition text-blue-900">
@@ -100,9 +111,10 @@ export const SubscribersPage = ({ onBack }) => {
 
             {/* Desktop Header */}
             <div className="hidden md:grid grid-cols-12 gap-3 mb-3 px-4 py-3 border-b border-gray-300 font-semibold text-sm text-gray-700">
-                <div className="col-span-5">Email</div>
+                <div className="col-span-4">Email</div>
                 <div className="col-span-3">Status</div>
-                <div className="col-span-4">Subscription Date</div>
+                <div className="col-span-3">Subscription Date</div>
+                <div className="col-span-2 text-center">Actions</div>
             </div>
 
             {/* Subscribers List */}
@@ -118,7 +130,7 @@ export const SubscribersPage = ({ onBack }) => {
                     {subscribers.map((sub) => (
                         <Card key={sub.id} className="p-4 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
                             {/* Email */}
-                            <div className="col-span-1 md:col-span-5 flex items-center gap-3">
+                            <div className="col-span-1 md:col-span-4 flex items-center gap-3">
                                 <div
                                     className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0 bg-blue-900"
                                 >
@@ -130,12 +142,12 @@ export const SubscribersPage = ({ onBack }) => {
                             {/* Status */}
                             <div className="col-span-1 md:col-span-3">
                                 <Badge variant={sub.status === 'ACTIVE' ? 'success' : 'error'}>
-                                    {sub.status}
+                                    {sub.status === 'ACTIVE' ? 'Active' : 'Inactive'}
                                 </Badge>
                             </div>
 
                             {/* Subscription Date */}
-                            <div className="col-span-1 md:col-span-4 flex items-center gap-2 text-xs text-gray-600">
+                            <div className="col-span-1 md:col-span-3 flex items-center gap-2 text-xs text-gray-600">
                                 <Clock className="w-4 h-4 shrink-0" />
                                 {(() => {
                                     const d = sub.createdAt || sub.subscribedAt;
@@ -144,6 +156,17 @@ export const SubscribersPage = ({ onBack }) => {
                                     return isNaN(date.getTime()) ? 'N/A' : format(date, 'MMM dd, yyyy HH:mm');
                                 })()}
                             </div>
+
+                            {/* Actions */}
+                            <div className="col-span-1 md:col-span-2 flex justify-center">
+                                <button
+                                    onClick={() => handleDelete(sub.id, sub.email)}
+                                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition"
+                                    title="Delete subscriber"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
                         </Card>
                     ))}
                 </div>
@@ -151,22 +174,34 @@ export const SubscribersPage = ({ onBack }) => {
 
             {/* Pagination */}
             {pagination.totalPages > 1 && (
-                <div className="mt-8 flex items-center justify-between">
-                    <button
-                        onClick={() => fetchSubscribers({ page: pagination.page - 1 })}
+                <div className="mt-8 flex items-center justify-center gap-1.5 flex-wrap">
+                    <button onClick={() => fetchSubscribers({ page: pagination.page - 1 })}
                         disabled={pagination.page === 0}
-                        className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50"
-                    >
-                        Previous
+                        className="px-3 py-1.5 text-sm font-medium border border-gray-300 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition">
+                        Prev
                     </button>
-                    <span className="text-sm text-gray-600">
-                        Page {pagination.page + 1} of {pagination.totalPages}
-                    </span>
-                    <button
-                        onClick={() => fetchSubscribers({ page: pagination.page + 1 })}
+                    {Array.from({ length: pagination.totalPages }, (_, i) => {
+                        const p = i;
+                        if (pagination.totalPages > 7) {
+                            if (p === 0 || p === pagination.totalPages - 1 || (p >= pagination.page - 1 && p <= pagination.page + 1)) {
+                                return <button key={p} onClick={() => fetchSubscribers({ page: p })}
+                                    className={`w-9 h-9 text-sm font-semibold rounded-lg transition ${pagination.page === p ? 'bg-blue-900 text-white' : 'border border-gray-300 text-gray-600 hover:bg-gray-50'}`}>
+                                    {p + 1}
+                                </button>;
+                            }
+                            if (p === pagination.page - 2 || p === pagination.page + 2) {
+                                return <span key={p} className="text-gray-400 text-sm px-1">...</span>;
+                            }
+                            return null;
+                        }
+                        return <button key={p} onClick={() => fetchSubscribers({ page: p })}
+                            className={`w-9 h-9 text-sm font-semibold rounded-lg transition ${pagination.page === p ? 'bg-blue-900 text-white' : 'border border-gray-300 text-gray-600 hover:bg-gray-50'}`}>
+                            {p + 1}
+                        </button>;
+                    })}
+                    <button onClick={() => fetchSubscribers({ page: pagination.page + 1 })}
                         disabled={pagination.page >= pagination.totalPages - 1}
-                        className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50"
-                    >
+                        className="px-3 py-1.5 text-sm font-medium border border-gray-300 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition">
                         Next
                     </button>
                 </div>

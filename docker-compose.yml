@@ -6,13 +6,17 @@ services:
       context: .
       dockerfile: Dockerfile
       target: production
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://blog.ithinklearn.com}
+        VITE_ADMIN_USERNAME: ${VITE_ADMIN_USERNAME:-admin}
+        VITE_ADMIN_PASSWORD: ${VITE_ADMIN_PASSWORD:-SecureAdmin@2026}
     container_name: ithinklearn-frontend
     image: ithinklearn-frontend:latest
     ports:
       - "9063:3000"
     environment:
       - NODE_ENV=production
-      - VITE_API_URL=${VITE_API_URL:-https://blog.ithinklearn.com}
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-https://blog.ithinklearn.com}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]

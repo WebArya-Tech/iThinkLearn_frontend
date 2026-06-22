@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Pagination from '../ui/Pagination'
+import { postQuestion, getStudentQuestions } from '../../api/api/answerApi'
 
 export default function AskQuestion() {
   const [currentPage, setCurrentPage] = useState(1)
@@ -11,60 +12,57 @@ export default function AskQuestion() {
     category: 'academic',
     question: ''
   })
+  const [questions, setQuestions] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
 
-  const [questions, setQuestions] = useState([
-    {
-      id: 1,
-      subject: 'Calculus Integration Problem',
-      category: 'Mathematics',
-      question: 'How do I solve integration by parts for ∫x²e^x dx?',
-      answer: 'To solve ∫x²e^x dx using integration by parts, apply the formula twice. First, let u = x² and dv = e^x dx. This gives du = 2x dx and v = e^x. Following the integration by parts formula ∫u dv = uv - ∫v du, you get...',
-      status: 'answered',
-      askedOn: '2 days ago',
-      answeredBy: 'AI Tutor',
-      reviewedBy: 'Prof. Smith'
-    },
-    {
-      id: 2,
-      subject: 'Chemical Bonding Confusion',
-      category: 'Chemistry',
-      question: 'What is the difference between ionic and covalent bonds?',
-      answer: 'Ionic bonds form between metals and non-metals through electron transfer, while covalent bonds form between non-metals through electron sharing...',
-      status: 'answered',
-      askedOn: '3 days ago',
-      answeredBy: 'AI Tutor',
-      reviewedBy: 'Dr. Johnson'
-    },
-    {
-      id: 3,
-      subject: 'Newton\'s Laws Application',
-      category: 'Physics',
-      question: 'How do I apply Newton\'s second law to an inclined plane problem?',
-      answer: null,
-      status: 'pending',
-      askedOn: '1 hour ago',
-      answeredBy: null,
-      reviewedBy: null
+  // Fetch questions on component mount
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const response = await getStudentQuestions()
+        setQuestions(response.data || response || [])
+      } catch (err) {
+        console.error('Error fetching questions:', err)
+        setError('Failed to load questions. Please try again.')
+      } finally {
+        setLoading(false)
+      }
     }
-  ])
 
-  const handleSubmit = (e) => {
+    fetchQuestions()
+  }, [])
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    const newQuestion = {
-      id: questions.length + 1,
-      subject: questionForm.subject,
-      category: questionForm.category,
-      question: questionForm.question,
-      answer: null,
-      status: 'pending',
-      askedOn: 'Just now',
-      answeredBy: null,
-      reviewedBy: null
+    try {
+      setSubmitting(true)
+      setError(null)
+      
+      const response = await postQuestion({
+        subject: questionForm.subject,
+        category: questionForm.category,
+        question: questionForm.question
+      })
+
+      // Add the new question to the list
+      if (response.data) {
+        setQuestions([response.data, ...questions])
+      }
+      
+      setQuestionForm({ subject: '', category: 'academic', question: '' })
+      setIsModalOpen(false)
+      alert('Question submitted successfully! You will be notified when it\'s answered.')
+    } catch (err) {
+      console.error('Error posting question:', err)
+      setError(err.message || 'Failed to submit question. Please try again.')
+      alert('Error: ' + (err.message || 'Failed to submit question'))
+    } finally {
+      setSubmitting(false)
     }
-    setQuestions([newQuestion, ...questions])
-    setQuestionForm({ subject: '', category: 'academic', question: '' })
-    setIsModalOpen(false)
-    alert('Question submitted successfully! You will be notified when it\'s answered.')
   }
 
   const toggleQuestion = (id) => {
@@ -95,7 +93,7 @@ export default function AskQuestion() {
       <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4" style={{ borderLeftColor: '#1e3a8a' }}>
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#1e3a8a' }}>
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#1e3a8a' }}>
               <svg className="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -137,6 +135,11 @@ export default function AskQuestion() {
 
             {/* Modal Content */}
             <div className="p-3 sm:p-4">
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                  {error}
+                </div>
+              )}
               <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
                 <div>
                   <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">Subject/Topic</label>
@@ -184,16 +187,25 @@ export default function AskQuestion() {
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="flex-1 px-4 py-2 rounded-lg border border-gray-300 text-gray-600 font-medium hover:bg-gray-50 transition-colors text-sm"
+                    disabled={submitting}
+                    className="flex-1 px-4 py-2 rounded-lg border border-gray-300 text-gray-600 font-medium hover:bg-gray-50 transition-colors text-sm disabled:opacity-50"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2 rounded-lg text-white font-semibold text-sm shadow-md hover:opacity-90 transition-all"
+                    disabled={submitting}
+                    className="flex-1 px-4 py-2 rounded-lg text-white font-semibold text-sm shadow-md hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                     style={{ backgroundColor: '#1e3a8a' }}
                   >
-                    Submit
+                    {submitting ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                        Submitting...
+                      </>
+                    ) : (
+                      'Submit'
+                    )}
                   </button>
                 </div>
               </form>
@@ -205,7 +217,53 @@ export default function AskQuestion() {
       {/* My Questions */}
       <div className="bg-white rounded-xl shadow-md p-6">
         <h3 className="text-2xl font-bold mb-6" style={{ color: '#1e3a8a' }}>My Questions</h3>
-        <div className="space-y-4">
+        
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+            {error}
+            <button
+              onClick={() => {
+                setError(null)
+                const fetchQuestions = async () => {
+                  try {
+                    setLoading(true)
+                    setError(null)
+                    const response = await getStudentQuestions()
+                    setQuestions(response.data || response || [])
+                  } catch (err) {
+                    setError('Failed to load questions. Please try again.')
+                  } finally {
+                    setLoading(false)
+                  }
+                }
+                fetchQuestions()
+              }}
+              className="ml-3 underline font-semibold"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="w-12 h-12 border-4 border-blue-900 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+              <p className="text-gray-600">Loading your questions...</p>
+            </div>
+          </div>
+        ) : questions.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: '#1e3a8a20' }}>
+              <svg className="w-8 h-8 text-blue-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p className="text-gray-600 text-lg font-semibold">No questions yet</p>
+            <p className="text-gray-500 mt-1">Start by posting a question above to get expert help!</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
           {paginatedQuestions.map((q) => (
             <div
               key={q.id}
@@ -294,7 +352,8 @@ export default function AskQuestion() {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Pagination */}

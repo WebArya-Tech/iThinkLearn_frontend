@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
-import { useAuth } from '../../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
+import { authApi } from '../../api/authApi'
+import { useAuth } from '../../context/AuthContext'
+import toast from 'react-hot-toast'
 
-export default function LoginModal({ isOpen, onClose, onOpenSignup, onOpenForgotPassword }) {
-  const { login } = useAuth()
+export default function LoginModal({ isOpen, onClose, onOpenSignup, onOpenForgotPassword, onOpenAdminLogin }) {
+  const { refreshUser } = useAuth()
   const navigate = useNavigate()
   const [loginData, setLoginData] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
@@ -14,25 +16,45 @@ export default function LoginModal({ isOpen, onClose, onOpenSignup, onOpenForgot
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    setIsLoading(true)
 
+    if (!loginData.email || !loginData.password) {
+      setError('Email and password are required')
+      return
+    }
+
+    setIsLoading(true)
     try {
-      const result = login(loginData.email, loginData.password)
+      const response = await authApi.loginWithPassword({
+        email: loginData.email,
+        password: loginData.password
+      })
       
-      if (result.success) {
+      if (response.data && response.data.token) {
+        localStorage.setItem('icfy_token', response.data.token)
+        localStorage.setItem('icfy_user', JSON.stringify(response.data.user))
+        localStorage.setItem('icfy_role', response.data.user.role || 'student')
+        
+        console.log('✅ Login successful:', {
+          token: response.data.token.substring(0, 20) + '...',
+          user: response.data.user,
+          role: response.data.user.role || 'student'
+        })
+        
+        toast.success('Login successful!')
         setLoginData({ email: '', password: '' })
         onClose()
-        if (result.isAdmin) {
-          navigate('/admin-dashboard')
-        } else {
-          navigate('/student-dashboard')
-        }
+        refreshUser()
+        
+        const isAdmin = response.data.user.role === 'admin'
+        const redirectPath = isAdmin ? '/admin-dashboard' : '/student-dashboard'
+        console.log('🔄 Redirecting to:', redirectPath)
+        navigate(redirectPath)
       } else {
-        setError(result.message || 'Invalid email or password')
+        setError('Invalid response from server')
       }
-    } catch (err) {
-      setError('An error occurred during login')
-      console.error('Login error:', err)
+    } catch (apiError) {
+      console.error('Login API error:', apiError)
+      setError(apiError.response?.data?.message || 'Invalid email or password')
     } finally {
       setIsLoading(false)
     }
@@ -41,110 +63,96 @@ export default function LoginModal({ isOpen, onClose, onOpenSignup, onOpenForgot
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-blue-900/60 backdrop-blur-sm flex items-center justify-center z-[9999]" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
-        {/* Modal Header */}
-        <div className="p-6 rounded-t-2xl bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-900">
-          <div className="flex justify-between items-center">
-            <h2 className="text-3xl font-black text-white">Login</h2>
-            <button
-              onClick={onClose}
-              className="text-white hover:text-blue-200 text-3xl font-bold transition"
-            >
-              ×
-            </button>
+    <div className="fixed inset-0 bg-blue-950/70 backdrop-blur-sm flex items-center justify-center z-[9999] p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
+        <div className="relative bg-blue-900 px-6 pt-8 pb-6">
+          {/* Decorative accent bar */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-400" />
+          <div className="flex justify-between items-start">
+            <div>
+              <h2 className="text-2xl font-black text-white tracking-tight">Welcome Back</h2>
+              <p className="text-blue-300 mt-1 text-sm">Login to your iThinkLearn account</p>
+            </div>
+            <button onClick={onClose} className="text-blue-300 hover:text-white text-2xl font-bold transition leading-none mt-0.5">×</button>
           </div>
-          <p className="text-blue-200 mt-2">Welcome back to iThinkLearn</p>
         </div>
 
-        {/* Modal Body */}
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="space-y-5">
-            {/* Error Message */}
+        {/* Body */}
+        <form onSubmit={handleSubmit} className="px-6 py-6">
+          <div className="space-y-4">
             {error && (
-              <div className="p-3 rounded-lg bg-red-50 border border-red-200">
+              <div className="flex items-start gap-2.5 p-3 rounded-lg bg-red-50 border border-red-200">
+                <span className="text-red-500 mt-0.5 shrink-0">⚠️</span>
                 <p className="text-sm text-red-600 font-medium">{error}</p>
               </div>
             )}
 
-            {/* Email Field */}
             <div>
-              <label htmlFor="login-email" className="block text-sm font-semibold mb-2 text-blue-900">
-                Email Address
-              </label>
+              <label htmlFor="login-email" className="block text-xs font-bold mb-1.5 text-blue-900 uppercase tracking-wide">Email Address</label>
               <input
                 type="email"
                 id="login-email"
                 required
                 value={loginData.email}
-                onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-yellow-400 transition text-gray-800"
+                onChange={e => { setLoginData({ ...loginData, email: e.target.value }); setError('') }}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-900 transition text-gray-800 text-sm bg-gray-50 focus:bg-white"
                 placeholder="Enter your email"
+                disabled={isLoading}
               />
             </div>
 
-            {/* Password Field */}
             <div>
-              <label htmlFor="login-password" className="block text-sm font-semibold mb-2 text-blue-900">
-                Password
-              </label>
+              <label htmlFor="login-password" className="block text-xs font-bold mb-1.5 text-blue-900 uppercase tracking-wide">Password</label>
               <div className="relative">
                 <input
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   id="login-password"
                   required
                   value={loginData.password}
-                  onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                  className="w-full px-4 py-3 pr-12 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-yellow-400 transition text-gray-800"
+                  onChange={e => { setLoginData({ ...loginData, password: e.target.value }); setError('') }}
+                  className="w-full px-4 py-3 pr-12 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-900 transition text-gray-800 text-sm bg-gray-50 focus:bg-white"
                   placeholder="Enter your password"
+                  disabled={isLoading}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition"
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-900 transition" tabIndex={-1}>
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>
 
-            {/* Forgot Password */}
             <div className="text-right">
               <button
                 type="button"
-                onClick={() => {
-                  onClose()
-                  onOpenForgotPassword()
-                }}
-                className="text-sm font-semibold text-blue-900 hover:text-blue-700 hover:underline"
+                onClick={() => { onClose(); onOpenForgotPassword() }}
+                className="text-xs font-semibold text-blue-700 hover:text-blue-900 hover:underline transition"
               >
                 Forgot Password?
               </button>
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 rounded-lg font-bold text-lg bg-gradient-to-r from-yellow-400 to-orange-500 text-blue-900 hover:from-yellow-300 hover:to-orange-400 transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 rounded-xl font-bold text-base bg-gradient-to-r from-yellow-400 to-orange-500 text-blue-900 hover:from-yellow-300 hover:to-orange-400 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
             >
-              {isLoading ? 'Logging in...' : 'Login'}
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-2"><span className="w-4 h-4 border-2 border-blue-900/30 border-t-blue-900 rounded-full animate-spin" />Logging in...</span>
+              ) : 'Login'}
             </button>
 
-            {/* Sign Up Link */}
-            <div className="text-center pt-4 border-t border-gray-200">
-              <p className="text-gray-600">
+            <div className="text-center pt-3 border-t border-gray-100 space-y-2">
+              <p className="text-sm text-gray-500">
                 Don't have an account?{' '}
-                <button
-                  type="button"
-                  onClick={() => {
-                    onClose()
-                    onOpenSignup()
-                  }}
-                  className="font-semibold text-blue-900 hover:text-blue-700 hover:underline"
-                >
+                <button type="button" onClick={() => { onClose(); onOpenSignup() }} className="font-bold text-blue-900 hover:text-blue-700 hover:underline transition">
                   Sign Up
+                </button>
+              </p>
+              <p className="text-xs text-gray-400">
+                Administrator?{' '}
+                <button type="button" onClick={() => { onClose(); onOpenAdminLogin() }} className="font-bold text-red-600 hover:text-red-700 hover:underline transition">
+                  Admin Login
                 </button>
               </p>
             </div>

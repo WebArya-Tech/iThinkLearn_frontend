@@ -62,85 +62,87 @@ export default function FeePaymentManagement() {
   const getPendingAmount = () => payments.filter(p => p.status === 'pending').reduce((sum, p) => sum + Number(p.feeAmount || p.amount || 0), 0)
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white border-b-2 border-blue-900 rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-blue-900"> Fee Payment Management</h2>
-        <p className="text-gray-500 text-sm mt-1">Track and manage student fee payments (auto-synced from frontend)</p>
+    <div className="space-y-4 md:space-y-6 w-full">
+      <div className="bg-white border-b-2 border-blue-900 rounded-xl p-4 md:p-6">
+        <h2 className="text-xl md:text-2xl font-bold text-blue-900">Fee Payment Management</h2>
+        <p className="text-gray-500 text-xs md:text-sm mt-1">Track and manage student fee payments (auto-synced from frontend)</p>
       </div>
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
         {[
           { label: 'Total Records', value: payments.length, color: '#1e3a8a', bg: '#eff6ff' },
           { label: 'Total Amount', value: `₹${getTotalAmount().toLocaleString()}`, color: '#1e3a8a', bg: '#eff6ff' },
           { label: 'Paid', value: `₹${getPaidAmount().toLocaleString()}`, color: '#28a745', bg: '#f0fff4' },
           { label: 'Pending', value: `₹${getPendingAmount().toLocaleString()}`, color: '#dc3545', bg: '#fff5f5' },
         ].map(s => (
-          <div key={s.label} className="rounded-xl shadow-md p-5 border-l-4" style={{ backgroundColor: s.bg, borderLeftColor: s.color }}>
+          <div key={s.label} className="rounded-xl shadow-md p-3 md:p-5 border-l-4" style={{ backgroundColor: s.bg, borderLeftColor: s.color }}>
             <p className="text-xs font-semibold text-gray-600 mb-1">{s.label}</p>
-            <p className="text-2xl font-bold" style={{ color: s.color }}>{s.value}</p>
+            <p className="text-lg md:text-2xl font-bold truncate" style={{ color: s.color }}>{s.value}</p>
           </div>
         ))}
       </div>
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-md p-4 flex flex-col md:flex-row gap-3">
-        <input
-          type="text"
-          placeholder="Search student, email, course..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="flex-1 px-4 py-2 border-2 rounded-lg focus:outline-none"
-          style={{ borderColor: '#1e3a8a' }}
-        />
-        <div className="flex flex-wrap gap-2">
-          {['all', 'pending', 'paid', 'failed'].map(status => (
-            <button key={status} onClick={() => setFilterStatus(status)}
-              className={`px-3 py-2 rounded-lg text-sm font-semibold ${filterStatus === status ? 'text-white' : 'text-gray-600 bg-gray-100'}`}
-              style={filterStatus === status ? { backgroundColor: '#1e3a8a' } : {}}>
-              {status.charAt(0).toUpperCase() + status.slice(1)}
-            </button>
-          ))}
+      <div className="bg-white rounded-xl shadow-md p-3 md:p-4">
+        <div className="flex flex-col gap-3">
+          <input
+            type="text"
+            placeholder="Search student, email, course..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full px-3 md:px-4 py-2 border-2 rounded-lg focus:outline-none text-xs md:text-sm"
+            style={{ borderColor: '#1e3a8a' }}
+          />
+          <div className="flex flex-wrap gap-2">
+            {['all', 'pending', 'paid', 'failed'].map(status => (
+              <button key={status} onClick={() => setFilterStatus(status)}
+                className={`px-2 md:px-3 py-1 md:py-2 rounded-lg text-xs md:text-sm font-semibold ${filterStatus === status ? 'text-white' : 'text-gray-600 bg-gray-100'}`}
+                style={filterStatus === status ? { backgroundColor: '#1e3a8a' } : {}}>
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
       {/* Table */}
       <div className="bg-white rounded-xl shadow-md overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full">
+          <table className="min-w-full text-xs md:text-sm">
             <thead className="bg-blue-900">
               <tr>
                 {['Receipt ID', 'Student Name', 'Email', 'Course', 'Amount', 'Payment Date', 'Transaction ID', 'Status', 'Actions'].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-white text-sm font-semibold">{h}</th>
+                  <th key={h} className="px-2 md:px-3 lg:px-4 py-2 md:py-3 text-left text-white font-semibold">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {paginatedPayments.length === 0 ? (
-                <tr><td colSpan="9" className="text-center py-10 text-gray-500">No payment records found.</td></tr>
+                <tr><td colSpan="9" className="text-center py-8 md:py-10 text-gray-500 text-xs md:text-sm">No payment records found.</td></tr>
               ) : paginatedPayments.map((p, idx) => (
                 <tr key={p.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <td className="px-4 py-3 font-mono text-xs text-gray-600">{p.id}</td>
-                  <td className="px-4 py-3 font-semibold text-blue-900">{p.fullName || p.studentName || '-'}</td>
-                  <td className="px-4 py-3 text-sm">{p.email || '-'}</td>
-                  <td className="px-4 py-3 text-sm">{p.courseName || p.course || '-'}</td>
-                  <td className="px-4 py-3 font-bold">₹{Number(p.feeAmount || p.amount || 0).toLocaleString()}</td>
-                  <td className="px-4 py-3 text-sm">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString('en-IN') : (p.date || '-')}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-gray-500">{p.razorpayPaymentId || '-'}</td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                  <td className="px-2 md:px-3 lg:px-4 py-2 md:py-3 font-mono text-xs text-gray-600">{p.id}</td>
+                  <td className="px-2 md:px-3 lg:px-4 py-2 md:py-3 font-semibold text-blue-900 text-xs md:text-sm truncate">{p.fullName || p.studentName || '-'}</td>
+                  <td className="px-2 md:px-3 lg:px-4 py-2 md:py-3 text-xs md:text-sm truncate">{p.email || '-'}</td>
+                  <td className="px-2 md:px-3 lg:px-4 py-2 md:py-3 text-xs md:text-sm truncate">{p.courseName || p.course || '-'}</td>
+                  <td className="px-2 md:px-3 lg:px-4 py-2 md:py-3 font-bold text-xs md:text-sm">₹{Number(p.feeAmount || p.amount || 0).toLocaleString()}</td>
+                  <td className="px-2 md:px-3 lg:px-4 py-2 md:py-3 text-xs md:text-sm whitespace-nowrap">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString('en-IN') : (p.date || '-')}</td>
+                  <td className="px-2 md:px-3 lg:px-4 py-2 md:py-3 font-mono text-xs text-gray-500 truncate max-w-25">{p.razorpayPaymentId || '-'}</td>
+                  <td className="px-2 md:px-3 lg:px-4 py-2 md:py-3">
+                    <span className={`px-2 py-0.5 md:py-1 rounded-full text-xs font-bold whitespace-nowrap inline-block ${
                       (p.status === 'paid' || p.status === 'Success') ? 'bg-green-100 text-green-800' :
                       p.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                       'bg-red-100 text-red-800'
                     }`}>{p.status}</span>
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-2">
+                  <td className="px-2 md:px-3 lg:px-4 py-2 md:py-3">
+                    <div className="flex gap-1 md:gap-2 flex-wrap">
                       <select value={p.status} onChange={e => handleStatusUpdate(p.id, e.target.value)}
-                        className="px-2 py-1 border rounded text-xs" style={{ borderColor: '#1e3a8a' }}>
+                        className="px-1.5 md:px-2 py-0.5 md:py-1 border rounded text-xs" style={{ borderColor: '#1e3a8a' }}>
                         <option value="pending">Pending</option>
                         <option value="paid">Paid</option>
                         <option value="failed">Failed</option>
                       </select>
                       <button onClick={() => handleDelete(p.id)}
-                        className="px-2 py-1 rounded text-white text-xs" style={{ backgroundColor: '#dc3545' }}>Del</button>
+                        className="px-1.5 md:px-2 py-0.5 md:py-1 rounded text-white text-xs whitespace-nowrap" style={{ backgroundColor: '#dc3545' }}>Del</button>
                     </div>
                   </td>
                 </tr>

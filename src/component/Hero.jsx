@@ -1,8 +1,8 @@
-import React, { useState } from "react"
-import ContactModal from "./ContactModal"
+import React from "react"
+import { useDemoModal } from "../context/DemoModalContext"
 
 export default function Hero() {
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const { openDemoModal } = useDemoModal()
 
   const handleLearnMore = () => {
     const section = document.getElementById('why-choose')
@@ -32,10 +32,10 @@ export default function Hero() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
               <button 
-                onClick={() => setIsModalOpen(true)}
+                onClick={openDemoModal}
                 className="bg-white text-blue-900 px-8 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg hover:bg-blue-50 transition transform hover:scale-105 w-full sm:w-auto text-center"
               >
-                Get Started
+                Schedule Free Demo
               </button>
               <button 
                 onClick={handleLearnMore}
@@ -54,8 +54,6 @@ export default function Hero() {
           </div>
         </div>
       </div>
-
-      <ContactModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </section>
   )
 }

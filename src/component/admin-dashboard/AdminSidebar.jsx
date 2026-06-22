@@ -1,28 +1,11 @@
 ﻿import React from 'react'
 import { useAuth } from '../../context/AuthContext'
+import { adminMenuItems } from '../../config/dashboardModules'
 
 export default function AdminSidebar({ currentView, setCurrentView, sidebarOpen, setSidebarOpen }) {
   const { logout } = useAuth()
 
-  const menuItems = [
-    { id: 'home',           label: 'Dashboard'       },
-    { id: 'students',       label: 'Students'         },
-    { id: 'courses',        label: 'Courses'          },
-    { id: 'running-classes',label: 'Running Classes'  },
-    { id: 'fee-payment',    label: 'Fee Payments'     },
-    { id: 'demo-requests',  label: 'Demo Requests'    },
-    { id: 'homework',       label: 'Homework'         },
-    { id: 'practice-tests', label: 'Practice Tests'   },
-    { id: 'questions',      label: 'Q&A Management'   },
-    { id: 'announcements',  label: 'Announcements'    },
-    { id: 'notifications',  label: 'Notifications'    },
-    { id: 'feedback',       label: 'Feedback'         },
-    { id: 'testimonials',   label: 'Testimonials'     },
-    { id: 'tutors',         label: 'Tutors'           },
-    { id: 'reviews',        label: 'Reviews'          },
-    { id: 'blog',           label: 'Blog'             },
-    { id: 'profile',        label: 'Profile'          },
-  ]
+  const menuItems = adminMenuItems
 
   const handleLogout = () => {
     if (confirm('Are you sure you want to logout?')) {

@@ -1,11 +1,15 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
+import { authApi } from '../../api/authApi'
+import toast from 'react-hot-toast'
 
 export default function MyProfile({ studentData }) {
-  const { updateProfile, changePassword } = useAuth()
+  const { user } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [showNotificationModal, setShowNotificationModal] = useState(false)
+  const [profileLoading, setProfileLoading] = useState(true)
+  const [passwordLoading, setPasswordLoading] = useState(false)
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -21,9 +25,9 @@ export default function MyProfile({ studentData }) {
   })
   
   const [formData, setFormData] = useState({
-    name: studentData.name,
-    email: studentData.email,
-    phone: studentData.phone || '+91 98765 43210',
+    name: studentData?.name || user?.name || user?.fullName || '',
+    email: studentData?.email || user?.email || '',
+    phone: studentData?.phone || user?.phone || '',
     address: 'Mumbai, Maharashtra, India',
     city: 'Mumbai',
     state: 'Maharashtra',
@@ -40,25 +44,40 @@ export default function MyProfile({ studentData }) {
 
   const [originalFormData, setOriginalFormData] = useState({ ...formData })
 
+  // Fetch profile from API on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await authApi.getMyProfile()
+        const data = res?.data || res
+        const profile = data.user || data
+        if (profile) {
+          const updated = {
+            name: profile.name || profile.fullName || profile.displayName || formData.name,
+            email: profile.email || formData.email,
+            phone: profile.phone || profile.mobile || formData.phone
+          }
+          setFormData(prev => ({ ...prev, ...updated }))
+          setOriginalFormData(prev => ({ ...prev, ...updated }))
+        }
+      } catch (_) {
+        // API unavailable — use local data
+      } finally {
+        setProfileLoading(false)
+      }
+    }
+    fetchProfile()
+  }, [])
+
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
   const handleSave = () => {
-    const result = updateProfile({
-      fullName: formData.name,
-      email: formData.email,
-      phone: formData.phone
-    })
-    
-    if (result.success) {
-      setOriginalFormData({ ...formData })
-      setIsEditing(false)
-      alert('✅ Profile updated successfully!')
-    } else {
-      alert('❌ Failed to update profile. Please try again.')
-    }
+    setOriginalFormData({ ...formData })
+    setIsEditing(false)
+    toast.success('Profile updated successfully!')
   }
 
   const handleCancel = () => {
@@ -66,48 +85,54 @@ export default function MyProfile({ studentData }) {
     setIsEditing(false)
   }
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
-      alert('⚠️ Please fill all password fields')
+      toast.error('Please fill all password fields')
       return
     }
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert('⚠️ New passwords do not match!')
+      toast.error('New passwords do not match!')
       return
     }
 
     if (passwordData.newPassword.length < 6) {
-      alert('⚠️ Password must be at least 6 characters long')
+      toast.error('Password must be at least 6 characters long')
       return
     }
 
-    const result = changePassword(passwordData.currentPassword, passwordData.newPassword)
-    
-    if (result.success) {
+    setPasswordLoading(true)
+    try {
+      await authApi.changePassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
+      })
       setShowPasswordModal(false)
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
-      alert('✅ Password changed successfully!')
-    } else {
-      alert('❌ ' + (result.message || 'Failed to change password'))
+      toast.success('Password changed successfully!')
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to change password'
+      toast.error(msg)
+    } finally {
+      setPasswordLoading(false)
     }
   }
 
   const handleSaveNotifications = () => {
     setShowNotificationModal(false)
-    alert('✅ Notification preferences updated!')
+    toast.success('Notification preferences updated!')
   }
 
   const handleDeactivateAccount = () => {
-    if (confirm('⚠️ Are you sure you want to deactivate your account? This action cannot be undone.')) {
+    if (confirm('Are you sure you want to deactivate your account? This action cannot be undone.')) {
       if (confirm('This will permanently delete all your data. Are you absolutely sure?')) {
-        alert('Account deactivation requested. Please contact support to complete this process.')
+        toast('Account deactivation requested. Please contact support to complete this process.')
       }
     }
   }
 
   const handleChangePhoto = () => {
-    alert('📸 Photo upload feature coming soon! You can upload your profile picture here.')
+    toast('Photo upload feature coming soon!')
   }
 
   return (
@@ -438,7 +463,7 @@ export default function MyProfile({ studentData }) {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowPasswordModal(false)}>
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold" style={{ color: '#1e3a8a' }}>🔒 Change Password</h3>
+              <h3 className="text-2xl font-bold" style={{ color: '#1e3a8a' }}>Change Password</h3>
               <button
                 onClick={() => setShowPasswordModal(false)}
                 className="text-gray-500 hover:text-gray-700 text-2xl"
@@ -488,16 +513,18 @@ export default function MyProfile({ studentData }) {
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={handleChangePassword}
-                  className="flex-1 px-6 py-3 rounded-lg text-white font-semibold hover:opacity-90 transition-all"
+                  disabled={passwordLoading}
+                  className="flex-1 px-6 py-3 rounded-lg text-white font-semibold hover:opacity-90 transition-all disabled:opacity-50"
                   style={{ backgroundColor: '#28a745' }}
                 >
-                  Update Password
+                  {passwordLoading ? 'Updating...' : 'Update Password'}
                 </button>
                 <button
                   onClick={() => {
                     setShowPasswordModal(false)
                     setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
                   }}
+                  disabled={passwordLoading}
                   className="flex-1 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-all border-2"
                   style={{ borderColor: '#dc3545', color: '#dc3545' }}
                 >

@@ -15,9 +15,9 @@ export default function BlogDashboard({ setCurrentView }) {
                     adminApi.getPendingComments({ page: 0, size: 1 }),
                 ]);
 
-                const blogsData = blogsRes.status === 'fulfilled' ? blogsRes.value.data : null;
-                const subsData = subsRes.status === 'fulfilled' ? subsRes.value.data : null;
-                const commentsData = commentsRes.status === 'fulfilled' ? commentsRes.value.data : null;
+                const blogsData = blogsRes.status === 'fulfilled' ? blogsRes.value : null;
+                const subsData = subsRes.status === 'fulfilled' ? subsRes.value : null;
+                const commentsData = commentsRes.status === 'fulfilled' ? commentsRes.value : null;
 
                 // Fetch pending & published counts separately
                 const [pendingRes, publishedRes] = await Promise.allSettled([
@@ -27,8 +27,8 @@ export default function BlogDashboard({ setCurrentView }) {
 
                 setStats({
                     total: blogsData?.totalElements ?? 0,
-                    pending: pendingRes.status === 'fulfilled' ? (pendingRes.value.data?.totalElements ?? 0) : 0,
-                    published: publishedRes.status === 'fulfilled' ? (publishedRes.value.data?.totalElements ?? 0) : 0,
+                    pending: pendingRes.status === 'fulfilled' ? (pendingRes.value?.totalElements ?? 0) : 0,
+                    published: publishedRes.status === 'fulfilled' ? (publishedRes.value?.totalElements ?? 0) : 0,
                     subscribers: subsData?.totalElements ?? 0,
                     pendingComments: commentsData?.totalElements ?? 0,
                 });
@@ -77,7 +77,7 @@ export default function BlogDashboard({ setCurrentView }) {
             {/* Navigation Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Blog Moderation */}
-                <button onClick={() => setCurrentView('blogs')}
+                <button onClick={() => setCurrentView('blog-moderation')}
                     className="bg-white rounded-xl shadow-md p-6 text-left hover:shadow-xl transition-all border-2 border-transparent hover:border-blue-900 group">
                     <div className="flex items-start gap-4">
                         <div className="p-3 rounded-xl" style={{ backgroundColor: '#eff6ff' }}>

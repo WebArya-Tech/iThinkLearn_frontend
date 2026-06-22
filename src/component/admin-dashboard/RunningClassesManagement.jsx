@@ -1,130 +1,45 @@
-﻿
-import React, { useState, useEffect } from 'react';
-import { runningClassesApi } from '../../api/runningClassesApi';
+﻿import React, { useState, useEffect } from 'react';
+import ScrollableCard from './ScrollableCard'
+import { adminClassesApi } from '../../api/runningClassesApi';
 import toast from 'react-hot-toast';
 import Pagination from '../ui/Pagination';
-import { Eye, BookOpen, Edit, Trash2 } from 'lucide-react';
+import { Eye, BookOpen, Edit, Trash2, Check, X, Users } from 'lucide-react';
 
 const DEFAULT_CLASSES = [
-  { 
-    id: 1, 
-    subject: 'UG Mathematics', 
-    level: 'Undergraduate', 
-    instructor: 'Ms. Neha Aggarwal', 
-    schedule: 'Mon, Wed, Fri - 6:00 PM IST', 
-    maxCapacity: 15,
-    currentEnrollment: 1,
-    description: 'Comprehensive mathematics coverage for B.Sc and B.Tech students',
-    startDate: '2024-06-01',
-    endDate: '2024-08-31',
-    duration: '12 weeks',
-    topics: 'Calculus, Linear Algebra, Differential Equations',
-    difficultyLevel: 'Intermediate',
-    prerequisites: 'Basic Mathematics',
-    demoLink: '',
-    meetingLink: '',
-    image: '', 
-    status: 'Active', 
-    approvedEnrollments: [
-      {
-        enrollmentNo: 'ENROLL1172345',
-        fullName: 'Rahul Kumar',
-        email: 'rahul.kumar@example.com',
-        phone: '+91-9876543210',
-        classSubject: 'UG Mathematics',
-        specialRequirements: 'Prefer morning sessions if possible',
-        enrollmentDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        status: 'Approved'
-      }
-    ],
-    allEnrollments: []
-  },
-  { 
-    id: 2, 
-    subject: 'UG Physics', 
-    level: 'Undergraduate', 
-    instructor: 'Mr. Arvind', 
-    schedule: 'Tue, Thu - 5:30 PM IST', 
-    maxCapacity: 12,
-    currentEnrollment: 0,
-    description: 'Advanced physics concepts with real-world applications', 
-    startDate: '2024-06-01',
-    endDate: '2024-08-31',
-    duration: '10 weeks',
-    topics: 'Mechanics, Thermodynamics, Waves and Optics',
-    difficultyLevel: 'Intermediate',
-    prerequisites: 'Basic Physics',
-    demoLink: '',
-    meetingLink: '',
-    image: '', 
-    status: 'Active',
-    approvedEnrollments: [],
-    allEnrollments: []
-  },
-  { 
-    id: 3, 
-    subject: 'UG Chemistry', 
-    level: 'Undergraduate', 
-    instructor: 'Dr. Priya', 
-    schedule: 'Mon, Wed - 4:00 PM IST', 
-    maxCapacity: 10,
-    currentEnrollment: 0,
-    description: 'Organic, inorganic and physical chemistry', 
-    startDate: '2024-06-01',
-    endDate: '2024-08-31',
-    duration: '10 weeks',
-    topics: 'Organic Chemistry, Inorganic Chemistry, Physical Chemistry',
-    difficultyLevel: 'Intermediate',
-    prerequisites: 'Basic Chemistry',
-    demoLink: '',
-    meetingLink: '',
-    image: '', 
-    status: 'Active',
-    approvedEnrollments: [],
-    allEnrollments: []
-  },
-  { 
-    id: 4, 
-    subject: 'GRE Preparation', 
-    level: 'Professional', 
-    instructor: 'Mr. Rajan', 
-    schedule: 'Sat, Sun - 10:00 AM IST', 
-    maxCapacity: 8,
-    currentEnrollment: 0,
-    description: 'Complete GRE verbal and quantitative prep', 
-    startDate: '2024-06-15',
-    endDate: '2024-09-15',
-    duration: '12 weeks',
-    topics: 'Verbal Reasoning, Quantitative Reasoning, Analytical Writing',
-    difficultyLevel: 'Advanced',
-    prerequisites: 'Basic English and Math',
-    demoLink: '',
-    meetingLink: '',
-    image: '', 
-    status: 'Active',
+  {
+    id: '664300000000000000000001',
+    title: 'Advanced Calculus 101',
+    category: 'UNDERGRADUATE',
+    instructorName: 'Prof. Alan Math',
+    schedule: 'Mon, Wed, Fri - 6:00 PM IST',
+    maxCapacity: 20,
+    enrolledCount: 2,
+    availableSeats: 18,
+    description: 'A comprehensive course on multivariable calculus.',
+    startDate: '2026-05-23T19:01:48.557',
+    endDate: '2026-08-13T19:01:48.557',
+    feeInfo: '₹5,000 / month',
+    status: 'ACTIVE',
     approvedEnrollments: [],
     allEnrollments: []
   },
 ];
 
 const EMPTY_FORM = {
-  subject: '',
-  level: 'Undergraduate',
-  instructor: '',
+  title: '',
+  category: 'UNDERGRADUATE',
+  instructorName: '',
   schedule: '',
-  maxCapacity: '15',
-  currentEnrollment: '0',
+  maxCapacity: 20,
+  enrolledCount: 0,
   description: '',
   startDate: '',
   endDate: '',
-  duration: '',
-  topics: '',
-  difficultyLevel: 'Intermediate',
-  prerequisites: '',
-  demoLink: '',
-  meetingLink: '',
-  image: '',
-  status: 'Active',
+  feeInfo: '',
+  status: 'ACTIVE',
+  batchSize: '',
+  instructorBio: '',
+  additionalInfo: '',
   approvedEnrollments: [],
   allEnrollments: [],
 };
@@ -149,12 +64,7 @@ export default function RunningClassesManagement() {
   const paginatedClasses = classes.slice(startIndex, startIndex + itemsPerPage);
 
   const getClassEnrollmentCount = (classItem) => {
-    const approvedCount = classItem.approvedEnrollments?.length || 0;
-    const matchingApprovedRequests = enrollmentRequests.filter(
-      (req) => req.classSubject === classItem.subject && req.status === 'Approved'
-    ).length;
-
-    return Math.max(Number(classItem.currentEnrollment) || 0, approvedCount, matchingApprovedRequests);
+    return classItem.enrolledCount || 0;
   };
 
   const filteredEnrollmentRequests = selectedEnrollmentClass === 'all'
@@ -165,56 +75,45 @@ export default function RunningClassesManagement() {
   const enrollmentStartIndex = (enrollmentPage - 1) * itemsPerPage;
   const paginatedEnrollments = filteredEnrollmentRequests.slice(enrollmentStartIndex, enrollmentStartIndex + itemsPerPage);
 
-  // Fetch classes from backend; fall back to defaults if unavailable
   const fetchClasses = async () => {
     try {
       setLoading(true);
-      const res = await runningClassesApi.getAll();
-      const data = res.data?.data || res.data || [];
-      setClasses(Array.isArray(data) && data.length > 0 ? data : DEFAULT_CLASSES);
-      // Keep localStorage in sync for other pages
-      localStorage.setItem('icfy_running_classes', JSON.stringify(
-        Array.isArray(data) && data.length > 0 ? data : DEFAULT_CLASSES
-      ));
-    } catch {
-      // API unavailable — load from localStorage or use defaults
-      try {
-        const saved = JSON.parse(localStorage.getItem('icfy_running_classes') || 'null');
-        setClasses(saved && saved.length > 0 ? saved : DEFAULT_CLASSES);
-      } catch {
-        setClasses(DEFAULT_CLASSES);
-      }
+      const response = await adminClassesApi.getAll({
+        page: currentPage - 1,
+        size: itemsPerPage
+      });
+      const data = response.data;
+      const classList = data.content || (Array.isArray(data) ? data : []);
+      setClasses(classList.length > 0 ? classList : DEFAULT_CLASSES);
+    } catch (error) {
+      console.error('Failed to fetch classes:', error);
+      toast.error('Failed to load classes from server');
+      setClasses(DEFAULT_CLASSES);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchClasses(); }, []);
+  useEffect(() => { fetchClasses(); }, [currentPage]);
 
-  // Load enrollment requests from localStorage
-  useEffect(() => {
-    let enrollments = JSON.parse(localStorage.getItem('runningClassEnrollments') || '[]');
-    
-    // Add sample enrollment if none exist
-    if (enrollments.length === 0) {
-      enrollments = [
-        {
-          id: 'ENROLL1172345',
-          enrollmentNo: 'ENROLL1172345',
-          fullName: 'Rahul Kumar',
-          email: 'rahul.kumar@example.com',
-          phone: '+91-9876543210',
-          classSubject: 'UG Mathematics',
-          specialRequirements: 'Prefer morning sessions if possible',
-          enrollmentDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          status: 'Approved'
-        }
-      ];
-      localStorage.setItem('runningClassEnrollments', JSON.stringify(enrollments));
+  const fetchEnrollments = async () => {
+    try {
+      const response = await adminClassesApi.getEnrollments({
+        page: enrollmentPage - 1,
+        size: itemsPerPage
+      });
+      const data = response.data;
+      const enrollmentList = data.content || (Array.isArray(data) ? data : []);
+      setEnrollmentRequests(enrollmentList);
+    } catch (error) {
+      console.error('Failed to fetch enrollments:', error);
+      setEnrollmentRequests([]);
     }
-    
-    setEnrollmentRequests(enrollments);
-  }, []);
+  };
+
+  useEffect(() => {
+    fetchEnrollments();
+  }, [enrollmentPage]);
 
   const handleInputChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -222,58 +121,67 @@ export default function RunningClassesManagement() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const token = localStorage.getItem('icfy_token');
+    if (!token) {
+      toast.error('You must be logged in as an admin to perform this action.');
+      return;
+    }
+
     setSaving(true);
+
+    const payload = {
+      title: form.title || '',
+      description: form.description || '',
+      category: form.category || 'UNDERGRADUATE',
+      schedule: form.schedule || '',
+      batchSize: form.batchSize || '',
+      instructorName: form.instructorName || '',
+      instructorBio: form.instructorBio || '',
+      feeInfo: form.feeInfo || '',
+      startDate: form.startDate ? `${form.startDate}T00:00:00` : null,
+      endDate: form.endDate ? `${form.endDate}T00:00:00` : null,
+      additionalInfo: form.additionalInfo || '',
+      status: form.status || 'ACTIVE',
+      maxCapacity: Number(form.maxCapacity || 20)
+    };
+
     try {
       if (editId) {
-        await runningClassesApi.update(editId, form);
+        await adminClassesApi.update(editId, payload);
         toast.success('Class updated successfully');
       } else {
-        await runningClassesApi.create(form);
+        await adminClassesApi.create(payload);
         toast.success('Class created successfully');
       }
       await fetchClasses();
-    } catch {
-      // API failed — update locally and persist to localStorage
-      if (editId) {
-        const updated = classes.map(c =>
-          c.id === editId ? { ...form, id: editId, enrolledStudents: c.enrolledStudents || [] } : c
-        );
-        setClasses(updated);
-        localStorage.setItem('icfy_running_classes', JSON.stringify(updated));
-        toast.success('Class updated (offline mode)');
-      } else {
-        const newClass = { ...form, id: Date.now(), enrolledStudents: [] };
-        const updated = [...classes, newClass];
-        setClasses(updated);
-        localStorage.setItem('icfy_running_classes', JSON.stringify(updated));
-        toast.success('Class created (offline mode)');
-      }
+      setForm(EMPTY_FORM);
+      setEditId(null);
+      setShowForm(false);
+    } catch (error) {
+      console.error('Save error:', error);
+      const errorMsg = error.message || (error.status === 403 ? 'Access denied. You may not have admin permissions.' : 'Failed to save class.');
+      toast.error(errorMsg);
     } finally {
       setSaving(false);
     }
-    setForm(EMPTY_FORM);
-    setEditId(null);
-    setShowForm(false);
   };
 
   const handleEdit = (c) => {
     setForm({
-      subject: c.subject,
-      level: c.level,
-      instructor: c.instructor,
+      title: c.title,
+      category: c.category,
+      instructorName: c.instructorName,
       schedule: c.schedule,
-      maxCapacity: String(c.maxCapacity || c.students || '15'),
-      currentEnrollment: String(c.currentEnrollment || c.approvedEnrollments?.length || 0),
+      maxCapacity: Number(c.maxCapacity || 20),
+      enrolledCount: Number(c.enrolledCount || 0),
       description: c.description,
-      startDate: c.startDate || '',
-      endDate: c.endDate || '',
-      duration: c.duration || '',
-      topics: c.topics || '',
-      difficultyLevel: c.difficultyLevel || 'Intermediate',
-      prerequisites: c.prerequisites || '',
-      demoLink: c.demoLink || '',
-      meetingLink: c.meetingLink || '',
-      image: c.image || '',
+      startDate: c.startDate ? c.startDate.split('T')[0] : '',
+      endDate: c.endDate ? c.endDate.split('T')[0] : '',
+      feeInfo: c.feeInfo || '',
+      batchSize: c.batchSize || '',
+      instructorBio: c.instructorBio || '',
+      additionalInfo: c.additionalInfo || '',
       status: c.status,
       approvedEnrollments: c.approvedEnrollments || [],
       allEnrollments: c.allEnrollments || [],
@@ -281,69 +189,65 @@ export default function RunningClassesManagement() {
     setEditId(c.id);
     setShowForm(true);
     setShowClassDetailsModal(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this class?')) return;
     try {
-      await runningClassesApi.delete(id);
+      await adminClassesApi.delete(id);
       toast.success('Class deleted successfully');
       await fetchClasses();
-    } catch {
-      const updated = classes.filter(c => c.id !== id);
-      setClasses(updated);
-      localStorage.setItem('icfy_running_classes', JSON.stringify(updated));
-      toast.success('Class deleted (offline mode)');
+    } catch (error) {
+      toast.error(error.message || 'Failed to delete class');
     }
     setShowClassDetailsModal(false);
     setSelectedClassForDetails(null);
   };
 
-  const handleApproveEnrollment = (enrollmentId) => {
-    // Update enrollment request status
-    const updated = enrollmentRequests.map(req =>
-      req.id === enrollmentId ? { ...req, status: 'Approved' } : req
-    );
-    setEnrollmentRequests(updated);
-    localStorage.setItem('runningClassEnrollments', JSON.stringify(updated));
-
-    // Find the enrollment and add to the class's approvedEnrollments
-    const enrollment = updated.find(e => e.id === enrollmentId);
-    if (enrollment) {
-      const updatedClasses = classes.map(c => {
-        if (c.subject === enrollment.classSubject) {
-          return {
-            ...c,
-            approvedEnrollments: [...(c.approvedEnrollments || []), enrollment],
-            currentEnrollment: (c.currentEnrollment || c.approvedEnrollments?.length || 0) + 1
-          };
-        }
-        return c;
-      });
-      setClasses(updatedClasses);
-      localStorage.setItem('icfy_running_classes', JSON.stringify(updatedClasses));
+  const handleConfirmEnrollment = async (id) => {
+    try {
+      await adminClassesApi.confirmEnrollment(id);
+      toast.success('Enrollment confirmed');
+      fetchEnrollments();
+      fetchClasses();
+    } catch (error) {
+      toast.error(error.message || 'Failed to confirm enrollment');
     }
-    toast.success('Enrollment approved and student added to class');
   };
 
-  const handleRejectEnrollment = (enrollmentId) => {
-    const updated = enrollmentRequests.map(req =>
-      req.id === enrollmentId ? { ...req, status: 'Rejected' } : req
-    );
-    setEnrollmentRequests(updated);
-    localStorage.setItem('runningClassEnrollments', JSON.stringify(updated));
-    toast.success('Enrollment rejected');
+  const handleRejectEnrollment = async (id) => {
+    const reason = window.prompt('Enter reason for rejection:');
+    if (reason === null) return;
+    try {
+      await adminClassesApi.rejectEnrollment(id, { reason });
+      toast.success('Enrollment rejected');
+      fetchEnrollments();
+    } catch (error) {
+      toast.error(error.message || 'Failed to reject enrollment');
+    }
+  };
+
+  const handleDeleteEnrollment = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this enrollment?')) return;
+    try {
+      await adminClassesApi.deleteEnrollment(id);
+      toast.success('Enrollment deleted');
+      fetchEnrollments();
+    } catch (error) {
+      toast.error(error.message || 'Failed to delete enrollment');
+    }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white border-b-2 border-blue-900 rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-blue-900">Running Classes Management</h2>
-        <p className="text-gray-500 text-sm mt-1">Manage currently running classes, schedules, and student enrollments</p>
+    <div className="space-y-6 max-w-full">
+      <div className="bg-white border-b-2 border-blue-900 rounded-xl p-4 md:p-6">
+        <h2 className="text-xl md:text-2xl font-bold text-blue-900">Running Classes Management</h2>
+        <p className="text-gray-500 text-xs md:text-sm mt-1">Manage currently running classes, schedules, and student enrollments</p>
       </div>
-      <div className="bg-white rounded-xl shadow-md p-4 md:p-8">
+      <div className="bg-white rounded-xl shadow-md p-3 md:p-6 overflow-hidden">
         <button
-          className="mb-4 px-4 py-2 rounded font-bold text-white bg-blue-900 disabled:opacity-60"
+          className="mb-6 px-4 py-2 rounded font-bold text-white bg-blue-900 hover:bg-blue-800 transition-colors disabled:opacity-60 text-sm md:text-base"
           disabled={saving}
           onClick={() => {
             setShowForm(!showForm);
@@ -355,401 +259,295 @@ export default function RunningClassesManagement() {
         </button>
 
         {showForm && (
-          <form onSubmit={handleSubmit} className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50 p-6 rounded-lg">
+          <form onSubmit={handleSubmit} className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50 p-4 md:p-6 rounded-lg border border-blue-100">
             <div className="md:col-span-2">
-              <h3 className="text-lg font-bold text-blue-900 mb-4">{editId ? 'Edit Class' : 'Add New Running Class'}</h3>
+              <h3 className="text-lg font-bold text-blue-900 mb-2">{editId ? 'Edit Class' : 'Add New Running Class'}</h3>
             </div>
-            
-            {/* Basic Information */}
-            <input
-              name="subject"
-              value={form.subject}
-              onChange={handleInputChange}
-              placeholder="Subject Name (e.g., UG Mathematics)"
-              className="w-full px-4 py-2 border border-gray-300 rounded"
-              required
-            />
-            <select
-              name="level"
-              value={form.level}
-              onChange={handleInputChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded"
-              required
-            >
-              <option value="Undergraduate">Undergraduate</option>
-              <option value="Post-Graduate">Post-Graduate</option>
-              <option value="Professional">Professional</option>
-            </select>
-            
-            <input
-              name="instructor"
-              value={form.instructor}
-              onChange={handleInputChange}
-              placeholder="Instructor Name"
-              className="w-full px-4 py-2 border border-gray-300 rounded"
-              required
-            />
-            
-            <select
-              name="difficultyLevel"
-              value={form.difficultyLevel}
-              onChange={handleInputChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded"
-            >
-              <option value="Beginner">Beginner</option>
-              <option value="Intermediate">Intermediate</option>
-              <option value="Advanced">Advanced</option>
-              <option value="Expert">Expert</option>
-            </select>
 
-            {/* Dates & Duration */}
-            <div>
-              <label className="text-sm font-semibold text-gray-700 mb-1">Start Date</label>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-700">Class Title *</label>
+              <input
+                name="title"
+                value={form.title}
+                onChange={handleInputChange}
+                placeholder="e.g., Advanced Calculus 101"
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                required
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-700">Category *</label>
+              <select
+                name="category"
+                value={form.category}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                required
+              >
+                <option value="UNDERGRADUATE">Undergraduate</option>
+                <option value="POST_GRADUATE">Post-Graduate</option>
+                <option value="PROFESSIONAL">Professional</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-700">Instructor Name *</label>
+              <input
+                name="instructorName"
+                value={form.instructorName}
+                onChange={handleInputChange}
+                placeholder="Instructor Name"
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                required
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-700">Fee Information</label>
+              <input
+                name="feeInfo"
+                value={form.feeInfo}
+                onChange={handleInputChange}
+                placeholder="e.g., ₹5,000 / month"
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-700">Start Date</label>
               <input
                 type="date"
                 name="startDate"
                 value={form.startDate}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded"
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
 
-            <div>
-              <label className="text-sm font-semibold text-gray-700 mb-1">End Date</label>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-700">End Date</label>
               <input
                 type="date"
                 name="endDate"
                 value={form.endDate}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded"
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
 
-            <input
-              name="duration"
-              value={form.duration}
-              onChange={handleInputChange}
-              placeholder="Duration (e.g., 12 weeks)"
-              className="w-full px-4 py-2 border border-gray-300 rounded"
-            />
+            <div className="md:col-span-2 space-y-1">
+              <label className="text-xs font-bold text-gray-700">Schedule *</label>
+              <input
+                name="schedule"
+                value={form.schedule}
+                onChange={handleInputChange}
+                placeholder="e.g., Mon, Wed, Fri - 6:00 PM IST"
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                required
+              />
+            </div>
 
-            <input
-              name="schedule"
-              value={form.schedule}
-              onChange={handleInputChange}
-              placeholder="Schedule (e.g., Mon, Wed, Fri - 6:00 PM IST)"
-              className="w-full px-4 py-2 border border-gray-300 rounded"
-              required
-            />
-
-            {/* Capacity & Enrollment */}
-            <div>
-              <label className="text-sm font-semibold text-gray-700 mb-1">Max Capacity</label>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-700">Max Capacity *</label>
               <input
                 type="number"
                 name="maxCapacity"
                 value={form.maxCapacity}
                 onChange={handleInputChange}
-                placeholder="15"
-                className="w-full px-4 py-2 border border-gray-300 rounded"
+                placeholder="20"
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
                 min="1"
                 required
               />
             </div>
 
-            <div>
-              <label className="text-sm font-semibold text-gray-700 mb-1">Current Enrollment (Auto)</label>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-700 italic">Current Enrollment (Auto)</label>
               <input
                 type="text"
-                value={form.currentEnrollment}
+                value={form.enrolledCount}
                 placeholder="0"
-                className="w-full px-4 py-2 border border-gray-300 rounded bg-gray-100"
+                className="w-full px-4 py-2 border border-gray-300 rounded bg-gray-100 cursor-not-allowed"
                 disabled
               />
             </div>
 
-            {/* Topics & Prerequisites */}
-            <div className="md:col-span-2">
-              <label className="text-sm font-semibold text-gray-700 mb-1">Topics Covered</label>
+            <div className="md:col-span-2 space-y-1">
+              <label className="text-xs font-bold text-gray-700">Batch Size Info</label>
               <input
-                name="topics"
-                value={form.topics}
+                name="batchSize"
+                value={form.batchSize}
                 onChange={handleInputChange}
-                placeholder="e.g., Calculus, Linear Algebra, Differential Equations"
-                className="w-full px-4 py-2 border border-gray-300 rounded"
+                placeholder="e.g., 12-15 students"
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
 
-            <div className="md:col-span-2">
-              <label className="text-sm font-semibold text-gray-700 mb-1">Prerequisites</label>
+            <div className="md:col-span-2 space-y-1">
+              <label className="text-xs font-bold text-gray-700">Instructor Bio</label>
               <input
-                name="prerequisites"
-                value={form.prerequisites}
+                name="instructorBio"
+                value={form.instructorBio}
                 onChange={handleInputChange}
-                placeholder="e.g., Basic Mathematics, High school Chemistry"
-                className="w-full px-4 py-2 border border-gray-300 rounded"
+                placeholder="Brief bio of the instructor"
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
 
-            {/* Description */}
-            <textarea
-              name="description"
-              value={form.description}
-              onChange={handleInputChange}
-              placeholder="Class Description"
-              className="w-full md:col-span-2 px-4 py-2 border border-gray-300 rounded"
-              rows="3"
-              required
-            />
-
-            {/* Links */}
-            <div className="md:col-span-2">
-              <label className="text-sm font-semibold text-gray-700 mb-1">Demo Class Link</label>
-              <input
-                name="demoLink"
-                value={form.demoLink}
+            <div className="md:col-span-2 space-y-1">
+              <label className="text-xs font-bold text-gray-700">Additional Info</label>
+              <textarea
+                name="additionalInfo"
+                value={form.additionalInfo}
                 onChange={handleInputChange}
-                placeholder="https://zoom.us/j/... or https://meet.google.com/..."
-                type="url"
-                className="w-full px-4 py-2 border border-gray-300 rounded"
+                placeholder="Any additional information about the class"
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                rows="2"
               />
             </div>
 
-            <div className="md:col-span-2">
-              <label className="text-sm font-semibold text-gray-700 mb-1">Regular Meeting Link</label>
-              <input
-                name="meetingLink"
-                value={form.meetingLink}
+            <div className="md:col-span-2 space-y-1">
+              <label className="text-xs font-bold text-gray-700">Description *</label>
+              <textarea
+                name="description"
+                value={form.description}
                 onChange={handleInputChange}
-                placeholder="https://zoom.us/j/... or https://meet.google.com/..."
-                type="url"
-                className="w-full px-4 py-2 border border-gray-300 rounded"
+                placeholder="Class Description"
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                rows="3"
+                required
               />
             </div>
 
-            {/* Status */}
-            <select
-              name="status"
-              value={form.status}
-              onChange={handleInputChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded"
-            >
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-              <option value="Completed">Completed</option>
-            </select>
+            <div className="md:col-span-2 space-y-1">
+              <label className="text-xs font-bold text-gray-700">Status</label>
+              <select
+                name="status"
+                value={form.status}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+              >
+                <option value="ACTIVE">ACTIVE</option>
+                <option value="INACTIVE">INACTIVE</option>
+                <option value="COMPLETED">COMPLETED</option>
+                <option value="CANCELLED">CANCELLED</option>
+              </select>
+            </div>
 
             <button
               type="submit"
               disabled={saving}
-              className="md:col-span-2 px-4 py-2 rounded text-white font-bold bg-blue-900 hover:bg-blue-800 disabled:opacity-60"
+              className="md:col-span-2 mt-4 px-6 py-3 rounded text-white font-bold bg-blue-900 hover:bg-blue-800 transition-colors disabled:opacity-60 shadow-lg"
             >
-              {saving ? 'Saving...' : editId ? 'Update Class' : 'Create Class'}
+              {saving ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Saving...
+                </span>
+              ) : editId ? 'Update Class' : 'Create Class'}
             </button>
           </form>
         )}
 
         {loading ? (
-          <div className="text-center py-10 text-blue-900 font-semibold">Loading classes...</div>
+          <div className="flex flex-col items-center justify-center py-20 text-blue-900">
+            <div className="w-10 h-10 border-4 border-blue-900 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="font-semibold">Loading classes...</p>
+          </div>
         ) : classes.length === 0 ? (
-          <div className="text-gray-600 text-center py-8">No running classes found.</div>
+          <div className="text-gray-500 text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+            No running classes found. Click "+ Add Running Class" to get started.
+          </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 border">
-              <thead className="bg-linear-to-r from-blue-900 to-blue-800 text-white">
+          <ScrollableCard>
+            <table className="w-full min-w-[800px] divide-y divide-gray-200">
+              <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left font-semibold">Subject</th>
-                  <th className="px-4 py-3 text-left font-semibold">Level</th>
-                  <th className="px-4 py-3 text-left font-semibold">Instructor</th>
-                  <th className="px-4 py-3 text-left font-semibold">Schedule</th>
-                  <th className="px-4 py-3 text-left font-semibold">Enrollment</th>
-                  <th className="px-4 py-3 text-left font-semibold">Duration</th>
-                  <th className="px-4 py-3 text-left font-semibold">Difficulty</th>
-                  <th className="px-4 py-3 text-left font-semibold">Status</th>
-                  <th className="px-4 py-3 text-left font-semibold">Actions</th>
+                  <th className="px-4 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Title</th>
+                  <th className="px-4 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Category</th>
+                  <th className="px-4 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Instructor</th>
+                  <th className="px-4 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Schedule</th>
+                  <th className="px-4 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Enrollment</th>
+                  <th className="px-4 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Fee</th>
+                  <th className="px-4 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="bg-white divide-y divide-gray-200">
                 {paginatedClasses.map((c) => {
-                  const enrolled = c.currentEnrollment || c.approvedEnrollments?.length || 0;
-                  const capacity = c.maxCapacity || 15;
-                  const enrollmentPercent = (enrolled / capacity) * 100;
-                  
+                  const enrolled = c.enrolledCount || 0;
+                  const capacity = c.maxCapacity || 20;
+
                   return (
-                    <tr key={c.id} className="hover:bg-blue-50 border-b">
-                      <td className="px-4 py-3 font-medium text-gray-900">{c.subject}</td>
-                      <td className="px-4 py-3 text-sm"><span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">{c.level}</span></td>
-                      <td className="px-4 py-3 text-sm">{c.instructor}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{c.schedule}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-20 bg-gray-200 rounded-full h-2">
-                            <div 
-                              className={`h-2 rounded-full transition-all ${enrollmentPercent > 80 ? 'bg-red-500' : enrollmentPercent > 50 ? 'bg-yellow-500' : 'bg-green-500'}`}
-                              style={{width: `${Math.min(enrollmentPercent, 100)}%`}}
-                            ></div>
-                          </div>
-                          <span className="text-sm font-semibold text-gray-700">{enrolled}/{capacity}</span>
-                        </div>
+                    <tr key={c.id} className="hover:bg-blue-50/30 transition-colors">
+                      <td className="px-4 py-4">
+                        <div className="text-sm font-bold text-gray-900">{c.title}</div>
                       </td>
-                      <td className="px-4 py-3 text-sm">{c.duration || '-'}</td>
-                      <td className="px-4 py-3 text-sm">
-                        <span className={`px-2 py-1 rounded text-white text-xs font-semibold ${
-                          c.difficultyLevel === 'Beginner' ? 'bg-green-600' :
-                          c.difficultyLevel === 'Intermediate' ? 'bg-blue-600' :
-                          c.difficultyLevel === 'Advanced' ? 'bg-orange-600' :
-                          'bg-red-600'
-                        }`}>
-                          {c.difficultyLevel || 'N/A'}
+                      <td className="px-4 py-4">
+                        <span className="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full text-[10px] font-bold border border-blue-100 uppercase">
+                          {c.category?.replace('_', ' ')}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-4 text-sm text-gray-600 font-medium">{c.instructorName}</td>
+                      <td className="px-4 py-4 text-[11px] text-gray-500 leading-tight max-w-[150px]">{c.schedule}</td>
+                      <td className="px-4 py-4">
+                        <span className="font-semibold text-gray-700">{enrolled}/{capacity}</span>
+                      </td>
+                      <td className="px-4 py-4 text-sm font-bold text-gray-700">{c.feeInfo || '-'}</td>
+                      <td className="px-4 py-4">
                         <span
-                          className={`inline-block px-2 py-1 rounded text-sm font-semibold text-white ${
-                            c.status === 'Active' ? 'bg-green-600' : c.status === 'Inactive' ? 'bg-gray-500' : 'bg-blue-600'
-                          }`}
+                          className={`inline-flex px-2 py-1 rounded text-[10px] font-bold text-white shadow-sm ${c.status === 'ACTIVE' ? 'bg-green-600' :
+                              c.status === 'INACTIVE' ? 'bg-gray-400' :
+                                c.status === 'COMPLETED' ? 'bg-blue-600' :
+                                  'bg-red-500'
+                            }`}
                         >
                           {c.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 flex gap-2 flex-wrap">
-                        <button
-                          className="px-3 py-1 rounded text-white font-bold text-sm bg-blue-600 hover:bg-blue-700 inline-flex items-center gap-1"
-                          onClick={() => {
-                            setSelectedClassForDetails(c);
-                            setShowClassDetailsModal(true);
-                          }}
-                          title="View Class Details"
-                        >
-                          <Eye size={16} /> View
-                        </button>
+                      <td className="px-4 py-4 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            className="p-2 rounded-full text-blue-600 hover:bg-blue-100 transition-colors min-w-[44px] whitespace-nowrap"
+                            onClick={() => {
+                              setSelectedClassForDetails(c);
+                              setShowClassDetailsModal(true);
+                            }}
+                            title="View Details"
+                          >
+                            <Eye size={18} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
-          </div>
+          </ScrollableCard>
         )}
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-          totalItems={classes.length}
-          itemsPerPage={itemsPerPage}
-          alwaysShow={true}
-        />
-      </div>
-      {/* Enrollment Requests */}
-      {enrollmentRequests.length > 0 && (
-        <div className="bg-white rounded-xl shadow-md p-4 md:p-8">
-          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-4">
-            <div>
-              <h3 className="text-xl font-bold text-blue-900">
-                Enrollment Requests ({filteredEnrollmentRequests.length})
-              </h3>
-              <p className="text-sm text-gray-500 mt-1">
-                Filter by running class to see class-wise students and requests.
-              </p>
-            </div>
-            <div className="w-full lg:w-80">
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Filter by Class</label>
-              <select
-                value={selectedEnrollmentClass}
-                onChange={(e) => {
-                  setSelectedEnrollmentClass(e.target.value);
-                  setEnrollmentPage(1);
-                }}
-                className="w-full px-4 py-2 border border-gray-300 rounded"
-              >
-                <option value="all">All Running Classes ({enrollmentRequests.length})</option>
-                {classes.map((classItem) => {
-                  const totalRequests = enrollmentRequests.filter((req) => req.classSubject === classItem.subject).length;
-                  const studentCount = getClassEnrollmentCount(classItem);
 
-                  return (
-                    <option key={classItem.id} value={classItem.subject}>
-                      {classItem.subject} - {studentCount} students, {totalRequests} requests
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 border">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left font-semibold">Enrollment No</th>
-                  <th className="px-4 py-3 text-left font-semibold">Name</th>
-                  <th className="px-4 py-3 text-left font-semibold">Email</th>
-                  <th className="px-4 py-3 text-left font-semibold">Phone</th>
-                  <th className="px-4 py-3 text-left font-semibold">Class</th>
-                  <th className="px-4 py-3 text-left font-semibold">Date</th>
-                  <th className="px-4 py-3 text-left font-semibold">Status</th>
-                  <th className="px-4 py-3 text-left font-semibold">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedEnrollments.map((req) => (
-                  <tr key={req.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium text-sm text-gray-900">{req.enrollmentNo || req.id}</td>
-                    <td className="px-4 py-3 font-medium">{req.fullName}</td>
-                    <td className="px-4 py-3">{req.email}</td>
-                    <td className="px-4 py-3">{req.phone}</td>
-                    <td className="px-4 py-3">{req.classSubject}</td>
-                    <td className="px-4 py-3 text-sm">{new Date(req.enrollmentDate).toLocaleDateString()}</td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-block px-2 py-1 rounded text-xs font-semibold text-white ${
-                        req.status === 'Approved' ? 'bg-green-600' : req.status === 'Rejected' ? 'bg-red-600' : 'bg-yellow-500'
-                      }`}>
-                        {req.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 flex gap-2">
-                      {req.status === 'Pending' && (
-                        <>
-                          <button
-                            className="px-3 py-1 rounded text-white font-bold text-sm bg-green-600"
-                            onClick={() => handleApproveEnrollment(req.id)}
-                          >
-                            Approve
-                          </button>
-                          <button
-                            className="px-3 py-1 rounded bg-red-600 text-white font-bold text-sm"
-                            onClick={() => handleRejectEnrollment(req.id)}
-                          >
-                            Reject
-                          </button>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="mt-6 border-t pt-4">
           <Pagination
-            currentPage={enrollmentPage}
-            totalPages={enrollmentTotalPages}
-            onPageChange={setEnrollmentPage}
-            totalItems={filteredEnrollmentRequests.length}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            totalItems={classes.length}
             itemsPerPage={itemsPerPage}
             alwaysShow={true}
           />
         </div>
-      )}
-      
-      {/* Class Details Modal */}
+      </div>
+
       {showClassDetailsModal && selectedClassForDetails && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto">
-            {/* Modal Header */}
             <div className="sticky top-0 bg-linear-to-r from-blue-900 to-blue-800 text-white p-6 rounded-t-xl">
               <div className="flex justify-between items-center">
                 <div>
-                  <h2 className="text-2xl font-bold">{selectedClassForDetails.subject}</h2>
-                  <p className="text-blue-100 mt-1">{selectedClassForDetails.level} | {selectedClassForDetails.status}</p>
+                  <h2 className="text-2xl font-bold">{selectedClassForDetails.title}</h2>
+                  <p className="text-white/80 mt-1 font-semibold">{selectedClassForDetails.category} | {selectedClassForDetails.status}</p>
                 </div>
                 <button
                   onClick={() => setShowClassDetailsModal(false)}
@@ -760,7 +558,6 @@ export default function RunningClassesManagement() {
               </div>
             </div>
 
-            {/* Modal Content */}
             <div className="p-6">
               <div>
                 <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -769,16 +566,16 @@ export default function RunningClassesManagement() {
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600">Subject</p>
-                    <p className="font-semibold">{selectedClassForDetails.subject}</p>
+                    <p className="text-sm text-gray-600">Title</p>
+                    <p className="font-semibold">{selectedClassForDetails.title}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Level</p>
-                    <p className="font-semibold">{selectedClassForDetails.level}</p>
+                    <p className="text-sm text-gray-600">Category</p>
+                    <p className="font-semibold">{selectedClassForDetails.category}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Instructor</p>
-                    <p className="font-semibold">{selectedClassForDetails.instructor}</p>
+                    <p className="font-semibold">{selectedClassForDetails.instructorName}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Schedule</p>
@@ -787,16 +584,12 @@ export default function RunningClassesManagement() {
                   <div>
                     <p className="text-sm text-gray-600">Enrollment</p>
                     <p className="font-semibold">
-                      {getClassEnrollmentCount(selectedClassForDetails)} / {selectedClassForDetails.maxCapacity || 15}
+                      {getClassEnrollmentCount(selectedClassForDetails)} / {selectedClassForDetails.maxCapacity || 20}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Duration</p>
-                    <p className="font-semibold">{selectedClassForDetails.duration || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Difficulty</p>
-                    <p className="font-semibold">{selectedClassForDetails.difficultyLevel || 'N/A'}</p>
+                    <p className="text-sm text-gray-600">Fee Info</p>
+                    <p className="font-semibold">{selectedClassForDetails.feeInfo || 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Status</p>
@@ -814,41 +607,24 @@ export default function RunningClassesManagement() {
 
                 <div className="mt-6 space-y-4">
                   <div>
-                    <p className="text-sm text-gray-600">Topics Covered</p>
-                    <p className="font-semibold">{selectedClassForDetails.topics || 'N/A'}</p>
+                    <p className="text-sm text-gray-600">Batch Size</p>
+                    <p className="font-semibold">{selectedClassForDetails.batchSize || 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Prerequisites</p>
-                    <p className="font-semibold">{selectedClassForDetails.prerequisites || 'N/A'}</p>
+                    <p className="text-sm text-gray-600">Instructor Bio</p>
+                    <p className="font-semibold">{selectedClassForDetails.instructorBio || 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Description</p>
                     <p className="font-semibold">{selectedClassForDetails.description || 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Demo Class Link</p>
-                    {selectedClassForDetails.demoLink ? (
-                      <a className="font-semibold text-blue-700 underline break-all" href={selectedClassForDetails.demoLink} target="_blank" rel="noreferrer">
-                        {selectedClassForDetails.demoLink}
-                      </a>
-                    ) : (
-                      <p className="font-semibold">N/A</p>
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Regular Meeting Link</p>
-                    {selectedClassForDetails.meetingLink ? (
-                      <a className="font-semibold text-blue-700 underline break-all" href={selectedClassForDetails.meetingLink} target="_blank" rel="noreferrer">
-                        {selectedClassForDetails.meetingLink}
-                      </a>
-                    ) : (
-                      <p className="font-semibold">N/A</p>
-                    )}
+                    <p className="text-sm text-gray-600">Additional Info</p>
+                    <p className="font-semibold">{selectedClassForDetails.additionalInfo || 'N/A'}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Modal Actions */}
               <div className="mt-6 pt-4 border-t border-gray-200 flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => handleEdit(selectedClassForDetails)}

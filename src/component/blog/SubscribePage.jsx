@@ -19,14 +19,14 @@ export const SubscribePage = () => {
 
     const handleVerify = async (e) => {
         e.preventDefault(); setLoading(true);
-        try { await blogApi.verifySubscription({ email, otp }); toast.success('Subscribed!'); setStep('done'); }
+        try { await blogApi.verifySubscription({ email, otp }); blogApi.saveSubscriptionLocally(email); toast.success('Subscribed!'); setStep('done'); }
         catch (err) { toast.error(err.response?.data?.message || 'Invalid OTP'); }
         finally { setLoading(false); }
     };
 
     const handleUnsubscribe = async (e) => {
         e.preventDefault(); setLoading(true);
-        try { await blogApi.unsubscribe({ email }); toast.success('Unsubscribed'); setEmail(''); setStep('subscribe'); }
+        try { await blogApi.unsubscribe({ email }); blogApi.saveUnsubscriptionLocally(email); toast.success('Unsubscribed'); setEmail(''); setStep('subscribe'); }
         catch (err) { toast.error(err.response?.data?.message || 'Failed'); }
         finally { setLoading(false); }
     };

@@ -1,12 +1,34 @@
+import axios from 'axios';
+import { getMediaSignature } from '../api/api/answerApi';
+
 /**
- * Converts an uploaded media file to a local data URL.
- * This keeps testimonial media functional without any backend/API integration.
+ * Uploads a file directly to Cloudinary using a backend-generated signature.
+ * @param {File} file - The file to upload.
+ * @returns {Promise<string>} - The URL of the uploaded resource.
  */
 export const uploadToCloudinary = async (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error('Failed to read media file. Please try again.'));
-    reader.readAsDataURL(file);
-  });
+  try {
+    // 1. Get signature from backend
+    const signatureData = await getMediaSignature();
+    const { signature, timestamp, cloud_name, api_key, folder } = signatureData;
+
+    // 2. Prepare FormData for Cloudinary
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('api_key', api_key);
+    formData.append('timestamp', timestamp);
+    formData.append('signature', signature);
+    formData.append('folder', folder);
+
+    // 3. Post to Cloudinary
+    const uploadUrl = `https://api.cloudinary.com/v1_1/${cloud_name}/auto/upload`;
+    const response = await axios.post(uploadUrl, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+
+    return response.data.secure_url;
+  } catch (error) {
+    console.error('Cloudinary upload error:', error);
+    throw new Error('Failed to upload media. Please try again.');
+  }
 };

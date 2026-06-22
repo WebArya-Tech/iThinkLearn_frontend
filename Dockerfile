@@ -8,6 +8,13 @@ WORKDIR /app
 # Set NODE_ENV to production during build
 ENV NODE_ENV=production
 
+ARG VITE_API_BASE_URL
+ARG VITE_ADMIN_USERNAME
+ARG VITE_ADMIN_PASSWORD
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_ADMIN_USERNAME=$VITE_ADMIN_USERNAME
+ENV VITE_ADMIN_PASSWORD=$VITE_ADMIN_PASSWORD
+
 # Install dependencies (layer-cache friendly)
 COPY package.json package-lock.json* ./
 RUN npm ci --only=production

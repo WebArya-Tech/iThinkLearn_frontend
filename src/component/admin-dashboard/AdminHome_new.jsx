@@ -7,72 +7,31 @@ import { adminApi } from '../../api/blogApi';
 import toast from 'react-hot-toast';
 
 export const AdminHome = ({ setCurrentView }) => {
-    // Initialize with cached stats or fallback data for instant render
-    const [stats, setStats] = useState(() => {
-        const cached = localStorage.getItem('adminStats');
-        return cached ? JSON.parse(cached) : { total: 0, pending: 0, published: 0, subscribers: 0 };
-    });
+    const [stats, setStats] = useState({ total: 0, pending: 0, published: 0, subscribers: 0 });
     const [isUpdating, setIsUpdating] = useState(false);
 
     useEffect(() => {
-        let mounted = true;
-        
-        // Load stats in background without blocking UI
         const loadStats = async () => {
             setIsUpdating(true);
             try {
-                // Fetch all data in parallel with timeout
-                const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Timeout')), 5000)
-                );
+                const blogsData = await adminApi.getAdminBlogs({ size: 1, page: 0 });
+                const pendingData = await adminApi.getAdminBlogs({ status: 'PENDING', size: 1, page: 0 });
+                const subsData = await adminApi.getSubscribers({ size: 1, page: 0 });
 
-                const results = await Promise.all([
-                    Promise.race([
-                        adminApi.getAdminBlogs({ size: 1, page: 0 }),
-                        timeoutPromise
-                    ]).catch(() => ({ data: { totalElements: stats.total || 3 } })),
-                    
-                    Promise.race([
-                        adminApi.getAdminBlogs({ status: 'PENDING', size: 1, page: 0 }),
-                        timeoutPromise
-                    ]).catch(() => ({ data: { totalElements: stats.pending || 1 } })),
-                    
-                    Promise.race([
-                        adminApi.getSubscribers({ size: 1, page: 0 }),
-                        timeoutPromise
-                    ]).catch(() => ({ data: { totalElements: stats.subscribers || 4 } }))
-                ]);
-
-                if (mounted) {
-                    const totalCount = results[0]?.data?.totalElements ?? stats.total ?? 3;
-                    const pendingCount = results[1]?.data?.totalElements ?? stats.pending ?? 1;
-                    
-                    const newStats = {
-                        total: totalCount,
-                        pending: pendingCount,
-                        published: totalCount - pendingCount,
-                        subscribers: results[2]?.data?.totalElements ?? stats.subscribers ?? 4,
-                    };
-                    setStats(newStats);
-                    localStorage.setItem('adminStats', JSON.stringify(newStats));
-                }
+                setStats({
+                    total: blogsData.totalElements || 0,
+                    pending: pendingData.totalElements || 0,
+                    published: (blogsData.totalElements || 0) - (pendingData.totalElements || 0),
+                    subscribers: subsData.totalElements || 0,
+                });
             } catch (err) {
-                // Keep existing stats on error
-                if (!stats.total) {
-                    setStats({ total: 3, pending: 1, published: 2, subscribers: 4 });
-                }
+                console.error('Failed to load stats', err);
             } finally {
-                if (mounted) setIsUpdating(false);
+                setIsUpdating(false);
             }
         };
 
-        // Load stats with small delay to avoid blocking
-        const timer = setTimeout(loadStats, 100);
-        
-        return () => {
-            mounted = false;
-            clearTimeout(timer);
-        };
+        loadStats();
     }, []);
 
     const cards = [

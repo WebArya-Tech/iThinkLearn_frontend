@@ -1,7 +1,7 @@
 import React from 'react'
-import { Toaster } from 'react-hot-toast'
 import Header from '../component/Header'
 import Footer from '../component/Footer'
+import ErrorBoundary from '../component/ErrorBoundary'
 import { SubmitBlogPage } from '../component/blog/SubmitBlogPage'
 
 export default function SubmitBlog() {
@@ -9,10 +9,11 @@ export default function SubmitBlog() {
     <div>
       <Header />
       <main className="min-h-screen bg-white">
-        <SubmitBlogPage />
+        <ErrorBoundary>
+          <SubmitBlogPage />
+        </ErrorBoundary>
       </main>
       <Footer />
-      <Toaster position="top-right" />
     </div>
   )
 }

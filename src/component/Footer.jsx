@@ -1,21 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useDemoModal } from '../context/DemoModalContext'
 
 export default function Footer() {
   const [gstModalOpen, setGstModalOpen] = useState(false)
-  const [demoDropdownOpen, setDemoDropdownOpen] = useState(false)
-  const demoDropdownRef = useRef(null)
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (demoDropdownRef.current && !demoDropdownRef.current.contains(e.target)) {
-        setDemoDropdownOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  const { openDemoModal } = useDemoModal()
 
   return (
     <footer id="contact" className="bg-linear-to-b from-blue-900 to-indigo-950 text-white">
@@ -44,7 +33,9 @@ export default function Footer() {
                 Office Address
               </h4>
               <div className="text-blue-200 text-xs sm:text-sm leading-relaxed space-y-1">
-                <p>No. 81, Ground Floor, Share Space 88, Borewell Road, Whitefield, Bangalore - 560066</p>
+                <p>No. 81, Ground Floor, Share Space</p>
+                <p>88, Borewell Road, Whitefield</p>
+                <p>Bangalore - 560066</p>
                 <p className="text-blue-300">Landmark: ICICI Bank, Vivero International School</p>
               </div>
               
@@ -218,7 +209,7 @@ export default function Footer() {
                
                 <div className="pt-1">
                   <button
-                    onClick={() => setDemoDropdownOpen(!demoDropdownOpen)}
+                    onClick={openDemoModal}
                     className="inline-flex items-center gap-2 bg-linear-to-r from-yellow-400 to-orange-500 text-blue-900 font-bold px-5 py-2.5 rounded-lg hover:from-yellow-300 hover:to-orange-400 transition-all text-xs sm:text-sm shadow-lg"
                   >
                     📞 Book Free Demo
@@ -354,35 +345,7 @@ export default function Footer() {
 
       </div>
 
-      {/* Demo Dropdown */}
-      {demoDropdownOpen && (
-        <div className="fixed bottom-20 right-4 sm:right-8 lg:right-12 z-50" ref={demoDropdownRef}>
-          <div className="bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden w-72">
-            <div className="bg-blue-900 text-white px-4 py-3">
-              <p className="font-bold text-sm">📚 Book a Free Demo Class</p>
-            </div>
-            <div className="p-4 space-y-3">
-              <div>
-                <p className="text-xs text-gray-500 font-medium mb-1">📞 Call:</p>
-                <a href="tel:+917795010900" className="block text-blue-900 hover:text-blue-700 font-semibold text-sm">+91 779 501 0900</a>
-              </div>
-              <div className="border-t pt-3">
-                <p className="text-xs text-gray-500 font-medium mb-1">WhatsApp:</p>
-                <a href="https://wa.me/917795010900" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-900 hover:text-green-600 font-semibold text-sm transition">
-                  <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                  </svg>
-                  +91 779 501 0900
-                </a>
-              </div>
-              <div className="border-t pt-3">
-                <p className="text-xs text-gray-500 font-medium mb-1">📧 Email:</p>
-                <a href="mailto:ithinklearn@ixpoe.com" className="text-blue-900 hover:text-blue-700 font-semibold text-sm">ithinklearn@ixpoe.com</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* GST Modal */}
     </footer>
   )
 }

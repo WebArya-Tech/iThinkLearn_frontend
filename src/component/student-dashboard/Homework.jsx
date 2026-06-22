@@ -18,7 +18,9 @@ const loadHomework = () => {
         assignedDate: h.assignedDate || 'Not assigned',
       }))
     }
-  } catch {}
+  } catch {
+    return STATIC_HOMEWORK
+  }
   return STATIC_HOMEWORK
 }
 
@@ -34,7 +36,15 @@ export default function Homework() {
 
   // Reload when admin updates homework
   useEffect(() => {
-    setHomework(loadHomework())
+    const refresh = () => setHomework(loadHomework())
+    refresh()
+
+    window.addEventListener('storage', refresh)
+    window.addEventListener('icfy_homework_updated', refresh)
+    return () => {
+      window.removeEventListener('storage', refresh)
+      window.removeEventListener('icfy_homework_updated', refresh)
+    }
   }, [])
 
   const filteredHomework = filter === 'all' ? homework : homework.filter(h => h.status === filter)
@@ -84,6 +94,7 @@ export default function Homework() {
     )
     setHomework(updatedHomework)
     localStorage.setItem('icfy_homework', JSON.stringify(updatedHomework))
+    window.dispatchEvent(new Event('icfy_homework_updated'))
     setSelectedFile(null)
     setShowSubmitModal(false)
     setSelectedHomework(null)
@@ -179,7 +190,7 @@ export default function Homework() {
               </tr>
             </thead>
             <tbody>
-              {paginatedHomework.map((hw, idx) => (
+              {paginatedHomework.map((hw) => (
                 <tr
                   key={hw.id}
                   className="border-b border-gray-100 hover:bg-gray-50 transition-colors"

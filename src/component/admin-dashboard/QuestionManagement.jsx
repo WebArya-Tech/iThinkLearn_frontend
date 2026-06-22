@@ -1,14 +1,15 @@
-﻿import React, { useState } from 'react'
+﻿import React, { useState, useEffect } from 'react'
 import Pagination from '../ui/Pagination'
+import { getAdminQuestions, submitAnswer, updateAnswer, deleteAnswer } from '../../api/api/answerApi'
 
 export default function QuestionManagement() {
-  const [questions, setQuestions] = useState([
-    { id: 1, student: 'Rahul Sharma', subject: 'Calculus Integration', category: 'Mathematics', question: 'How to solve integration by parts?', tutorAnswer: null, status: 'pending', needsReview: true },
-    { id: 2, student: 'Priya Mehta', subject: 'Chemical Bonding', category: 'Chemistry', question: 'Difference between ionic and covalent bonds?', tutorAnswer: 'Let me explain...', status: 'tutor-reviewed', needsReview: false },
-  ])
+  const [questions, setQuestions] = useState([])
   const [filterStatus, setFilterStatus] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 100
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
 
   // Modal states
   const [viewModalOpen, setViewModalOpen] = useState(false)
@@ -18,16 +19,25 @@ export default function QuestionManagement() {
   const [selectedQuestion, setSelectedQuestion] = useState(null)
   const [tutorAnswerInput, setTutorAnswerInput] = useState('')
 
-  const handleAddAnswer = (id) => {
-    const answer = prompt('Enter tutor answer:')
-    if (!answer) return
-    setQuestions(questions.map(q => q.id === id ? { ...q, tutorAnswer: answer, status: 'tutor-reviewed' } : q))
-  }
+  // Fetch questions on component mount
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const response = await getAdminQuestions(filterStatus)
+        const data = response?.content || (Array.isArray(response) ? response : response?.data || [])
+        setQuestions(Array.isArray(data) ? data : [])
+      } catch (err) {
+        console.error('Error fetching questions:', err)
+        setError('Failed to load questions. Please try again.')
+      } finally {
+        setLoading(false)
+      }
+    }
 
-  const openViewModal = (q) => {
-    setSelectedQuestion(q)
-    setViewModalOpen(true)
-  }
+    fetchQuestions()
+  }, [filterStatus])
 
   const openReviewModal = (q) => {
     setSelectedQuestion(q)
@@ -35,12 +45,35 @@ export default function QuestionManagement() {
     setReviewModalOpen(true)
   }
 
-  const handleSubmitReview = () => {
+  const handleSubmitReview = async () => {
     if (!tutorAnswerInput.trim()) return
-    setQuestions(questions.map(q => q.id === selectedQuestion.id ? { ...q, tutorAnswer: tutorAnswerInput, status: 'tutor-reviewed', needsReview: false } : q))
-    setReviewModalOpen(false)
-    setSelectedQuestion(null)
-    setTutorAnswerInput('')
+    try {
+      setSubmitting(true)
+      setError(null)
+      
+      await submitAnswer(selectedQuestion.id, {
+        tutorAnswer: tutorAnswerInput,
+        answeredBy: 'Tutor'
+      })
+
+      // Update local state
+      setQuestions(questions.map(q => 
+        q.id === selectedQuestion.id 
+          ? { ...q, tutorAnswer: tutorAnswerInput, status: 'tutor-reviewed', needsReview: false } 
+          : q
+      ))
+      
+      setReviewModalOpen(false)
+      setSelectedQuestion(null)
+      setTutorAnswerInput('')
+      alert('Answer submitted successfully!')
+    } catch (err) {
+      console.error('Error submitting answer:', err)
+      setError(err.message || 'Failed to submit answer.')
+      alert('Error: ' + (err.message || 'Failed to submit answer'))
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const openEditModal = (q) => {
@@ -49,12 +82,34 @@ export default function QuestionManagement() {
     setEditModalOpen(true)
   }
 
-  const handleEditAnswer = () => {
+  const handleEditAnswer = async () => {
     if (!tutorAnswerInput.trim()) return
-    setQuestions(questions.map(q => q.id === selectedQuestion.id ? { ...q, tutorAnswer: tutorAnswerInput, status: 'tutor-reviewed' } : q))
-    setEditModalOpen(false)
-    setSelectedQuestion(null)
-    setTutorAnswerInput('')
+    try {
+      setSubmitting(true)
+      setError(null)
+      
+      await updateAnswer(selectedQuestion.id, {
+        tutorAnswer: tutorAnswerInput
+      })
+
+      // Update local state
+      setQuestions(questions.map(q => 
+        q.id === selectedQuestion.id 
+          ? { ...q, tutorAnswer: tutorAnswerInput, status: 'tutor-reviewed' } 
+          : q
+      ))
+      
+      setEditModalOpen(false)
+      setSelectedQuestion(null)
+      setTutorAnswerInput('')
+      alert('Answer updated successfully!')
+    } catch (err) {
+      console.error('Error updating answer:', err)
+      setError(err.message || 'Failed to update answer.')
+      alert('Error: ' + (err.message || 'Failed to update answer'))
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const openDeleteModal = (q) => {
@@ -62,10 +117,35 @@ export default function QuestionManagement() {
     setDeleteModalOpen(true)
   }
 
-  const handleDeleteAnswer = () => {
-    setQuestions(questions.map(q => q.id === selectedQuestion.id ? { ...q, tutorAnswer: null, status: q.needsReview ? 'pending' : 'pending', needsReview: true } : q))
-    setDeleteModalOpen(false)
-    setSelectedQuestion(null)
+  const handleDeleteAnswer = async () => {
+    try {
+      setSubmitting(true)
+      setError(null)
+      
+      await deleteAnswer(selectedQuestion.id)
+
+      // Update local state
+      setQuestions(questions.map(q => 
+        q.id === selectedQuestion.id 
+          ? { ...q, tutorAnswer: null, status: 'pending', needsReview: true } 
+          : q
+      ))
+      
+      setDeleteModalOpen(false)
+      setSelectedQuestion(null)
+      alert('Answer deleted successfully!')
+    } catch (err) {
+      console.error('Error deleting answer:', err)
+      setError(err.message || 'Failed to delete answer.')
+      alert('Error: ' + (err.message || 'Failed to delete answer'))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const openViewModal = (q) => {
+    setSelectedQuestion(q)
+    setViewModalOpen(true)
   }
 
   const filteredQuestions = filterStatus === 'all'
@@ -77,8 +157,6 @@ export default function QuestionManagement() {
   const totalPages = Math.ceil(filteredQuestions.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
   const paginatedQuestions = filteredQuestions.slice(startIndex, startIndex + itemsPerPage)
-
-
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -98,6 +176,18 @@ export default function QuestionManagement() {
         <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-900">❓ Q&A Management</h2>
         <p className="text-gray-600 mt-2 text-sm sm:text-base">Manage student questions and provide tutor responses</p>
       </div>
+
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center justify-between">
+          <span>{error}</span>
+          <button
+            onClick={() => setError(null)}
+            className="ml-3 underline font-semibold"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
@@ -142,7 +232,7 @@ export default function QuestionManagement() {
         </button>
         <button
           onClick={() => setFilterStatus('pending')}
-          className={`px-3 sm:px-4 py-1 sm:py-2 rounded-lg font-semibold transition-all border-1 border-yellow-500 text-xs sm:text-sm ${
+          className={`px-3 sm:px-4 py-1 sm:py-2 rounded-lg font-semibold transition-all border border-yellow-500 text-xs sm:text-sm ${
             filterStatus === 'pending' ? 'bg-yellow-500 text-white shadow-md' : 'bg-transparent text-gray-700 hover:bg-yellow-50'
           }`}
         >
@@ -151,8 +241,28 @@ export default function QuestionManagement() {
        
       </div>
 
-      {/* Questions List */}
-      <div className="space-y-3 sm:space-y-4">
+      {/* Loading State */}
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-blue-900 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+            <p className="text-gray-600">Loading questions...</p>
+          </div>
+        </div>
+      ) : questions.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-xl shadow-md">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: '#1e3a8a20' }}>
+            <svg className="w-8 h-8 text-blue-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <p className="text-gray-600 text-lg font-semibold">No questions to review</p>
+          <p className="text-gray-500 mt-1">Questions from students will appear here</p>
+        </div>
+      ) : (
+        <>
+          {/* Questions List */}
+          <div className="space-y-3 sm:space-y-4">
         {paginatedQuestions.map((q) => (
           <div
             key={q.id}
@@ -238,7 +348,7 @@ export default function QuestionManagement() {
             </div>
           </div>
         ))}
-      </div>
+        </div>
 
       {/* Pagination */}
       <Pagination
@@ -249,6 +359,8 @@ export default function QuestionManagement() {
         itemsPerPage={itemsPerPage}
         alwaysShow={true}
       />
+        </>
+      )}
 
       {/* View Details Modal */}
       {viewModalOpen && selectedQuestion && (
@@ -359,14 +471,22 @@ export default function QuestionManagement() {
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
                 <button
                   onClick={handleEditAnswer}
-                  disabled={!tutorAnswerInput.trim()}
-                  className="flex-1 py-2 sm:py-2.5 rounded-lg font-semibold text-white bg-blue-900 hover:bg-blue-800 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm order-1 sm:order-2"
+                  disabled={!tutorAnswerInput.trim() || submitting}
+                  className="flex-1 py-2 sm:py-2.5 rounded-lg font-semibold text-white bg-blue-900 hover:bg-blue-800 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm order-1 sm:order-2 flex items-center justify-center gap-2"
                 >
-                  Save Changes
+                  {submitting ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Changes'
+                  )}
                 </button>
                 <button
                   onClick={() => { setEditModalOpen(false); setSelectedQuestion(null); setTutorAnswerInput('') }}
-                  className="flex-1 py-2 sm:py-2.5 rounded-lg font-semibold border-2 border-gray-300 text-gray-700 hover:bg-gray-50 transition text-sm order-2 sm:order-1"
+                  disabled={submitting}
+                  className="flex-1 py-2 sm:py-2.5 rounded-lg font-semibold border-2 border-gray-300 text-gray-700 hover:bg-gray-50 transition text-sm order-2 sm:order-1 disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -398,13 +518,22 @@ export default function QuestionManagement() {
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
                 <button
                   onClick={handleDeleteAnswer}
-                  className="flex-1 py-2 sm:py-2.5 rounded-lg font-semibold text-white bg-red-500 hover:bg-red-600 transition text-sm order-1 sm:order-2"
+                  disabled={submitting}
+                  className="flex-1 py-2 sm:py-2.5 rounded-lg font-semibold text-white bg-red-500 hover:bg-red-600 transition text-sm order-1 sm:order-2 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Yes, Delete
+                  {submitting ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                      Deleting...
+                    </>
+                  ) : (
+                    'Yes, Delete'
+                  )}
                 </button>
                 <button
                   onClick={() => { setDeleteModalOpen(false); setSelectedQuestion(null) }}
-                  className="flex-1 py-2 sm:py-2.5 rounded-lg font-semibold border-2 border-gray-300 text-gray-700 hover:bg-gray-50 transition text-sm order-2 sm:order-1"
+                  disabled={submitting}
+                  className="flex-1 py-2 sm:py-2.5 rounded-lg font-semibold border-2 border-gray-300 text-gray-700 hover:bg-gray-50 transition text-sm order-2 sm:order-1 disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -450,14 +579,22 @@ export default function QuestionManagement() {
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
                 <button
                   onClick={handleSubmitReview}
-                  disabled={!tutorAnswerInput.trim()}
-                  className="flex-1 py-2 sm:py-2.5 rounded-lg font-semibold text-white bg-blue-900 hover:bg-blue-800 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm order-1 sm:order-2"
+                  disabled={!tutorAnswerInput.trim() || submitting}
+                  className="flex-1 py-2 sm:py-2.5 rounded-lg font-semibold text-white bg-blue-900 hover:bg-blue-800 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm order-1 sm:order-2 flex items-center justify-center gap-2"
                 >
-                  Submit Review
+                  {submitting ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                      Submitting...
+                    </>
+                  ) : (
+                    'Submit Review'
+                  )}
                 </button>
                 <button
                   onClick={() => { setReviewModalOpen(false); setSelectedQuestion(null); setTutorAnswerInput('') }}
-                  className="flex-1 py-2 sm:py-2.5 rounded-lg font-semibold border-2 border-gray-300 text-gray-700 hover:bg-gray-50 transition text-sm order-2 sm:order-1"
+                  disabled={submitting}
+                  className="flex-1 py-2 sm:py-2.5 rounded-lg font-semibold border-2 border-gray-300 text-gray-700 hover:bg-gray-50 transition text-sm order-2 sm:order-1 disabled:opacity-50"
                 >
                   Cancel
                 </button>

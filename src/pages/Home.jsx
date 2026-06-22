@@ -1,12 +1,12 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Link } from 'react-router-dom'
 import Header from '../component/Header'
 import Hero from '../component/Hero'
 import Footer from '../component/Footer'
-import ContactModal from '../component/ContactModal'
+import { useDemoModal } from '../context/DemoModalContext'
 
 export default function Home() {
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const { openDemoModal } = useDemoModal()
   const features = [
     { 
       icon: '🎓', 
@@ -273,9 +273,9 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 flex-wrap justify-center">
            
-            <a href="https://wa.me/918197466607" target="_blank" rel="noopener noreferrer" className="btn-secondary text-white px-6 sm:px-10 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg flex items-center justify-center gap-2 hover:shadow-lg transition">
+            <button onClick={openDemoModal} className="btn-secondary text-white px-6 sm:px-10 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg flex items-center justify-center gap-2 hover:shadow-lg transition cursor-pointer">
               ✨ Book Free Demo Class
-            </a>
+            </button>
            
           </div>
          
@@ -561,9 +561,9 @@ export default function Home() {
           </p>
           <div className="flex gap-4 flex-wrap justify-center">
           
-            <a href="https://wa.me/918197466607" target="_blank" rel="noopener noreferrer" className="btn-secondary text-white px-10 py-4 rounded-lg font-bold text-lg">
+            <button onClick={openDemoModal} className="btn-secondary text-white px-10 py-4 rounded-lg font-bold text-lg cursor-pointer">
               📚 Join a Free Demo Class
-            </a>
+            </button>
           </div>
         </div>
       </section>
@@ -835,7 +835,6 @@ export default function Home() {
       </section>
 
       <Footer />
-      <ContactModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   )
 }

@@ -1,25 +1,22 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { X, Video, Headphones, MessageCircle, Image as ImageIcon, FileText, Plus } from 'lucide-react';
-import { getApprovedTestimonials } from '../api/api/testimonialApi.js';
+import { Star, Filter, X, Play, Video, Headphones, MessageCircle, ArrowRight, Image as ImageIcon, FileText, Plus, TrendingUp, Users } from 'lucide-react';
+import { testimonialApi } from '../api/testimonialApi.js';
 import TestimonialFormModal from '../component/TestimonialFormModal';
 import Header from '../component/Header';
 import Footer from '../component/Footer';
-
-const whatsappImageUrls = {
-  sanjana: new URL('../assets/A level Math and Statistics guidance to Sanjana.png', import.meta.url).href,
-  amrit: new URL('../assets/Amrit scored A grade for Math classes IGCSE.png', import.meta.url).href,
-  rithika: new URL('../assets/AS Level guidance and support for Math and Statistics to Rithika.jpeg', import.meta.url).href,
-  mahiRia: new URL('../assets/Mahi and Ria scored A (star) and A grades in IGCSE Math.PNG', import.meta.url).href,
-  pradyumna: new URL("../assets/Pradyumna's bridge course for a smooth transition from CBSE to IGCSE.png", import.meta.url).href,
-  rheaTheaOjal: new URL('../assets/Rhea, Thea and Ojal Math group classes for IGCSE.png', import.meta.url).href,
-  siddhantPC: new URL('../assets/Siddhant scored A (star) grades in Physics and Chemistry subjects.png', import.meta.url).href,
-  siddhantML: new URL("../assets/Siddhant's IA-ML computer science project feedback for IGCSE.png", import.meta.url).href,
-  thanya: new URL('../assets/Thanya scored an A grade for 8th grade Math IGCSE.png', import.meta.url).href,
-};
+import toast from 'react-hot-toast';
 
 const cardBackgrounds = [
-  'https://images.unsplash.com/photo-1501504905252-473c47e087f8?w=800&h=1000&fit=crop',
-  'https://images.unsplash.com/photo-1557821552-17105176677c?w=800&h=1000&fit=crop',
+  '/testimonial/WhatsApp Image 2026-05-26 at 7.38.17 PM (1).jpeg',
+  '/testimonial/WhatsApp Image 2026-05-26 at 7.38.17 PM.jpeg',
+  '/testimonial/WhatsApp Image 2026-05-26 at 7.38.18 PM (1).jpeg',
+  '/testimonial/WhatsApp Image 2026-05-26 at 7.38.18 PM (2).jpeg',
+  '/testimonial/WhatsApp Image 2026-05-26 at 7.38.18 PM.jpeg',
+  '/testimonial/WhatsApp Image 2026-05-26 at 7.38.19 PM (1).jpeg',
+  '/testimonial/WhatsApp Image 2026-05-26 at 7.38.19 PM.jpeg',
+  '/testimonial/WhatsApp Image 2026-05-26 at 7.38.20 PM (1).jpeg',
+  '/testimonial/WhatsApp Image 2026-05-26 at 7.38.20 PM (2).jpeg',
+  '/testimonial/WhatsApp Image 2026-05-26 at 7.38.20 PM.jpeg',
 ];
 
 const maskPhone = (phone) => {
@@ -69,6 +66,34 @@ const linkifyText = (text) => {
   return parts.length > 0 ? parts : text;
 };
 
+const getMediaType = (url) => {
+  if (!url || typeof url !== 'string') return 'none';
+  if (url.includes('youtube.com') || url.includes('youtu.be')) return 'embed';
+  if (url.startsWith('data:video/') || url.match(/\.(mp4|webm|mov|m4v)(\?.*)?$/i)) return 'video';
+  if (url.startsWith('data:audio/') || url.match(/\.(mp3|wav|ogg|m4a)(\?.*)?$/i)) return 'audio';
+  if (url.startsWith('data:image/') || url.match(/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i)) return 'image';
+  if (url.match(/\.pdf(\?.*)?$/i)) return 'pdf';
+  return 'link';
+};
+
+const getActualMediaUrl = (testimonial) => {
+  const candidates = [
+    testimonial?.mediaUrl,
+    testimonial?.image,
+    testimonial?.videoUrl,
+    testimonial?.audioUrl,
+  ];
+  const direct = candidates.find((value) => typeof value === 'string' && value.trim());
+  if (direct) return direct;
+
+  const content = testimonial?.content;
+  if (typeof content === 'string' && (content.startsWith('http') || content.startsWith('data:'))) {
+    return content;
+  }
+
+  return '';
+};
+
 const Testimonials = () => {
   const categories = ['All', 'IGCSE', 'AS/A Level'];
 
@@ -76,7 +101,6 @@ const Testimonials = () => {
 
   const [selectedCategory] = useState('All');
   const [selectedType] = useState('All');
-  const [visibleCount, setVisibleCount] = useState(9);
   const [testimonials, setTestimonials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -84,11 +108,12 @@ const Testimonials = () => {
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
-        const data = await getApprovedTestimonials();
-        const testimonialList = data?.content || (Array.isArray(data) ? data : []);
-        setTestimonials(testimonialList);
+        const response = await testimonialApi.getAll();
+        const testimonialList = response.data || [];
+        setTestimonials(Array.isArray(testimonialList) ? testimonialList : []);
       } catch (error) {
         console.error('Error fetching testimonials:', error);
+        toast.error('Failed to load testimonials');
       } finally {
         setLoading(false);
       }
@@ -97,14 +122,6 @@ const Testimonials = () => {
   }, []);
 
   const [active, setActive] = useState(null);
-
-  useEffect(() => {
-    setVisibleCount(9);
-  }, [selectedCategory, selectedType]);
-
-  const handleLoadMore = () => {
-    setVisibleCount(prev => prev + 18);
-  };
 
   const primaryTestimonial = useMemo(() =>
     testimonials.find(t => t.primary),
@@ -115,17 +132,13 @@ const Testimonials = () => {
     return testimonials.filter((t) => {
       const categoryMatch = selectedCategory === 'All' || t.category === selectedCategory;
       const typeMatch = selectedType === 'All' || t.type === selectedType;
-      const isNotPrimary = !t.primary;
-      return categoryMatch && typeMatch && isNotPrimary;
+      return categoryMatch && typeMatch;
     });
   }, [testimonials, selectedCategory, selectedType]);
 
-  const paginatedTestimonials = filteredTestimonials.slice(0, visibleCount);
-
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex min-h-screen flex-col bg-gradient-to-b from-indigo-50 via-white to-fuchsia-50">
       <Header />
-      <div className="flex-1 min-h-screen bg-gradient-to-b from-indigo-50 via-white to-fuchsia-50">
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 4px;
@@ -164,22 +177,22 @@ const Testimonials = () => {
                 </h1>
                 <div className="h-1.5 w-24 bg-indigo-600 mx-auto rounded-full"></div>
                 <p className="mt-6 text-lg text-gray-600">
-                  Explore real stories from IGCSE and AS/A Level students and parents.
+                  Explore real success stories from iThinkLearn students and parents.
                 </p>
               </div>
 
               {/* Authenticity Statement */}
               <div className="max-w-4xl mx-auto mb-12">
                 <p className="text-sm text-gray-800 mb-3" style={{ fontFamily: 'Inter, sans-serif' }}>
-                  <span className="font-semibold">Dear Parents and Students,</span> Trust and authenticity are at the heart of everything we do. All testimonials displayed here are 100% genuine and have been provided by real students and parents. None of them is AI-generated, fake, edited, or modified in any manner.
+                  Dear Parents and Students, Trust and authenticity are at the heart of everything we do. All testimonials displayed here are 100% genuine and have been provided by real students and parents. None of them is AI-generated, fake, edited, or modified in any manner.
                 </p>
                 <p className="text-sm text-gray-800" style={{ fontFamily: 'Inter, sans-serif' }}>
                   We invite you to click on each testimonial to view the original feedback. We also welcome any further verification to reassure you of the authenticity of every testimonial shared here.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                {paginatedTestimonials.map((testimonial, index) => {
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 lg:gap-10">
+                {filteredTestimonials.map((testimonial, index) => {
                   const id = testimonial.id || testimonial._id;
                   const studentName = testimonial.name || testimonial.reviewerName || 'Student';
 
@@ -197,21 +210,15 @@ const Testimonials = () => {
                   }
 
                   // Determine media type for the icon
-                  const mediaUrl = testimonial.mediaUrl || testimonial.content;
-                  let mediaType = testimonial.type || 'text';
-                  if (mediaUrl) {
-                    if (mediaUrl.startsWith('data:video/') || mediaUrl.match(/\.(mp4|webm|mov)$/i)) mediaType = 'video';
-                    else if (mediaUrl.startsWith('data:audio/') || mediaUrl.match(/\.(mp3|wav|ogg)$/i)) mediaType = 'audio';
-                    else if (mediaUrl.startsWith('data:image/') || mediaUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)) mediaType = 'image';
-                    else if (mediaUrl.match(/\.pdf$/i)) mediaType = 'pdf';
-                  }
+                  const mediaUrl = getActualMediaUrl(testimonial);
+                  const mediaType = getMediaType(mediaUrl);
 
                   return (
                     <button
-                      key={id}
+                      key={id || `${studentName}-${index}`}
                       type="button"
                       onClick={() => setActive(testimonial)}
-                      className="group relative flex flex-col w-full rounded-2xl overflow-hidden transition-all duration-500 hover:scale-[1.03] text-left shadow-2xl aspect-[4/5]"
+                      className="group relative flex flex-col w-full rounded-2xl overflow-hidden transition-all duration-500 hover:scale-[1.03] text-left shadow-2xl aspect-[4/5] h-96 sm:h-auto"
                     >
                       {/* Background Image with Overlay */}
                       <div className="absolute inset-0">
@@ -225,31 +232,31 @@ const Testimonials = () => {
                       </div>
 
                       {/* Content Overlay */}
-                      <div className="relative h-full flex flex-col p-6 pb-4 justify-between z-10">
+                      <div className="relative h-full flex flex-col p-3 sm:p-4 md:p-6 pb-2 sm:pb-3 md:pb-4 justify-between z-10">
                         {/* Media Icon Indicator */}
                         <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 group-hover:bg-[#FF6B6B] group-hover:border-[#FF6B6B] transition-all duration-300">
-                          {mediaType === 'video' && <Video size={18} className="text-white" />}
+                          {(mediaType === 'video' || mediaType === 'embed') && <Video size={18} className="text-white" />}
                           {mediaType === 'audio' && <Headphones size={18} className="text-white" />}
+                          {mediaType === 'whatsapp' && <MessageCircle size={18} className="text-white" />}
                           {mediaType === 'image' && <ImageIcon size={18} className="text-white" />}
-                          {mediaType === 'pdf' && <FileText size={18} className="text-white" />}
-                          {mediaType === 'text' && !mediaUrl && <MessageCircle size={18} className="text-white" />}
+                          {(mediaType === 'pdf' || mediaType === 'link' || mediaType === 'none') && <FileText size={18} className="text-white" />}
                         </div>
 
                         {/* Top Quote Icon */}
                         <div className="text-[#FF6B6B] opacity-60">
-                          <span className="text-5xl font-serif leading-none">&ldquo;</span>
+                          <span className="text-3xl sm:text-4xl md:text-5xl font-serif leading-none">&ldquo;</span>
                         </div>
 
                         {/* Testimonial Text with Scroll */}
-                        <div className="flex-1 overflow-y-auto pr-2 -mr-2 custom-scrollbar scroll-smooth my-4">
-                          <div className="text-white text-base md:text-lg font-bold italic leading-relaxed drop-shadow-sm" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                        <div className="flex-1 overflow-y-auto pr-2 -mr-2 custom-scrollbar scroll-smooth my-2 sm:my-3 md:my-4">
+                          <div className="text-white text-xs sm:text-sm md:text-base lg:text-lg font-bold italic leading-relaxed drop-shadow-sm" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                             {linkifyText(testimonialText)}
                           </div>
                         </div>
 
                         {/* Bottom Quote Icon */}
                         <div className="text-[#FF6B6B] opacity-60 flex justify-end">
-                          <span className="text-5xl font-serif leading-none rotate-180 inline-block">&ldquo;</span>
+                          <span className="text-3xl sm:text-4xl md:text-5xl font-serif leading-none rotate-180 inline-block">&ldquo;</span>
                         </div>
                       </div>
 
@@ -259,21 +266,6 @@ const Testimonials = () => {
                 })}
               </div>
 
-              {filteredTestimonials.length > paginatedTestimonials.length && (
-                <div className="mt-16 flex flex-col items-center justify-center gap-4">
-                  <button
-                    type="button"
-                    onClick={handleLoadMore}
-                    className="group flex items-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-4 rounded-full font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-600/20 transition-all hover:scale-105 active:scale-95"
-                  >
-                    Load More Success Stories
-                    <Plus size={16} className="group-hover:rotate-90 transition-transform duration-300" />
-                  </button>
-                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">
-                    Showing {paginatedTestimonials.length} of {filteredTestimonials.length} Stories
-                  </div>
-                </div>
-              )}
             </>
           )}
         </div>
@@ -299,38 +291,42 @@ const Testimonials = () => {
               </button>
 
               {/* Evidence Content Only */}
-              <div className="w-full h-full overflow-hidden rounded-3xl shadow-2xl bg-white border-4 border-[#FF6B6B]">
-                {active.mediaUrl || active.image || (active.content && active.content.startsWith('http')) ? (
+              <div className="w-full h-full overflow-hidden  shadow-2xl bg-white border-4 border-[#FF6B6B]">
+                {getActualMediaUrl(active) ? (
                   <div className="w-full h-full flex items-center justify-center bg-gray-900 min-h-[400px]">
                     {(() => {
-                      const url = active.mediaUrl || active.image || active.content;
-                      
-                      // Video: mp4, webm, mov, or data video
-                      if (url.startsWith('data:video/') || url.match(/\.(mp4|webm|mov|m4v)$/i)) {
+                      const url = getActualMediaUrl(active);
+                      const mediaType = getMediaType(url);
+
+                      if (mediaType === 'video') {
                         return (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <video 
-                              src={url} 
-                              controls 
-                              autoPlay
-                              className="max-w-full max-h-[80vh] w-full h-full object-contain" 
-                              style={{ backgroundColor: '#000' }}
-                            />
-                          </div>
-                        );
-                      } 
-                      // Image: jpg, png, gif, webp
-                      else if (url.startsWith('data:image/') || url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-                        return (
-                          <img
+                          <video
                             src={url}
-                            alt="Testimonial Evidence"
+                            controls
                             className="max-w-full max-h-[80vh] object-contain"
                           />
                         );
-                      } 
-                      // PDF
-                      else if (url.match(/\.pdf$/i)) {
+                      } else if (mediaType === 'embed') {
+                        return (
+                          <div className="relative w-full aspect-video bg-black">
+                            <iframe
+                              src={url}
+                              title="Video evidence"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                              className="absolute inset-0 w-full h-full"
+                            />
+                          </div>
+                        );
+                      } else if (mediaType === 'image') {
+                        return (
+                          <img
+                            src={url}
+                            alt="Evidence"
+                            className="max-w-full max-h-[80vh] object-contain"
+                          />
+                        );
+                      } else if (mediaType === 'pdf') {
                         return (
                           <iframe
                             src={url}
@@ -338,56 +334,33 @@ const Testimonials = () => {
                             className="w-full h-[80vh]"
                           />
                         );
-                      } 
-                      // Audio: mp3, wav, ogg
-                      else if (url.startsWith('data:audio/') || url.match(/\.(mp3|wav|ogg|m4a)$/i)) {
+                      } else if (mediaType === 'audio') {
                         return (
-                          <div className="p-12 w-full max-w-lg bg-gradient-to-br from-purple-900 to-indigo-900 rounded-2xl shadow-xl">
-                            <div className="flex items-center justify-center mb-8">
-                              <Headphones size={48} className="text-[#FF6B6B]" />
-                            </div>
-                            <h3 className="text-xl font-black text-white mb-2 text-center uppercase tracking-widest">Audio Testimonial</h3>
-                            <p className="text-purple-200 text-center mb-6 text-sm">Listen to the original feedback</p>
-                            <audio 
-                              controls 
-                              autoPlay
-                              src={url} 
-                              className="w-full" 
-                              style={{ 
-                                accentColor: '#FF6B6B',
-                                filter: 'brightness(1.2)'
-                              }}
-                            />
+                          <div className="p-12 w-full max-w-lg bg-white rounded-2xl">
+                            <h3 className="text-xl font-black text-[#002B5B] mb-6 text-center uppercase tracking-widest">Audio Evidence</h3>
+                            <audio controls src={url} className="w-full" />
                           </div>
                         );
                       }
-                      
-                      // Fallback if URL type can't be determined
                       return (
-                        <div className="p-12 text-center bg-gradient-to-br from-gray-100 to-gray-50 w-full h-full flex flex-col items-center justify-center">
-                          <FileText size={64} className="text-gray-400 mb-4" />
-                          <p className="text-xl font-bold text-gray-600">Media Content</p>
-                          <p className="text-gray-500 mt-2">{url}</p>
+                        <div className="p-12 text-center bg-white max-w-2xl">
+                          <h3 className="text-2xl font-black text-gray-900 mb-4">Actual Testimonial</h3>
+                          <div className="text-left text-gray-800 whitespace-pre-wrap break-words leading-relaxed font-medium">
+                            {linkifyText(active.text || active.quote || active.message || active.content || 'No testimonial text available.')}
+                          </div>
                         </div>
                       );
                     })()}
                   </div>
                 ) : (
-                  <div className="p-12 text-center bg-gradient-to-br from-white to-gray-50 min-h-[400px] flex flex-col items-center justify-center">
+                  <div className="p-20 text-center bg-white">
                     <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <MessageCircle size={40} className="text-blue-600" />
+                      <FileText size={40} className="text-blue-600" />
                     </div>
-                    <h3 className="text-2xl font-black text-gray-900 mb-2">Testimonial from {active.name || active.reviewerName}</h3>
-                    <p className="text-gray-500 mb-6 text-sm font-medium">{active.role || 'Student'}</p>
-                    <div className="flex gap-0.5 mb-6 justify-center">
-                      {[...Array(5)].map((_, i) => (
-                        <span key={i}>
-                          <span className={i < (active.rating || 5) ? '⭐' : '☆'} />
-                        </span>
-                      ))}
-                    </div>
-                    <div className="text-left text-gray-800 whitespace-pre-wrap break-words leading-relaxed font-medium max-w-2xl bg-blue-50 p-6 rounded-xl border-l-4 border-blue-600">
-                      "{linkifyText(active.text || active.quote || active.message || active.content || 'No testimonial text available.')}"
+                    <h3 className="text-2xl font-black text-gray-900 mb-2">Evidence for {active.name || active.reviewerName}</h3>
+                    <p className="text-gray-500 mb-6">This testimonial consists of the verified text shown on the card.</p>
+                    <div className="text-left text-gray-800 whitespace-pre-wrap break-words leading-relaxed font-medium">
+                      {linkifyText(active.text || active.quote || active.message || active.content || 'No testimonial text available.')}
                     </div>
                   </div>
                 )}
@@ -434,7 +407,6 @@ const Testimonials = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       />
-      </div>
       <Footer />
     </div>
   );

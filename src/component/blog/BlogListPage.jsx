@@ -33,15 +33,15 @@ export const BlogListPage = () => {
             if (yearVal) queryParams.year = Number(yearVal);
             if (monthVal) queryParams.month = Number(monthVal);
             const response = await blogApi.getBlogs(queryParams);
-            setBlogs(response.data.content);
-            setPagination({ page: response.data.page, totalPages: response.data.totalPages, totalElements: response.data.totalElements });
+            setBlogs(response.content);
+            setPagination({ page: response.page, totalPages: response.totalPages, totalElements: response.totalElements });
         } catch (err) { console.error('Failed to load blogs', err); }
         finally { setLoading(false); }
     }, [sort, search, pageSize, year, month]);
     const fetchArchive = async () => {
         try {
             const response = await blogApi.getArchive();
-            setArchive(response.data);
+            setArchive(response);
         } catch (err) { console.error('Failed to load archive', err); }
     };
     useEffect(() => { fetchBlogs(); fetchArchive(); }, []);

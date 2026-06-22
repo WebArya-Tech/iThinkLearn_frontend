@@ -56,14 +56,14 @@ export default function PracticeTestManagement() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white border-b-2 border-blue-900 rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-blue-900">Practice Test Management</h2>
-        <p className="text-gray-500 text-sm mt-1">Create and manage practice tests</p>
+    <div className="space-y-6 w-full">
+      <div className="bg-white border-b-2 border-blue-900 rounded-xl p-4 md:p-6">
+        <h2 className="text-xl md:text-2xl font-bold text-blue-900">Practice Test Management</h2>
+        <p className="text-gray-500 text-xs md:text-sm mt-1">Create and manage practice tests</p>
       </div>
-      <div className="bg-white rounded-xl shadow-md p-4 md:p-8">
+      <div className="bg-white rounded-xl shadow-md p-4 md:p-6 lg:p-8">
         <button
-          className="mb-4 px-4 py-2 rounded bg-blue-900 text-white font-bold"
+          className="w-full sm:w-auto mb-4 px-3 md:px-4 py-2 md:py-2.5 rounded bg-blue-900 text-white font-bold text-sm hover:bg-blue-800 transition"
           onClick={() => {
             setShowForm(!showForm);
             setForm({ name: '', subject: '', duration: 0, questions: 0 });
@@ -72,14 +72,15 @@ export default function PracticeTestManagement() {
         >
           {showForm ? 'Cancel' : 'Add Practice Test'}
         </button>
+        
         {showForm && (
-          <form onSubmit={handleSubmit} className="space-y-4 mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4 mb-6 grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
             <input
               name="name"
               value={form.name}
               onChange={handleInputChange}
               placeholder="Test Name"
-              className="w-full px-4 py-2 border rounded"
+              className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
               required
             />
             <input
@@ -87,7 +88,7 @@ export default function PracticeTestManagement() {
               value={form.subject}
               onChange={handleInputChange}
               placeholder="Subject"
-              className="w-full px-4 py-2 border rounded"
+              className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
               required
             />
             <input
@@ -96,7 +97,7 @@ export default function PracticeTestManagement() {
               value={form.duration}
               onChange={handleInputChange}
               placeholder="Duration (minutes)"
-              className="w-full px-4 py-2 border rounded"
+              className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
               min={0}
               required
             />
@@ -106,63 +107,138 @@ export default function PracticeTestManagement() {
               value={form.questions}
               onChange={handleInputChange}
               placeholder="No. of Questions"
-              className="w-full px-4 py-2 border rounded"
+              className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
               min={0}
               required
             />
+            <select
+              name="difficulty"
+              value={form.difficulty || 'Medium'}
+              onChange={handleInputChange}
+              className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
+            >
+              <option value="Easy">Easy</option>
+              <option value="Medium">Medium</option>
+              <option value="Hard">Hard</option>
+            </select>
             <button
               type="submit"
-              className="col-span-full px-4 py-2 rounded bg-blue-900 text-white font-bold"
+              className="w-full sm:col-span-2 px-3 md:px-4 py-2 md:py-2.5 rounded bg-blue-900 text-white font-bold text-sm hover:bg-blue-800 transition"
             >
               {editId ? 'Update' : 'Create'}
             </button>
           </form>
         )}
+        
         {tests.length === 0 ? (
-          <div className="text-gray-600 text-center py-8">No practice tests found.</div>
+          <div className="text-gray-600 text-center py-8 text-sm">No practice tests found.</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead>
-                <tr>
-                  <th className="px-4 py-2 text-left">Test Name</th>
-                  <th className="px-4 py-2 text-left">Subject</th>
-                  <th className="px-4 py-2 text-left">Duration</th>
-                  <th className="px-4 py-2 text-left">Questions</th>
-                  <th className="px-4 py-2 text-left">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedTests.map((t) => (
-                  <tr key={t.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2">{t.name}</td>
-                    <td className="px-4 py-2">{t.subject}</td>
-                    <td className="px-4 py-2">{t.duration} min</td>
-                    <td className="px-4 py-2">{t.questions}</td>
-                    <td className="px-4 py-2 flex gap-2">
-                      <button
-                        className="px-3 py-1 rounded bg-blue-900 text-white text-sm"
-                        onClick={() => handleEdit(t)}
-                      >Edit</button>
-                      <button
-                        className="px-3 py-1 rounded bg-red-600 text-white text-sm"
-                        onClick={() => handleDelete(t.id)}
-                      >Delete</button>
-                    </td>
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden sm:block overflow-x-auto rounded-lg border border-gray-200">
+              <table className="w-full divide-y divide-gray-200 text-xs md:text-sm">
+                <thead className="bg-blue-50">
+                  <tr>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-left font-semibold text-gray-700">#</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-left font-semibold text-gray-700">Test Name</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-left font-semibold text-gray-700">Subject</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-left font-semibold text-gray-700 hidden md:table-cell">Duration</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-left font-semibold text-gray-700 hidden lg:table-cell">Questions</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-left font-semibold text-gray-700 hidden lg:table-cell">Difficulty</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-center font-semibold text-gray-700">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {paginatedTests.map((t, idx) => (
+                    <tr key={t.id} className="hover:bg-gray-50 transition">
+                      <td className="px-3 md:px-4 py-2 md:py-3 text-gray-600">{startIndex + idx + 1}</td>
+                      <td className="px-3 md:px-4 py-2 md:py-3 font-medium text-gray-800 truncate">{t.name}</td>
+                      <td className="px-3 md:px-4 py-2 md:py-3 text-gray-600">{t.subject}</td>
+                      <td className="px-3 md:px-4 py-2 md:py-3 text-gray-600 hidden md:table-cell">{t.duration} min</td>
+                      <td className="px-3 md:px-4 py-2 md:py-3 text-gray-600 hidden lg:table-cell">{t.questions}</td>
+                      <td className="px-3 md:px-4 py-2 md:py-3 hidden lg:table-cell">
+                        <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                          t.difficulty === 'Easy' ? 'bg-green-100 text-green-800' :
+                          t.difficulty === 'Hard' ? 'bg-red-100 text-red-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {t.difficulty}
+                        </span>
+                      </td>
+                      <td className="px-3 md:px-4 py-2 md:py-3">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            className="px-2 md:px-3 py-1 md:py-1.5 rounded bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition"
+                            onClick={() => handleEdit(t)}
+                          >Edit</button>
+                          <button
+                            className="px-2 md:px-3 py-1 md:py-1.5 rounded bg-red-600 text-white text-xs font-semibold hover:bg-red-700 transition"
+                            onClick={() => handleDelete(t.id)}
+                          >Delete</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="sm:hidden space-y-3">
+              {paginatedTests.map((t, idx) => (
+                <div key={t.id} className="bg-white border border-gray-200 rounded-lg p-3 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-800 text-sm truncate">{t.name}</p>
+                      <p className="text-xs text-gray-500">{t.subject}</p>
+                    </div>
+                    <span className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap ${
+                      t.difficulty === 'Easy' ? 'bg-green-100 text-green-800' :
+                      t.difficulty === 'Hard' ? 'bg-red-100 text-red-800' :
+                      'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {t.difficulty}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div className="bg-gray-50 p-2 rounded">
+                      <p className="text-gray-500">Duration</p>
+                      <p className="font-semibold text-gray-800">{t.duration} min</p>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded">
+                      <p className="text-gray-500">Questions</p>
+                      <p className="font-semibold text-gray-800">{t.questions}</p>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded">
+                      <p className="text-gray-500">ID</p>
+                      <p className="font-semibold text-gray-800">{startIndex + idx + 1}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 pt-2 border-t border-gray-200">
+                    <button
+                      className="flex-1 px-2 py-1.5 rounded bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition"
+                      onClick={() => handleEdit(t)}
+                    >Edit</button>
+                    <button
+                      className="flex-1 px-2 py-1.5 rounded bg-red-600 text-white text-xs font-semibold hover:bg-red-700 transition"
+                      onClick={() => handleDelete(t.id)}
+                    >Delete</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              totalItems={tests.length}
+              itemsPerPage={itemsPerPage}
+              alwaysShow={true}
+            />
+          </>
         )}
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-          totalItems={tests.length}
-          itemsPerPage={itemsPerPage}
-          alwaysShow={true}
-        />
       </div>
     </div>
   );

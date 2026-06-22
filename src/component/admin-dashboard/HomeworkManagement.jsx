@@ -14,6 +14,11 @@ const loadHomework = () => {
   } catch { return DEFAULT_HOMEWORK }
 }
 
+const saveHomework = (items) => {
+  localStorage.setItem('icfy_homework', JSON.stringify(items))
+  window.dispatchEvent(new Event('icfy_homework_updated'))
+}
+
 export default function HomeworkManagement() {
   const [homework, setHomework] = useState(loadHomework);
   const [showForm, setShowForm] = useState(false);
@@ -26,8 +31,8 @@ export default function HomeworkManagement() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedHomework = homework.slice(startIndex, startIndex + itemsPerPage);
 
-  // Save to localStorage so student Homework.jsx can read them
-  useEffect(() => { localStorage.setItem('icfy_homework', JSON.stringify(homework)) }, [homework])
+  // Save to localStorage so student Homework.jsx and MyAssignments.jsx can read them
+  useEffect(() => { saveHomework(homework) }, [homework])
 
   const handleInputChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -38,7 +43,7 @@ export default function HomeworkManagement() {
     if (editId) {
       setHomework(homework.map(h => h.id === editId ? { ...h, ...form, id: editId } : h));
     } else {
-      setHomework([...homework, { ...form, id: Date.now(), assignedDate: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) }]);
+      setHomework([...homework, { ...form, id: Date.now(), status: 'pending', assignedDate: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) }]);
     }
     setForm({ title: '', subject: '', dueDate: '', marks: 10, description: '', assignedDate: '' });
     setEditId(null);
@@ -46,7 +51,7 @@ export default function HomeworkManagement() {
   };
 
   const handleEdit = (h) => {
-    setForm({ title: h.title, subject: h.subject, dueDate: h.dueDate, marks: h.marks || 10, description: h.description });
+    setForm({ title: h.title, subject: h.subject, dueDate: h.dueDate, marks: h.marks || 10, description: h.description, assignedDate: h.assignedDate || '' });
     setEditId(h.id);
     setShowForm(true);
   };
@@ -67,7 +72,7 @@ export default function HomeworkManagement() {
           className="mb-4 px-4 py-2 rounded bg-blue-900 text-white font-bold"
           onClick={() => {
             setShowForm(!showForm);
-            setForm({ title: '', subject: '', dueDate: '', description: '' });
+            setForm({ title: '', subject: '', dueDate: '', marks: 10, description: '', assignedDate: '' });
             setEditId(null);
           }}
         >

@@ -1,302 +1,388 @@
-﻿import React, { useState, useEffect } from 'react'
-import Pagination from '../ui/Pagination'
-
-const SAMPLE_STUDENTS = [
-  { id: 'STU001', name: 'Rahul Sharma', email: 'rahul@example.com', phone: '+91 98765 43210', status: 'active', enrollmentDate: '2026-01-10' },
-  { id: 'STU002', name: 'Priya Mehta', email: 'priya@example.com', phone: '+91 98765 43211', status: 'active', enrollmentDate: '2026-01-15' },
-  { id: 'STU003', name: 'Amit Kumar', email: 'amit@example.com', phone: '+91 98765 43212', status: 'inactive', enrollmentDate: '2026-01-20' },
-]
-
-const loadStudents = () => {
-  try {
-    // Check if admin has manually managed students
-    const adminStudents = JSON.parse(localStorage.getItem('icfy_admin_students') || 'null')
-    if (adminStudents && adminStudents.length > 0) return adminStudents
-    // Map icfy_users (registered via signup) to student format
-    const registered = JSON.parse(localStorage.getItem('icfy_users') || '[]')
-    const mapped = registered
-      .filter(u => u.role !== 'admin')
-      .map(u => ({
-        id: u.studentId || u.id,
-        name: u.fullName || u.name || '',
-        email: u.email || '',
-        phone: u.phone || '',
-        status: u.status || 'active',
-        enrollmentDate: u.enrollmentDate || new Date().toISOString().split('T')[0],
-      }))
-    return mapped.length > 0 ? mapped : SAMPLE_STUDENTS
-  } catch { return SAMPLE_STUDENTS }
-}
+﻿import React, { useState, useEffect } from 'react';
+import { Search, Trash2, Eye, Plus, Mail, Phone, MapPin, Calendar, Book, AlertCircle, Download } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function StudentManagement() {
-  const [students, setStudents] = useState(loadStudents);
-  
-  // Persist to localStorage whenever students changes
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [viewModal, setViewModal] = useState(false);
+
   useEffect(() => {
-    localStorage.setItem('icfy_admin_students', JSON.stringify(students))
-  }, [students])
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [filterStatus, setFilterStatus] = useState('all')
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 100
+    fetchStudents();
+  }, []);
+
+  const fetchStudents = async () => {
+    setLoading(true);
+    try {
+      // TODO: Replace with actual API call
+      // const response = await getStudents();
+      // setStudents(response.data || []);
+      
+      // Mock data for now
+      setStudents([
+        {
+          id: 1,
+          name: 'Rahul Kumar',
+          email: 'rahul.kumar@email.com',
+          phone: '+91-9876543210',
+          enrollment: '2024-01-15',
+          status: 'active',
+          courses: ['Mathematics', 'Physics'],
+          enrolledClasses: 2,
+          totalFeesPaid: 15000,
+          city: 'Delhi'
+        },
+        {
+          id: 2,
+          name: 'Priya Singh',
+          email: 'priya.singh@email.com',
+          phone: '+91-9876543211',
+          enrollment: '2024-02-20',
+          status: 'active',
+          courses: ['Chemistry', 'Biology'],
+          enrolledClasses: 3,
+          totalFeesPaid: 22500,
+          city: 'Mumbai'
+        },
+        {
+          id: 3,
+          name: 'Amit Patel',
+          email: 'amit.patel@email.com',
+          phone: '+91-9876543212',
+          enrollment: '2023-11-10',
+          status: 'inactive',
+          courses: ['English', 'History'],
+          enrolledClasses: 1,
+          totalFeesPaid: 7500,
+          city: 'Bangalore'
+        }
+      ]);
+    } catch (error) {
+      console.error('Error fetching students:', error);
+      toast.error('Failed to load students');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteStudent = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this student?')) return;
+    try {
+      // TODO: Replace with actual API call
+      // await deleteStudent(id);
+      
+      setStudents(prev => prev.filter(s => s.id !== id));
+      toast.success('Student deleted successfully');
+    } catch (error) {
+      console.error('Error deleting student:', error);
+      toast.error('Failed to delete student');
+    }
+  };
+
+  const handleDownloadReport = () => {
+    try {
+      const csvContent = [
+        ['Name', 'Email', 'Phone', 'Status', 'Enrollment Date', 'Total Fees Paid'],
+        ...filteredStudents.map(s => [
+          s.name,
+          s.email,
+          s.phone,
+          s.status,
+          s.enrollment,
+          s.totalFeesPaid
+        ])
+      ]
+        .map(row => row.join(','))
+        .join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `students-report-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      toast.success('Report downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading report:', error);
+      toast.error('Failed to download report');
+    }
+  };
 
   const filteredStudents = students.filter(student => {
     const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         String(student.id).includes(searchTerm)
-    const matchesFilter = filterStatus === 'all' || student.status === filterStatus
-    return matchesSearch && matchesFilter
-  })
+      student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.phone.includes(searchTerm);
+    
+    const matchesFilter = filterStatus === 'all' || student.status === filterStatus;
+    
+    return matchesSearch && matchesFilter;
+  });
 
-  const totalPages = Math.ceil(filteredStudents.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const paginatedStudents = filteredStudents.slice(startIndex, startIndex + itemsPerPage)
-
-  const handleAddStudent = (e) => {
-    e.preventDefault()
-    const formData = new FormData(e.target)
-    const newStudent = {
-      id: `STU${Date.now()}`,
-      name: formData.get('name'),
-      email: formData.get('email'),
-      phone: formData.get('phone'),
-      status: 'active',
-      enrollmentDate: new Date().toISOString().split('T')[0],
-    }
-    setStudents(prev => [...prev, newStudent])
-    // Also register in icfy_users so student can log in
-    const users = JSON.parse(localStorage.getItem('icfy_users') || '[]')
-    users.push({
-      fullName: newStudent.name, email: newStudent.email,
-      phone: newStudent.phone, studentId: newStudent.id, id: newStudent.id,
-      password: formData.get('password') || '123456',
-      role: 'student', enrollmentDate: newStudent.enrollmentDate, status: 'active'
-    })
-    localStorage.setItem('icfy_users', JSON.stringify(users))
-    setShowAddModal(false)
-    alert('Student added successfully!')
-  };
-
-  const handleDeleteStudent = (id) => {
-    if (!window.confirm('Delete this student?')) return;
-    setStudents(students.filter(s => s.id !== id))
-    alert('Student deleted successfully!');
-  };
-
-  const handleStatusUpdate = (id, newStatus) => {
-    setStudents(students.map(s => s.id === id ? { ...s, status: newStatus } : s))
-  };
+  const stats = [
+    { label: 'Total Students', count: students.length, color: 'bg-blue-900 text-white' },
+    { label: 'Active', count: students.filter(s => s.status === 'active').length, color: 'bg-green-100 text-green-800' },
+    { label: 'Inactive', count: students.filter(s => s.status === 'inactive').length, color: 'bg-red-100 text-red-800' },
+    { label: 'Total Revenue', count: `₹${students.reduce((sum, s) => sum + s.totalFeesPaid, 0).toLocaleString()}`, color: 'bg-purple-100 text-purple-800' },
+  ];
 
   return (
-    <div className=" sm:space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4">
-        <div className="bg-white  border-gray-100 rounded-xl p-2 sm:p-6">
-        <h2 className="text-xl sm:text-2xl font-bold text-blue-900">Student Management</h2>
-        <p className="text-gray-500 text-xs sm:text-sm mt-1">Manage all registered students</p>
-      </div>
+    <div className="w-full">
+      {/* Page Header */}
+      <div className="bg-white border-b-2 border-blue-900 rounded-xl p-6 mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-blue-900">Student Management</h1>
+          <p className="text-gray-500 text-sm mt-1">Manage and monitor all students in the system</p>
+        </div>
         <button
-          onClick={() => setShowAddModal(true)}
-          className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg text-white font-bold shadow-md hover:opacity-90 transition-all w-full md:w-auto bg-blue-900 text-sm sm:text-base"
+          onClick={handleDownloadReport}
+          className="flex items-center gap-2 px-4 py-3 bg-blue-900 text-white rounded-xl font-bold hover:bg-blue-800 transition-all shadow-lg"
         >
-          + Add New Student
+          <Download size={20} /> Download Report
         </button>
       </div>
-      {true ? (
-        <>
-          {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-            <div className="bg-white rounded-xl shadow-md p-2 sm:p-3 border-l-4 border-blue-900">
-              <h3 className="text-xs sm:text-sm font-semibold text-gray-600 mb-1">Total Students</h3>
-              <p className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-900">{students.length}</p>
-            </div>
-            <div className="bg-white rounded-xl shadow-md p-2 sm:p-3 border-l-4 border-blue-900">
-              <h3 className="text-xs sm:text-sm font-semibold text-gray-600 mb-1">Active Students</h3>
-              <p className="text-xl sm:text-2xl md:text-3xl font-bold text-green-700">
-                {students.filter(s => s.status === 'active').length}
-              </p>
-            </div>
-            <div className="bg-white rounded-xl shadow-md p-2 sm:p-3 border-l-4 border-blue-900">
-              <h3 className="text-xs sm:text-sm font-semibold text-gray-600 mb-1">Inactive Students</h3>
-              <p className="text-xl sm:text-2xl md:text-3xl font-bold text-yellow-600">
-                {students.filter(s => s.status === 'inactive').length}
-              </p>
-            </div>
-            <div className="bg-white rounded-xl shadow-md p-2 sm:p-3 border-l-4 border-blue-900">
-              <h3 className="text-xs sm:text-sm font-semibold text-gray-600 mb-1">Pending</h3>
-              <p className="text-xl sm:text-2xl md:text-3xl font-bold text-amber-700">{students.filter(s => s.status === 'pending').length}</p>
-            </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        {stats.map((s) => (
+          <div key={s.label} className={`rounded-xl p-4 text-center font-semibold ${s.color}`}>
+            <div className="text-2xl font-bold">{s.count}</div>
+            <div className="text-xs mt-1">{s.label}</div>
           </div>
-          {/* Search and Filter */}
-          <div className="bg-white rounded-xl shadow-md p-2 sm:p-3 md:p-2 ">
-            <div className="flex flex-col md:flex-row gap-3 sm:gap-4">
-              <input
-                type="text"
-                placeholder="Search by name, email, or ID..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg border-2 border-gray-100 focus:outline-none text-sm"
-              />
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg border-2 border-gray-100 focus:outline-none text-sm"
-              >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="pending">Pending</option>
-              </select>
-            </div>
-          </div>
-          {/* Students Table */}
-          <div className="bg-white rounded-xl shadow-md overflow-hidden -mx-2 sm:mx-0">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-160">
-                <thead>
-                  <tr className="border-b-2 border-gray-100" style={{ backgroundColor: '#fefce8' }}>
-                    <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-bold text-blue-900 text-xs sm:text-sm">Student ID</th>
-                    <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-bold text-blue-900 text-xs sm:text-sm">Name</th>
-                    <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-bold text-blue-900 text-xs sm:text-sm">Email</th>
-                    <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-bold text-blue-900 text-xs sm:text-sm">Phone</th>
-                    <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-bold text-blue-900 text-xs sm:text-sm">Status</th>
-                    <th className="text-left py-3 sm:py-4 px-3 sm:px-6 font-bold text-blue-900 text-xs sm:text-sm">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedStudents.length === 0 ? (
-                    <tr>
-                      <td colSpan="6" className="text-center py-6 sm:py-8 text-gray-600 text-sm">No students found</td>
-                    </tr>
-                  ) : (
-                    paginatedStudents.map((student) => (
-                      <tr key={student.id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-3 sm:py-4 px-3 sm:px-6 font-mono text-xs sm:text-sm">{student.id}</td>
-                        <td className="py-3 sm:py-4 px-3 sm:px-6 font-semibold text-xs sm:text-sm">{student.name}</td>
-                        <td className="py-3 sm:py-4 px-3 sm:px-6 text-xs sm:text-sm">{student.email}</td>
-                        <td className="py-3 sm:py-4 px-3 sm:px-6 text-xs sm:text-sm">{student.phone}</td>
-                        <td className="py-3 sm:py-4 px-3 sm:px-6">
-                          <select
-                            value={student.status || 'active'}
-                            onChange={(e) => handleStatusUpdate(student.id, e.target.value)}
-                            className="px-2 py-1 rounded text-xs sm:text-sm border border-gray-100"
-                          >
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                            <option value="pending">Pending</option>
-                          </select>
-                        </td>
-                        <td className="py-4 px-6">
-                          <div className="flex gap-2 flex-wrap">
-                            <button
-                              className="px-3 py-1 rounded-lg text-xs font-semibold text-white hover:opacity-90 bg-blue-900"
-                            >
-                              View
-                            </button>
-                            <button
-                              className="px-3 py-1 rounded-lg text-xs font-semibold text-white hover:opacity-90"
-                              style={{ backgroundColor: '#dc3545' }}
-                              onClick={() => handleDeleteStudent(student.id)}
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-            {/* Pagination */}
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-              totalItems={filteredStudents.length}
-              itemsPerPage={itemsPerPage}
-              alwaysShow={true}
+        ))}
+      </div>
+
+      {/* Search and Filter */}
+      <div className="bg-white rounded-xl p-6 mb-6 shadow-sm border border-gray-200">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-3 text-gray-400" size={20} />
+            <input
+              type="text"
+              placeholder="Search by name, email, or phone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 outline-none"
             />
           </div>
-        </>
+
+          <div className="flex gap-2">
+            {['all', 'active', 'inactive'].map((status) => (
+              <button
+                key={status}
+                onClick={() => setFilterStatus(status)}
+                className={`px-4 py-2 rounded-lg font-semibold transition-colors text-sm ${
+                  filterStatus === status
+                    ? 'bg-blue-900 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Students Table */}
+      {loading ? (
+        <div className="text-center py-12">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-900"></div>
+          <p className="text-gray-600 mt-4">Loading students...</p>
+        </div>
+      ) : filteredStudents.length === 0 ? (
+        <div className="text-center py-12 bg-gray-50 rounded-xl border border-gray-200">
+          <AlertCircle className="mx-auto mb-3 text-gray-400" size={40} />
+          <p className="text-gray-600">
+            {searchTerm ? 'No students found matching your search' : 'No students found'}
+          </p>
+        </div>
       ) : (
-        <div className="text-center py-8 text-gray-600">No students found.</div>
+        <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-blue-900 text-white text-left">
+                <th className="px-4 py-3 font-semibold">#</th>
+                <th className="px-4 py-3 font-semibold">Student Name</th>
+                <th className="px-4 py-3 font-semibold">Contact</th>
+                <th className="px-4 py-3 font-semibold">Enrollment Date</th>
+                <th className="px-4 py-3 font-semibold">Status</th>
+                <th className="px-4 py-3 font-semibold">Total Fees Paid</th>
+                <th className="px-4 py-3 font-semibold text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredStudents.map((student, idx) => (
+                <tr key={student.id} className="border-t border-gray-100 hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3 text-gray-500">{idx + 1}</td>
+                  <td className="px-4 py-3 font-semibold text-gray-800">{student.name}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col gap-1 text-xs text-gray-600">
+                      <div className="flex items-center gap-1">
+                        <Mail size={14} /> {student.email}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Phone size={14} /> {student.phone}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2 text-gray-700">
+                      <Calendar size={16} className="text-blue-600" />
+                      {new Date(student.enrollment).toLocaleDateString()}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
+                      student.status === 'active'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {student.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 font-semibold text-gray-800">
+                    ₹{student.totalFeesPaid.toLocaleString()}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => {
+                          setSelectedStudent(student);
+                          setViewModal(true);
+                        }}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition-colors text-xs font-medium"
+                        title="View details"
+                      >
+                        <Eye size={14} /> View
+                      </button>
+                      <button
+                        onClick={() => handleDeleteStudent(student.id)}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-xs font-medium"
+                        title="Delete student"
+                      >
+                        <Trash2 size={14} /> Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
-      {/* Add Student Modal */}
-      {showAddModal && (
+
+      {/* View Student Modal */}
+      {viewModal && selectedStudent && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-          onClick={() => setShowAddModal(false)}
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          onClick={() => setViewModal(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-2xl w-full"
+            className="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-2xl font-bold mb-6 text-blue-900">Add New Student</h2>
-            <form onSubmit={handleAddStudent} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
-                  <input
-                    type="text"
-                    name="name"
-                    required
-                    className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none"
-                    style={{ borderColor: '#1e3a8a' }}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
-                  <input
-                    type="email"
-                    name="email"
-                    required
-                    className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none"
-                    style={{ borderColor: '#1e3a8a' }}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Phone</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    required
-                    className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none"
-                    style={{ borderColor: '#1e3a8a' }}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
-                  <input
-                    type="password"
-                    name="password"
-                    required
-                    className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none"
-                    style={{ borderColor: '#1e3a8a' }}
-                  />
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-blue-900">Student Details</h2>
+              <button
+                onClick={() => setViewModal(false)}
+                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Personal Information */}
+              <div>
+                <h3 className="text-lg font-bold text-gray-800 mb-4">Personal Information</h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase">Name</label>
+                    <p className="text-gray-800 font-semibold">{selectedStudent.name}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase">Email</label>
+                    <p className="text-gray-800">{selectedStudent.email}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase">Phone</label>
+                    <p className="text-gray-800">{selectedStudent.phone}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase">City</label>
+                    <p className="text-gray-800 flex items-center gap-2">
+                      <MapPin size={16} className="text-blue-600" />
+                      {selectedStudent.city}
+                    </p>
+                  </div>
                 </div>
               </div>
-              <div className="flex gap-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="flex-1 py-3 rounded-lg font-bold border-2 transition-all"
-                  style={{ borderColor: '#dc3545', color: '#dc3545' }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-3 rounded-lg text-white font-bold shadow-md hover:opacity-90 transition-all bg-blue-900"
-                >
-                  Add Student
-                </button>
+
+              {/* Enrollment Information */}
+              <div>
+                <h3 className="text-lg font-bold text-gray-800 mb-4">Enrollment Information</h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase">Enrollment Date</label>
+                    <p className="text-gray-800 flex items-center gap-2">
+                      <Calendar size={16} className="text-green-600" />
+                      {new Date(selectedStudent.enrollment).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase">Status</label>
+                    <p className={`font-bold ${
+                      selectedStudent.status === 'active' ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {selectedStudent.status.toUpperCase()}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase">Enrolled Classes</label>
+                    <p className="text-gray-800 flex items-center gap-2">
+                      <Book size={16} className="text-purple-600" />
+                      {selectedStudent.enrolledClasses}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase">Total Fees Paid</label>
+                    <p className="text-gray-800 font-semibold text-lg">₹{selectedStudent.totalFeesPaid.toLocaleString()}</p>
+                  </div>
+                </div>
               </div>
-            </form>
+            </div>
+
+            {/* Courses */}
+            <div className="mt-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-3">Enrolled Courses</h3>
+              <div className="flex flex-wrap gap-2">
+                {selectedStudent.courses.map((course, idx) => (
+                  <span
+                    key={idx}
+                    className="px-4 py-2 bg-blue-100 text-blue-800 rounded-lg font-semibold text-sm"
+                  >
+                    {course}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 mt-6">
+              <button
+                onClick={() => setViewModal(false)}
+                className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg font-bold hover:bg-gray-300 transition-colors"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
     </div>
-  )
+  );
 }

@@ -1,24 +1,26 @@
 ﻿import React, { useMemo } from 'react';
-import { Users, BookOpen, GraduationCap, FileText, DollarSign, MessageSquare, ClipboardList, Bell, BarChart2, Star, HelpCircle, FlaskConical, Newspaper } from 'lucide-react';
+import { adminMenuItems } from '../../config/dashboardModules';
 
 const getStats = () => {
   try {
     const students = JSON.parse(localStorage.getItem('icfy_admin_students') || localStorage.getItem('icfy_users') || '[]').filter(u => u.role !== 'admin')
     const payments = JSON.parse(localStorage.getItem('feePayments') || '[]')
     const classes = JSON.parse(localStorage.getItem('icfy_running_classes') || '[]')
-    const demoRequests = JSON.parse(localStorage.getItem('icfy_demo_requests') || '[]')
+    const legacyDemoRequests = JSON.parse(localStorage.getItem('icfy_demo_requests') || '[]')
+    const runningClassDemoRequests = JSON.parse(localStorage.getItem('runningClassDemoRequests') || '[]')
+    const demoRequests = runningClassDemoRequests.length > 0 ? runningClassDemoRequests : legacyDemoRequests
     const homework = JSON.parse(localStorage.getItem('icfy_homework') || '[]')
     const announcements = JSON.parse(localStorage.getItem('icfy_announcements') || '[]')
     const enrollments = JSON.parse(localStorage.getItem('runningClassEnrollments') || '[]')
     const totalRevenue = payments.reduce((s, p) => s + Number(p.feeAmount || p.amount || 0), 0)
-    const pendingDemos = demoRequests.filter(r => r.status === 'pending').length
+    const pendingDemos = demoRequests.filter(r => ['pending', 'Pending'].includes(r.status)).length
     const pendingEnrollments = enrollments.filter(e => e.status === 'Pending').length
     return { students: students.length, payments: payments.length, classes: classes.filter(c => c.status === 'Active').length, totalRevenue, demoRequests: demoRequests.length, homework: homework.length, announcements: announcements.length, pendingDemos, pendingEnrollments }
   } catch { return { students: 0, payments: 0, classes: 0, totalRevenue: 0, demoRequests: 0, homework: 0, announcements: 0, pendingDemos: 0, pendingEnrollments: 0 } }
 }
 
 export default function AdminHome({ setCurrentView }) {
-  const stats = useMemo(getStats, [])
+  const stats = useMemo(() => getStats(), [])
 
   const statCards = [
     { label: 'Total Students', value: stats.students, color: '#1e3a8a', bg: '#eff6ff', id: 'students' },
@@ -31,22 +33,7 @@ export default function AdminHome({ setCurrentView }) {
     { label: 'Announcements', value: stats.announcements, color: '#eab308', bg: '#fefce8', id: 'announcements' },
   ]
 
-  const menuCards = [
-    { id: 'students', label: 'Students', icon: Users, description: 'View & manage registered students' },
-    { id: 'courses', label: 'Courses', icon: BookOpen, description: 'Create & manage course catalog' },
-    { id: 'running-classes', label: 'Running Classes', icon: GraduationCap, description: 'Manage active classes & enrollments' },
-    { id: 'fee-payment', label: 'Fee Payments', icon: DollarSign, description: 'Track payment records from frontend' },
-    { id: 'demo-requests', label: 'Demo Requests', icon: FileText, description: 'Manage demo class bookings' },
-    { id: 'homework', label: 'Homework', icon: ClipboardList, description: 'Assign & manage homework tasks' },
-    { id: 'practice-tests', label: 'Practice Tests', icon: FlaskConical, description: 'Create & manage tests' },
-    { id: 'announcements', label: 'Announcements', icon: Bell, description: 'Post announcements to students' },
-    { id: 'questions', label: 'Q&A Management', icon: HelpCircle, description: 'Answer student questions' },
-    { id: 'feedback', label: 'Feedback', icon: MessageSquare, description: 'View & respond to reviews' },
-    { id: 'testimonials', label: 'Testimonials', icon: Star, description: 'Moderate testimonial submissions' },
-    { id: 'blog', label: 'Blog', icon: Newspaper, description: 'Manage blog posts & subscribers' },
-    { id: 'notifications', label: 'Notifications', icon: Bell, description: 'Admin alerts & notifications' },
-    { id: 'profile', label: 'My Profile', icon: BarChart2, description: 'View & edit admin profile' },
-  ]
+  const menuCards = adminMenuItems.filter(m => m.id !== 'home')
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-6 ">

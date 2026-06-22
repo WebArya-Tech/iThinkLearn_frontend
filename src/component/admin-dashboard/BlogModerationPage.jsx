@@ -28,10 +28,30 @@ const Input = ({ value, onChange, placeholder }) => (
 const Pagination = ({ page, totalPages, onPageChange }) => {
   if (totalPages <= 1) return null;
   return (
-    <div className="mt-6 flex items-center justify-between">
-      <button onClick={() => onPageChange(page - 1)} disabled={page === 0} className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50">Previous</button>
-      <span className="text-sm text-gray-600">Page {page + 1} of {totalPages}</span>
-      <button onClick={() => onPageChange(page + 1)} disabled={page >= totalPages - 1} className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50">Next</button>
+    <div className="flex items-center justify-center gap-1.5 flex-wrap">
+      <button onClick={() => onPageChange(page - 1)} disabled={page === 0}
+        className="px-3 py-1.5 text-sm font-medium border border-gray-300 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition">Prev</button>
+      {Array.from({ length: totalPages }, (_, i) => {
+        const p = i;
+        if (totalPages > 7) {
+          if (p === 0 || p === totalPages - 1 || (p >= page - 1 && p <= page + 1)) {
+            return <button key={p} onClick={() => onPageChange(p)}
+              className={`w-9 h-9 text-sm font-semibold rounded-lg transition ${page === p ? 'bg-blue-900 text-white' : 'border border-gray-300 text-gray-600 hover:bg-gray-50'}`}>
+              {p + 1}
+            </button>;
+          }
+          if (p === page - 2 || p === page + 2) {
+            return <span key={p} className="text-gray-400 text-sm px-1">...</span>;
+          }
+          return null;
+        }
+        return <button key={p} onClick={() => onPageChange(p)}
+          className={`w-9 h-9 text-sm font-semibold rounded-lg transition ${page === p ? 'bg-blue-900 text-white' : 'border border-gray-300 text-gray-600 hover:bg-gray-50'}`}>
+          {p + 1}
+        </button>;
+      })}
+      <button onClick={() => onPageChange(page + 1)} disabled={page >= totalPages - 1}
+        className="px-3 py-1.5 text-sm font-medium border border-gray-300 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition">Next</button>
     </div>
   );
 };
@@ -49,12 +69,20 @@ const ContentEditor = ({ initialContent, onChange }) => {
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 
+const hasHtml = (str) => /<[a-z][\s\S]*>/i.test(str);
+
+const formatContent = (html, text) => {
+    const raw = html || text || '';
+    if (!raw) return '<p class="text-gray-400 italic">No content available</p>';
+    if (hasHtml(raw)) return raw;
+    return raw.split('\n').map(line => line.trim() ? `<p>${line}</p>` : '<br/>').join('\n');
+};
+
 export const BlogModerationPage = ({ onBack }) => {
     const [blogs, setBlogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState('');
     const [pagination, setPagination] = useState({ page: 0, totalPages: 0, totalElements: 0 });
-    const [pageSize, setPageSize] = useState(10);
     const [viewBlog, setViewBlog] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState({});
@@ -69,10 +97,9 @@ export const BlogModerationPage = ({ onBack }) => {
     const fetchBlogs = async (params = {}) => {
         setLoading(true);
         try {
-            const currentSize = params.size !== undefined ? params.size : pageSize;
-            const r = await adminApi.getAdminBlogs({ status: params.status !== undefined ? params.status : statusFilter, page: params.page || 0, size: currentSize });
-            setBlogs(r.data.content);
-            setPagination({ page: r.data.page, totalPages: r.data.totalPages, totalElements: r.data.totalElements });
+            const r = await adminApi.getAdminBlogs({ status: params.status !== undefined ? params.status : statusFilter, page: params.page || 0, size: params.size || 10 });
+            setBlogs(r.content);
+            setPagination({ page: r.page, totalPages: r.totalPages, totalElements: r.totalElements });
         } catch (err) { toast.error('Failed to load blogs'); }
         finally { setLoading(false); }
     };
@@ -104,7 +131,7 @@ export const BlogModerationPage = ({ onBack }) => {
         setCommentsLoading(true);
         try {
             const r = await blogApi.getComments(blogId, { page: 0, size: 50 });
-            setComments(r.data?.content || []);
+            setComments(r?.content || []);
         } catch (err) { setComments([]); }
         finally { setCommentsLoading(false); }
     };
@@ -176,37 +203,37 @@ export const BlogModerationPage = ({ onBack }) => {
             <div className="min-h-screen bg-bg-primary">
                 {/* Sticky top bar */}
                 <div className="sticky top-0 z-20 bg-bg-card/90 backdrop-blur-lg border-b border-border-primary shadow-sm">
-                    <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between">
+                    <div className="px-3 sm:px-6 py-2 sm:py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
                         <button onClick={() => { setViewBlog(null); setIsEditing(false); }}
-                            className="flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors">
-                            <ArrowLeft className="w-4 h-4" /> Back to list
+                            className="flex items-center gap-1.5 text-xs sm:text-sm text-text-secondary hover:text-text-primary transition-colors">
+                            <ArrowLeft className="w-4 h-4 flex-shrink-0" /> Back to list
                         </button>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
                             {statusBadge(viewBlog.status)}
-                            <div className="flex items-center bg-bg-tertiary rounded-lg p-0.5 ml-2">
+                            <div className="flex items-center bg-bg-tertiary rounded-lg p-0.5 ml-0 sm:ml-2">
                                 <button onClick={() => setIsEditing(false)}
-                                    className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${!isEditing ? 'bg-bg-card text-text-primary shadow-sm' : 'text-text-tertiary hover:text-text-secondary'}`}>
-                                    <Eye className="w-3.5 h-3.5" /> View
+                                    className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 text-xs font-medium rounded-md transition-all ${!isEditing ? 'bg-bg-card text-text-primary shadow-sm' : 'text-text-tertiary hover:text-text-secondary'}`}>
+                                    <Eye className="w-3.5 h-3.5" /> <span className="hidden sm:inline">View</span>
                                 </button>
                                 <button onClick={toggleEdit}
-                                    className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${isEditing ? 'bg-bg-card text-text-primary shadow-sm' : 'text-text-tertiary hover:text-text-secondary'}`}>
-                                    <Edit3 className="w-3.5 h-3.5" /> Edit
+                                    className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 text-xs font-medium rounded-md transition-all ${isEditing ? 'bg-bg-card text-text-primary shadow-sm' : 'text-text-tertiary hover:text-text-secondary'}`}>
+                                    <Edit3 className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Edit</span>
                                 </button>
                             </div>
                             {isEditing && (
                                 <button onClick={handleSaveEdit} disabled={actionLoading}
-                                    className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-lg bg-text-primary text-bg-primary hover:opacity-90 transition-all disabled:opacity-50">
-                                    <Save className="w-3.5 h-3.5" /> {actionLoading ? 'Saving...' : 'Save Changes'}
+                                    className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-1.5 text-xs font-semibold rounded-lg bg-text-primary text-bg-primary hover:opacity-90 transition-all disabled:opacity-50">
+                                    <Save className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" /> <span className="hidden sm:inline">{actionLoading ? 'Saving...' : 'Save Changes'}</span> <span className="inline sm:hidden">{actionLoading ? '...' : 'Save'}</span>
                                 </button>
                             )}
                             <button onClick={() => setDeleteConfirmBlog(viewBlog)} disabled={actionLoading}
-                                className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-lg bg-red-500 text-white hover:bg-red-600 transition-all disabled:opacity-50">
-                                <Trash2 className="w-3.5 h-3.5" /> Delete Blog
+                                className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-1.5 text-xs font-semibold rounded-lg bg-red-500 text-white hover:bg-red-600 transition-all disabled:opacity-50">
+                                <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" /> <span className="hidden sm:inline">Delete</span>
                             </button>
                         </div>
                     </div>
                 </div>
-                <div className="max-w-3xl mx-auto px-6 py-10">
+                <div className="px-3 sm:px-6 py-10">
                     {isEditing ? (
                         <div className="space-y-6">
                             <div>
@@ -246,10 +273,10 @@ export const BlogModerationPage = ({ onBack }) => {
                         <>
                             {viewBlog.featuredImageUrl && (
                                 <img src={viewBlog.featuredImageUrl} alt={viewBlog.title}
-                                    className="w-full h-64 md:h-80 object-cover rounded-xl mb-8 border border-border-secondary" />
+                                    className="w-full h-40 sm:h-64 md:h-80 object-cover rounded-xl mb-6 sm:mb-8 border border-border-secondary" />
                             )}
-                            <h1 className="text-3xl md:text-4xl font-bold text-text-primary mb-4 leading-tight">{viewBlog.title}</h1>
-                            <p className="text-text-secondary text-lg mb-6 leading-relaxed italic">{viewBlog.excerpt}</p>
+                            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-text-primary mb-3 sm:mb-4 leading-tight">{viewBlog.title}</h1>
+                            <p className="text-text-secondary text-base sm:text-lg mb-4 sm:mb-6 leading-relaxed italic">{viewBlog.excerpt}</p>
                             <div className="flex flex-wrap items-center gap-4 text-text-tertiary text-sm mb-6 pb-6 border-b border-border-secondary">
                                 <span className="flex items-center gap-1.5">
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
@@ -280,7 +307,7 @@ export const BlogModerationPage = ({ onBack }) => {
                                         };
                                     });
                                 }}
-                                dangerouslySetInnerHTML={{ __html: viewBlog.contentHtml || viewBlog.content || '' }} />
+                                dangerouslySetInnerHTML={{ __html: formatContent(viewBlog.contentHtml, viewBlog.content) }} />
                         </>
                     )}
                     {/* Comments Section */}
@@ -315,15 +342,15 @@ export const BlogModerationPage = ({ onBack }) => {
                     {viewBlog.status === 'PENDING' && (
                         <div className="mt-10 pt-8 border-t border-border-secondary">
                             <h3 className="text-sm font-semibold text-text-tertiary uppercase tracking-wider mb-4">Moderation Actions</h3>
-                            <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                                 <button onClick={() => handleApprove(viewBlog.id)} disabled={actionLoading}
-                                    className="group flex-1 flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 disabled:opacity-50 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/25 hover:from-emerald-600 hover:to-emerald-700 hover:shadow-emerald-500/40 hover:scale-[1.02] active:scale-[0.98]">
-                                    <CheckCircle className="w-5 h-5 transition-transform group-hover:scale-110" />
+                                    className="group flex-1 flex items-center justify-center gap-2.5 px-4 sm:px-6 py-2.5 sm:py-3.5 rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 disabled:opacity-50 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/25 hover:from-emerald-600 hover:to-emerald-700 hover:shadow-emerald-500/40 hover:scale-[1.02] active:scale-[0.98]">
+                                    <CheckCircle className="w-5 h-5 transition-transform group-hover:scale-110 flex-shrink-0" />
                                     {actionLoading ? 'Approving...' : 'Approve & Publish'}
                                 </button>
                                 <button onClick={() => { setRejectModal(viewBlog); setRejectReason(''); }} disabled={actionLoading}
-                                    className="group flex-1 flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 disabled:opacity-50 bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/25 hover:from-red-600 hover:to-red-700 hover:shadow-red-500/40 hover:scale-[1.02] active:scale-[0.98]">
-                                    <XCircle className="w-5 h-5 transition-transform group-hover:scale-110" />
+                                    className="group flex-1 flex items-center justify-center gap-2.5 px-4 sm:px-6 py-2.5 sm:py-3.5 rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 disabled:opacity-50 bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/25 hover:from-red-600 hover:to-red-700 hover:shadow-red-500/40 hover:scale-[1.02] active:scale-[0.98]">
+                                    <XCircle className="w-5 h-5 transition-transform group-hover:scale-110 flex-shrink-0" />
                                     Reject Blog
                                 </button>
                             </div>
@@ -361,21 +388,21 @@ export const BlogModerationPage = ({ onBack }) => {
     }
     // Blog list view
     return (
-        <div className="max-w-6xl mx-auto px-6 py-10">
+        <div className="px-3 sm:px-6 py-6">
             <div className="mb-8">
                 {onBack && (
                     <button onClick={onBack}
-                        className="flex items-center gap-1.5 text-sm font-semibold mb-4 hover:opacity-75 transition text-blue-900">
-                        <ArrowLeft className="w-4 h-4" /> Back to Blog Dashboard
+                        className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold mb-4 hover:opacity-75 transition text-blue-900">
+                        <ArrowLeft className="w-4 h-4 flex-shrink-0" /> Back to Blog Dashboard
                     </button>
                 )}
-                <h1 className="text-3xl font-bold text-text-primary mb-1">Blog Moderation</h1>
-                <p className="text-gray-500 text-sm">Review, approve, and manage blog submissions</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-text-primary mb-1">Blog Moderation</h1>
+                <p className="text-gray-500 text-xs sm:text-sm">Review, approve, and manage blog submissions</p>
             </div>
             <div className="flex flex-wrap gap-2 mb-6">
                 {['', 'PENDING', 'PUBLISHED', 'REJECTED', 'DRAFT'].map((s) => (
                     <button key={s} onClick={() => handleStatusFilter(s)}
-                        className={`px-3 py-1.5 rounded-lg text-sm transition-all ${statusFilter === s ? 'bg-text-primary text-bg-primary' : 'border border-border-primary text-text-secondary hover:border-text-secondary'}`}
+                        className={`px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm transition-all ${statusFilter === s ? 'bg-text-primary text-bg-primary' : 'border border-border-primary text-text-secondary hover:border-text-secondary'}`}
                         style={statusFilter === s ? { backgroundColor: '#1e3a8a', color: 'white' } : {}}>
                         {s || 'All'}
                     </button>
@@ -384,69 +411,73 @@ export const BlogModerationPage = ({ onBack }) => {
             {loading ? <div className="py-20 text-center"><Spinner size="lg" /></div> : blogs.length === 0 ? (
                 <Card><p className="text-center text-text-tertiary py-8">No blogs found</p></Card>
             ) : (
-                <div className="space-y-4">
-                    {blogs.map((blog) => (
-                        <Card key={blog.id} className="cursor-pointer hover:border-text-tertiary transition-colors" onClick={() => openView(blog)}>
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <h3 className="font-semibold text-text-primary truncate">{blog.title}</h3>
-                                        {statusBadge(blog.status)}
+                <div className="bg-white rounded-xl shadow border border-gray-200 overflow-hidden">
+                    <div className="hidden sm:grid grid-cols-12 gap-3 px-6 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                        <div className="col-span-4">Title</div>
+                        <div className="col-span-2">Author</div>
+                        <div className="col-span-2">Date</div>
+                        <div className="col-span-1 text-center">Comments</div>
+                        <div className="col-span-1 text-center">Status</div>
+                        <div className="col-span-2 text-center">Actions</div>
+                    </div>
+                    <div className="divide-y divide-gray-50">
+                        {blogs.map((blog) => (
+                            <div key={blog.id}
+                                className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-3 px-4 sm:px-6 py-4 items-center hover:bg-blue-50/40 transition cursor-pointer"
+                                onClick={() => openView(blog)}>
+                                <div className="col-span-1 sm:col-span-4 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm font-semibold text-gray-800 truncate">{blog.title}</span>
                                     </div>
-                                    <p className="text-text-secondary text-sm truncate">{blog.excerpt}</p>
-                                    <div className="flex items-center gap-3 mt-1.5 text-xs text-text-tertiary">
-                                        <span>By {blog.authorName}</span>
-                                        {blog.createdAt && !isNaN(new Date(blog.createdAt)) && (
-                                            <span>{format(new Date(blog.createdAt), 'MMM dd, yyyy')}</span>
-                                        )}
-                                    </div>
+                                    <p className="text-xs text-gray-400 truncate sm:hidden mt-0.5">{blog.excerpt}</p>
                                 </div>
-                                <div className="flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
+                                <div className="hidden sm:block col-span-2 text-sm text-gray-500 truncate">{blog.authorName}</div>
+                                <div className="hidden sm:block col-span-2 text-sm text-gray-500">
+                                    {blog.createdAt && !isNaN(new Date(blog.createdAt)) && format(new Date(blog.createdAt), 'MMM dd, yyyy')}
+                                </div>
+                                <div className="hidden sm:flex col-span-1 items-center justify-center gap-1.5">
+                                    <MessageSquare className="w-4 h-4 text-gray-400" />
+                                    <span className={`text-sm font-bold ${(blog.commentsCount || 0) > 0 ? 'text-blue-900' : 'text-gray-300'}`}>
+                                        {blog.commentsCount ?? 0}
+                                    </span>
+                                </div>
+                                <div className="col-span-1 text-center">{statusBadge(blog.status)}</div>
+                                <div className="col-span-1 sm:col-span-2 flex items-center justify-center sm:justify-end gap-1.5" onClick={e => e.stopPropagation()}>
                                     <button onClick={() => openView(blog)}
-                                        className="p-2 rounded-lg border border-border-primary text-text-secondary hover:bg-bg-hover hover:text-text-primary transition-all" title="View">
+                                        className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition" title="View">
                                         <Eye className="w-4 h-4" />
                                     </button>
                                     <button onClick={() => { openView(blog); setIsEditing(true); }}
-                                        className="p-2 rounded-lg border border-border-primary text-text-secondary hover:bg-bg-hover hover:text-text-primary transition-all" title="Edit">
+                                        className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition" title="Edit">
                                         <Edit3 className="w-4 h-4" />
                                     </button>
                                     {blog.status === 'PENDING' && (
                                         <>
-                                            <button onClick={() => handleApprove(blog.id)}
-                                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 transition-all">
-                                                <CheckCircle className="w-3.5 h-3.5" /> Approve
+                                            <button onClick={() => { handleApprove(blog.id); }}
+                                                className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium bg-green-50 text-green-600 hover:bg-green-100 transition">
+                                                <CheckCircle className="w-3.5 h-3.5" />
                                             </button>
                                             <button onClick={() => { setRejectModal(blog); setRejectReason(''); }}
-                                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-500/10 text-red-600 hover:bg-red-500/20 transition-all">
-                                                <XCircle className="w-3.5 h-3.5" /> Reject
+                                                className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100 transition">
+                                                <XCircle className="w-3.5 h-3.5" />
                                             </button>
                                         </>
                                     )}
-                                    {blog.commentsCount > 0 && (
-                                        <button onClick={(e) => openCommentsModal(blog, e)}
-                                            className="relative p-2 rounded-lg border border-blue-200 text-blue-500 hover:bg-blue-50 transition-all" title="View comments">
-                                            <MessageSquare className="w-4 h-4" />
-                                            <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-0.5 rounded-full bg-blue-500 text-white text-[10px] font-bold flex items-center justify-center">
-                                                {blog.commentsCount}
-                                            </span>
-                                        </button>
-                                    )}
-                                    <button onClick={() => setDeleteConfirmBlog(blog)}
-                                        className="p-2 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-all" title="Delete blog">
+                                    <button onClick={(e) => { setDeleteConfirmBlog(blog); }}
+                                        className="p-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition" title="Delete">
                                         <Trash2 className="w-4 h-4" />
                                     </button>
                                 </div>
                             </div>
-                        </Card>
-                    ))}
-
-                    <Pagination
-                        page={pagination.page}
-                        totalPages={pagination.totalPages}
-                        onPageChange={(p) => fetchBlogs({ page: p })}
-                        pageSize={pageSize}
-                        onPageSizeChange={(newSize) => { setPageSize(newSize); fetchBlogs({ page: 0, size: newSize }); }}
-                    />
+                        ))}
+                    </div>
+                    <div className="px-6 py-4 border-t border-gray-100">
+                        <Pagination
+                            page={pagination.page}
+                            totalPages={pagination.totalPages}
+                            onPageChange={(p) => fetchBlogs({ page: p })}
+                        />
+                    </div>
                 </div>
             )}
             {rejectModal && (

@@ -14,6 +14,11 @@ const loadAnnouncements = () => {
   } catch { return DEFAULT_ANNOUNCEMENTS }
 }
 
+const saveAnnouncements = (items) => {
+  localStorage.setItem('icfy_announcements', JSON.stringify(items))
+  window.dispatchEvent(new Event('icfy_announcements_updated'))
+}
+
 export default function AnnouncementManagement() {
   const [announcements, setAnnouncements] = useState(loadAnnouncements);
   const [showForm, setShowForm] = useState(false);
@@ -27,7 +32,7 @@ export default function AnnouncementManagement() {
   const paginatedAnnouncements = announcements.slice(startIndex, startIndex + itemsPerPage);
 
   // Save to localStorage so student dashboard Announcements.jsx can read them
-  useEffect(() => { localStorage.setItem('icfy_announcements', JSON.stringify(announcements)) }, [announcements])
+  useEffect(() => { saveAnnouncements(announcements) }, [announcements])
 
   const handleInputChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -36,7 +41,7 @@ export default function AnnouncementManagement() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (editId) {
-      setAnnouncements(announcements.map(a => a.id === editId ? { ...form, id: editId, createdAt: a.createdAt } : a));
+      setAnnouncements(announcements.map(a => a.id === editId ? { ...a, ...form, id: editId, createdAt: a.createdAt } : a));
     } else {
       setAnnouncements([...announcements, { ...form, id: Date.now(), createdAt: new Date().toISOString().split('T')[0] }]);
     }
@@ -67,7 +72,7 @@ export default function AnnouncementManagement() {
           className="mb-4 px-4 py-2 rounded bg-blue-900 text-white font-bold"
           onClick={() => {
             setShowForm(!showForm);
-            setForm({ title: '', message: '' });
+            setForm({ title: '', message: '', category: 'general', priority: 'medium' });
             setEditId(null);
           }}
         >
@@ -91,6 +96,31 @@ export default function AnnouncementManagement() {
               className="w-full px-4 py-2 border rounded"
               required
             />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <select
+                name="category"
+                value={form.category}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border rounded"
+              >
+                <option value="general">General</option>
+                <option value="exam">Exam</option>
+                <option value="academic">Academic</option>
+                <option value="class">Class</option>
+                <option value="event">Event</option>
+                <option value="payment">Payment</option>
+              </select>
+              <select
+                name="priority"
+                value={form.priority}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border rounded"
+              >
+                <option value="low">Low Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="high">High Priority</option>
+              </select>
+            </div>
             <button
               type="submit"
               className="px-4 py-2 rounded bg-blue-900 text-white font-bold"

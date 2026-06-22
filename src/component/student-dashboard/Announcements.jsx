@@ -23,7 +23,9 @@ const loadAnnouncements = () => {
       // Put admin announcements first, then static ones not already covered
       return mapped
     }
-  } catch {}
+  } catch {
+    return STATIC_ANNOUNCEMENTS
+  }
   return STATIC_ANNOUNCEMENTS
 }
 
@@ -35,10 +37,16 @@ export default function Announcements() {
 
   // Reload if admin updates announcements while student is logged in
   useEffect(() => {
-    const interval = setInterval(() => {
+    const refresh = () => {
       setAnnouncements(loadAnnouncements())
-    }, 5000) // Refresh every 5s
-    return () => clearInterval(interval)
+    }
+
+    window.addEventListener('storage', refresh)
+    window.addEventListener('icfy_announcements_updated', refresh)
+    return () => {
+      window.removeEventListener('storage', refresh)
+      window.removeEventListener('icfy_announcements_updated', refresh)
+    }
   }, [])
 
   const filteredAnnouncements = filter === 'all'
@@ -61,10 +69,6 @@ export default function Announcements() {
       default:
         return '#1e3a8a'
     }
-  }
-
-  const getCategoryIcon = (category) => {
-    return null
   }
 
   const getCategoryName = (category) => {

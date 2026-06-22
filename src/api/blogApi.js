@@ -1,45 +1,100 @@
 import api from './api';
+import { publicApi } from './api';
+
+const unwrap = (promise) => promise.then(r => r.data);
 
 export const blogApi = {
-    // Public endpoints
-    getBlogs: (params) => api.get('/api/blogs', { params }),
-    getBlogBySlug: (slug) => api.get(`/api/blogs/${slug}`),
-    getArchive: () => api.get('/api/blogs/archive'),
+  // ── Public ──────────────────────────────────────────────
+  getBlogs: (params) => unwrap(publicApi.get('/api/blogs', { params })),
+  getBlogBySlug: (slug) => unwrap(publicApi.get(`/api/blogs/${slug}`)),
+  getArchive: () => unwrap(publicApi.get('/api/blogs/archive')),
 
-    // Reactions
-    toggleReaction: (blogId, data) => api.post(`/api/blogs/${blogId}/reaction`, data),
-    getReactionStatus: (blogId, visitorKey) => api.get(`/api/blogs/${blogId}/reaction`, { params: { visitorKey } }),
+  // ── Blog Submissions ────────────────────────────────────
+  // OTP handled by authApi (requestUserOTP / verifyUserOTP)
+  finishSubmission: (data) => unwrap(api.post('/api/blogs', data)),
 
-    // Comments
-    getComments: (blogId, params) => api.get(`/api/blogs/${blogId}/comments`, { params }),
-    postComment: (blogId, data) => api.post(`/api/blogs/${blogId}/comments`, data),
+  // ── Subscriptions ───────────────────────────────────────
+  startSubscription: (data) => unwrap(publicApi.post('/api/blogs/subscriptions/request-otp', data)),
+  verifySubscription: (data) => unwrap(publicApi.post('/api/blogs/subscriptions/verify', data)),
+  unsubscribe: (data) => unwrap(publicApi.post('/api/blogs/subscriptions/unsubscribe', data)),
+  saveSubscriptionLocally: (email) => {
+    const subs = getSubscribersStore();
+    const existing = subs.findIndex(s => s.email === email);
+    if (existing >= 0) {
+      subs[existing].status = 'ACTIVE';
+      subs[existing].updatedAt = new Date().toISOString();
+    } else {
+      subs.push({ id: Date.now(), email, status: 'ACTIVE', createdAt: new Date().toISOString() });
+    }
+    localStorage.setItem(SUBSCRIBERS_STORAGE_KEY, JSON.stringify(subs));
+  },
+  saveUnsubscriptionLocally: (email) => {
+    const subs = getSubscribersStore();
+    const existing = subs.find(s => s.email === email);
+    if (existing) {
+      existing.status = 'UNSUBSCRIBED';
+      existing.updatedAt = new Date().toISOString();
+    } else {
+      subs.push({ id: Date.now(), email, status: 'UNSUBSCRIBED', createdAt: new Date().toISOString() });
+    }
+    localStorage.setItem(SUBSCRIBERS_STORAGE_KEY, JSON.stringify(subs));
+  },
 
-    // Subscription
-    startSubscription: (data) => api.post('/api/blogs/subscribe/start', data),
-    verifySubscription: (params) => api.post('/api/blogs/subscribe/verify-otp', null, { params }),
-    unsubscribe: (params) => api.post('/api/blogs/subscribe/unsubscribe', null, { params }),
-
-    // Submission (3-step)
-    startSubmission: (data) => api.post('/api/blogs/submission/start', data),
-    verifySubmission: (data) => api.post('/api/blogs/submission/verify', data),
-    finishSubmission: (data) => api.post('/api/blogs/submission/finish', data),
+  // ── Interactions ────────────────────────────────────────
+  getComments: (blogId, params) => unwrap(publicApi.get(`/api/blogs/${blogId}/comments`, { params })),
+  postComment: (blogId, data) => unwrap(publicApi.post(`/api/blogs/${blogId}/comments`, data)),
+  toggleReaction: (blogId, data) => unwrap(publicApi.post(`/api/blogs/${blogId}/reactions/toggle`, data)),
+  getReactionStatus: (blogId, visitorKey) =>
+    unwrap(publicApi.get(`/api/blogs/${blogId}/reactions/status`, { params: { visitorKey } })),
 };
 
+const SUBSCRIBERS_STORAGE_KEY = 'icfy_admin_subscribers';
+
+function getSubscribersStore() {
+  try {
+    const raw = localStorage.getItem(SUBSCRIBERS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function paginateList(items, page = 0, size = 10) {
+  const safeSize = size > 0 ? size : 10;
+  const safePage = page >= 0 ? page : 0;
+  const start = safePage * safeSize;
+  const content = items.slice(start, start + safeSize);
+  return {
+    content,
+    page: safePage,
+    totalPages: Math.max(1, Math.ceil(items.length / safeSize)),
+    totalElements: items.length,
+  };
+}
+
 export const adminApi = {
-    // Blog moderation
-    getAdminBlogs: (params) => api.get('/api/admin/blogs', { params }),
-    getBlogById: (id) => api.get(`/api/admin/blogs/${id}`),
-    approveBlog: (id, data) => api.post(`/api/admin/blogs/${id}/approve`, data),
-    rejectBlog: (id, data) => api.post(`/api/admin/blogs/${id}/reject`, data),
-    editBlog: (id, data) => api.patch(`/api/admin/blogs/${id}`, data),
-    deleteBlog: (id) => api.delete(`/api/admin/blogs/${id}`),
-
-    // Comment moderation
-    getPendingComments: (params) => api.get('/api/admin/comments/pending', { params }),
-    hideComment: (id) => api.post(`/api/admin/comments/${id}/hide`),
-    unhideComment: (id) => api.post(`/api/admin/comments/${id}/unhide`),
-    deleteComment: (id) => api.delete(`/api/admin/comments/${id}`),
-
-    // Subscribers
-    getSubscribers: (params) => api.get('/api/admin/subscribers', { params }),
+  getAdminBlogs: (params) => unwrap(api.get('/admin/api/blogs', { params })),
+  deleteBlog: (id) => unwrap(api.delete(`/admin/api/blogs/${id}`)),
+  approveBlog: (id) => unwrap(api.post(`/admin/api/blogs/${id}/approve`)),
+  rejectBlog: (id) => unwrap(api.post(`/admin/api/blogs/${id}/reject`)),
+  editBlog: (id, data) => unwrap(api.put(`/admin/api/blogs/${id}`, data)),
+  getMyProfile: () => unwrap(api.get('/api/account/me')),
+  getSubscribers: async (params) => {
+    try {
+      const r = await unwrap(api.get('/api/v1/admin/blog-subscriptions', { params }));
+      return r;
+    } catch {
+      const status = params?.status || '';
+      const page = Number(params?.page ?? 0);
+      const size = Number(params?.size ?? 10);
+      const subscribers = getSubscribersStore().filter((s) => (status ? s.status === status : true));
+      return paginateList(subscribers, page, size);
+    }
+  },
+  deleteSubscriber: (id) => unwrap(api.delete(`/api/v1/admin/blog-subscriptions/${id}`)),
+  getAllComments: (params) => unwrap(api.get('/admin/api/comments/all', { params })),
+  getPendingComments: (params) => unwrap(api.get('/admin/api/comments/pending', { params })),
+  approveComment: (id) => unwrap(api.post(`/admin/api/comments/${id}/approve`)),
+  editComment: (id, data) => unwrap(api.put(`/admin/api/comments/${id}`, data)),
+  deleteComment: (commentId) => unwrap(api.delete(`/admin/api/comments/${commentId}`)),
 };

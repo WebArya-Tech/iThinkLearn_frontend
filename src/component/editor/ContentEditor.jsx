@@ -6,6 +6,7 @@ import {
     Type
 } from 'lucide-react';
 import React from 'react';
+import { compressImage } from '../../utils/imageCompress';
 /* ─── Toolbar config ─── */
 const TOOLBAR = [
     { key: 'undo', icon: Undo, label: 'Undo (Ctrl+Z)', command: 'undo' },
@@ -222,41 +223,32 @@ export const ContentEditor = ({ initialContent, onChange }) => {
         }
     }, [handleInput]);
 
-    const handleFileUpload = (e) => {
+    const handleFileUpload = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Validate file type
         if (!file.type.startsWith('image/')) {
-            alert('❌ Please select a valid image file (JPG, PNG, GIF, WebP)');
+            alert('Please select a valid image file (JPG, PNG, GIF, WebP)');
             return;
         }
 
-        // Validate file size (max 5MB)
         const fileSizeMB = file.size / (1024 * 1024);
         if (fileSizeMB > 5) {
-            alert(`❌ File size is ${fileSizeMB.toFixed(1)}MB. Max allowed is 5MB`);
+            alert(`File size is ${fileSizeMB.toFixed(1)}MB. Max allowed is 5MB`);
             return;
         }
 
         setImageLoading(true);
 
-        // Convert to base64/data URL
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const dataUrl = event.target?.result;
-            if (typeof dataUrl === 'string') {
-                setImageUrl(dataUrl);
-                setImageLoading(false);
-            }
-        };
-        reader.onerror = () => {
-            alert('❌ Failed to read image file');
+        try {
+            const { dataUrl } = await compressImage(file, { maxWidth: 1920 });
+            setImageUrl(dataUrl);
+        } catch (err) {
+            alert(err.message || 'Failed to process image');
+        } finally {
             setImageLoading(false);
-        };
-        reader.readAsDataURL(file);
+        }
 
-        // Reset file input for re-upload
         e.target.value = '';
     };
 
