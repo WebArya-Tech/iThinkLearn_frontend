@@ -211,7 +211,7 @@ export default function TutorManagement() {
   const hiddenTutors = tutors.filter((t) => t.active === false)
 
   return (
-    <div className="w-full max-w-7xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       {/* Header */}
       <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>

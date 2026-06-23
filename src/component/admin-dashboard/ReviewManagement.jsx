@@ -136,7 +136,7 @@ export default function ReviewManagement() {
   ]
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-6">
+    <div className="w-full max-w-[1200px] mx-auto space-y-6">
       {/* Header */}
       <div className="bg-white border-b-2 border-blue-900 rounded-xl p-6">
         <h1 className="text-2xl font-bold text-blue-900">Review Management</h1>
@@ -214,30 +214,30 @@ export default function ReviewManagement() {
                     </td>
                     <td className="px-4 py-3">{statusBadge(review.status)}</td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center justify-center gap-1 flex-wrap">
-                        <button onClick={() => setViewModal(review)} className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-900 text-white rounded-lg hover:bg-blue-800 text-xs font-medium transition">
-                          <Eye size={12} /> View
+                      <div className="flex items-center justify-center gap-1">
+                        <button onClick={() => setViewModal(review)} className="flex items-center gap-1 px-2 py-1 bg-blue-900 text-white rounded hover:bg-blue-800 text-[10px] font-semibold transition whitespace-nowrap">
+                          <Eye size={10} /> View
                         </button>
                         <button
                           onClick={() => updateStatus(review.id, 'approved')}
                           disabled={actionLoading === review.id || review.status === 'APPROVED'}
-                          className="flex items-center gap-1 px-2.5 py-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 text-xs font-medium transition disabled:opacity-40"
+                          className="flex items-center gap-1 px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-[10px] font-semibold transition disabled:opacity-40 whitespace-nowrap"
                         >
-                          <Check size={12} /> Approve
+                          <Check size={10} /> Approve
                         </button>
                         <button
                           onClick={() => updateStatus(review.id, 'rejected')}
                           disabled={actionLoading === review.id || review.status === 'REJECTED'}
-                          className="flex items-center gap-1 px-2.5 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 text-xs font-medium transition disabled:opacity-40"
+                          className="flex items-center gap-1 px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-[10px] font-semibold transition disabled:opacity-40 whitespace-nowrap"
                         >
-                          <X size={12} /> Reject
+                          <X size={10} /> Reject
                         </button>
                         <button
                           onClick={() => handleDelete(review.id)}
                           disabled={actionLoading === review.id}
-                          className="flex items-center gap-1 px-2.5 py-1.5 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-xs font-medium transition disabled:opacity-40"
+                          className="flex items-center gap-1 px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-[10px] font-semibold transition disabled:opacity-40 whitespace-nowrap"
                         >
-                          <Trash2 size={12} /> Delete
+                          <Trash2 size={10} /> Delete
                         </button>
                       </div>
                     </td>

@@ -129,10 +129,15 @@ const Testimonials = () => {
   );
 
   const filteredTestimonials = useMemo(() => {
-    return testimonials.filter((t) => {
+    const filtered = testimonials.filter((t) => {
       const categoryMatch = selectedCategory === 'All' || t.category === selectedCategory;
       const typeMatch = selectedType === 'All' || t.type === selectedType;
       return categoryMatch && typeMatch;
+    });
+    return filtered.sort((a, b) => {
+      if (a.primary) return -1;
+      if (b.primary) return 1;
+      return 0;
     });
   }, [testimonials, selectedCategory, selectedType]);
 
@@ -220,6 +225,14 @@ const Testimonials = () => {
                       onClick={() => setActive(testimonial)}
                       className="group relative flex flex-col w-full rounded-2xl overflow-hidden transition-all duration-500 hover:scale-[1.03] text-left shadow-2xl aspect-[4/5] h-96 sm:h-auto"
                     >
+                      {/* Featured Badge */}
+                      {testimonial.primary && (
+                        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20">
+                          <div className="text-yellow-400 text-[10px] font-black uppercase tracking-wider px-3 py-1 flex items-center gap-1.5">
+                            <Star size={12} className="fill-yellow-900" /> Primary
+                          </div>
+                        </div>
+                      )}
                       {/* Background Image with Overlay */}
                       <div className="absolute inset-0">
                         <img

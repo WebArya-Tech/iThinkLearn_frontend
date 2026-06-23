@@ -290,7 +290,7 @@ export default function DemoRequestsManagement() {
   return (
     <div className="px-3 sm:px-6 py-4 sm:py-8 space-y-6">
       {/* Header */}
-      <div className="flex flex-col max-w-7xl  mx-auto sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col max-w-6xl mx-auto sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Demo Requests</h2>
           <p className="text-gray-600 text-sm mt-1">Manage all free demo scheduling requests</p>

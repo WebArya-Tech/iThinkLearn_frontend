@@ -85,7 +85,7 @@ export default function DemoSettings() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
+    <div className="max-w-6xl mx-auto space-y-8">
       <div>
         <h2 className="text-2xl font-bold text-gray-900 mb-1">Demo Settings</h2>
         <p className="text-sm text-gray-500">Manage grades and boards for the Schedule Free Demo form</p>

@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Star, Trash2, X, AlertCircle, Plus, Image as ImageIcon, Upload, Save, Edit, Headphones } from 'lucide-react';
+import { Star, Trash2, Check, X, AlertCircle, Eye, Plus, Video, Music, FileText, Image as ImageIcon, Upload, Send, Save, Edit } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { testimonialApi, adminTestimonialApi } from '../../api/testimonialApi.js';
+import { adminTestimonialApi } from '../../api/testimonialApi.js';
+import ScrollableCard from './ScrollableCard'
+import { getPublicTeachers } from '../../api/api/teacherApi';
+import { uploadToCloudinary } from '../../utils/cloudinaryUpload';
 
 export default function TestimonialManagement() {
   const [testimonials, setTestimonials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [actionLoading, setActionLoading] = useState(null);
+  const [viewModal, setViewModal] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [teachers, setTeachers] = useState([]);
   const [formData, setFormData] = useState({
     text: '',
     mediaUrl: '',
@@ -41,7 +46,7 @@ export default function TestimonialManagement() {
     const type = getMediaType(url);
     if (type === 'image') return <img src={url} alt="Preview" className={`${className} object-cover`} />;
     if (type === 'video') return <video src={url} className={`${className} object-cover`} controls />;
-    if (type === 'audio') return <div className="w-full h-full bg-purple-50 flex items-center justify-center"><Headphones className="text-purple-600" size={24} /></div>;
+    if (type === 'audio') return <div className="w-full h-full bg-purple-50 flex items-center justify-center"><Music className="text-purple-600" size={24} /></div>;
     return <div className="w-full h-full bg-blue-50 flex items-center justify-center"><ImageIcon className="text-blue-600" size={24} /></div>;
   };
 
@@ -49,14 +54,24 @@ export default function TestimonialManagement() {
     fetchTestimonials();
   }, [selectedStatus]);
 
+  const fetchTeachers = async () => {
+    try {
+      const data = await getPublicTeachers();
+      setTeachers(data?.content || (Array.isArray(data) ? data : []));
+    } catch (error) {
+      console.error('Error fetching teachers:', error);
+    }
+  };
+
   const fetchTestimonials = async () => {
     setLoading(true);
     try {
-      const response = await adminTestimonialApi.getAllTestimonials();
-      const list = Array.isArray(response.data) ? response.data
-        : response.data?.content || response.data?.data || [];
-      setTestimonials(list);
-    } catch {
+      const res = await adminTestimonialApi.getAllTestimonials();
+      const data = res?.data || res;
+      const testimonialList = data?.content || (Array.isArray(data) ? data : []);
+      setTestimonials(testimonialList);
+    } catch (error) {
+      console.error('Error fetching testimonials:', error);
       toast.error('Failed to load testimonials');
       setTestimonials([]);
     } finally {
@@ -74,26 +89,20 @@ export default function TestimonialManagement() {
     const file = e.target.files[0];
     if (!file) return;
 
-    const isImage = file.type.startsWith('image/');
-    const maxSize = isImage ? 5 * 1024 * 1024 : 50 * 1024 * 1024;
-    
-    if (file.size > maxSize) {
-      toast.error(`File size too large. Max ${isImage ? '5MB' : '50MB'} allowed.`);
+    if (file.size > 1 * 1024 * 1024) {
+      toast.error('File size too large. Max 1MB allowed.');
       return;
     }
 
     setMediaFile(file);
-    setUploading(true);
     setFormData(prev => ({ ...prev, type: 'URL', mediaUrl: '' }));
 
     const reader = new FileReader();
     reader.onloadend = () => {
       setMediaPreview(reader.result);
-      setUploading(false);
       toast.success(`${file.type.startsWith('video/') ? 'Video' : file.type.startsWith('audio/') ? 'Audio' : 'Image'} selected. Preview ready.`);
     };
     reader.onerror = () => {
-      setUploading(false);
       toast.error('Unable to read selected media. Please try another file.');
     };
     reader.readAsDataURL(file);
@@ -105,17 +114,28 @@ export default function TestimonialManagement() {
       toast.error('Please provide at least text or media');
       return;
     }
+
     setActionLoading('submitting');
     try {
+      let finalMediaUrl = formData.mediaUrl;
+
+      if (mediaFile) {
+        setUploading(true);
+        const uploadedUrl = await uploadToCloudinary(mediaFile);
+        finalMediaUrl = uploadedUrl;
+        setUploading(false);
+      }
+
       const payload = {
         text: formData.text,
-        mediaUrl: mediaPreview || formData.mediaUrl,
+        mediaUrl: finalMediaUrl,
         name: formData.name,
         reviewerName: formData.name,
         role: formData.role,
         category: formData.category,
         rating: Number(formData.rating)
       };
+
       if (editingId) {
         await adminTestimonialApi.updateTestimonial(editingId, payload);
         toast.success('Testimonial updated successfully');
@@ -123,12 +143,14 @@ export default function TestimonialManagement() {
         await adminTestimonialApi.createTestimonial(payload);
         toast.success('Testimonial added successfully');
       }
+
       setIsAdding(false);
       setEditingId(null);
       resetForm();
       fetchTestimonials();
     } catch (error) {
-      toast.error(error?.response?.data?.message || error?.message || 'Failed to save testimonial');
+      console.error('Submission error:', error);
+      toast.error(error?.message || 'Failed to save testimonial');
     } finally {
       setActionLoading(null);
       setUploading(false);
@@ -148,6 +170,34 @@ export default function TestimonialManagement() {
     setMediaPreview(null);
   };
 
+  const handleApprove = async (id) => {
+    setActionLoading(id);
+    try {
+      await adminTestimonialApi.updateTestimonial(id, { status: 'APPROVED' });
+      await fetchTestimonials();
+      toast.success('Testimonial approved');
+    } catch (error) {
+      console.error('Error approving testimonial:', error);
+      toast.error('Failed to approve testimonial');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleReject = async (id) => {
+    setActionLoading(id);
+    try {
+      await adminTestimonialApi.updateTestimonial(id, { status: 'REJECTED' });
+      await fetchTestimonials();
+      toast.success('Testimonial rejected');
+    } catch (error) {
+      console.error('Error rejecting testimonial:', error);
+      toast.error('Failed to reject testimonial');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleExport = async () => {
     try {
       toast.info('Export feature coming soon');
@@ -157,16 +207,20 @@ export default function TestimonialManagement() {
     }
   };
 
-  const handleSetPrimary = async (id) => {
+  const handleSetPrimary = async (id, wasPrimary, testimonial) => {
     setActionLoading(id);
     try {
-      await adminTestimonialApi.setPrimary(id);
-      setTestimonials(prev =>
-        prev.map(t => (t.id === id || t._id === id) ? { ...t, primary: true } : { ...t, primary: false })
-      );
-      toast.success('Testimonial set as primary');
-    } catch {
-      toast.error('Failed to set primary testimonial');
+      if (wasPrimary) {
+        await adminTestimonialApi.updateTestimonial(id, { primary: false });
+        toast.success('Primary unset');
+      } else {
+        await adminTestimonialApi.setPrimary(id);
+        toast.success('Testimonial set as primary');
+      }
+      await fetchTestimonials();
+    } catch (error) {
+      console.error('Error updating primary:', error);
+      toast.error(wasPrimary ? 'Failed to unset primary' : 'Failed to set primary testimonial');
     } finally {
       setActionLoading(null);
     }
@@ -193,41 +247,11 @@ export default function TestimonialManagement() {
     setActionLoading(id);
     try {
       await adminTestimonialApi.deleteTestimonial(id);
-      setTestimonials(prev => prev.filter(t => t.id !== id && t._id !== id));
+      setTestimonials((prev) => prev.filter((t) => (t.id !== id && t._id !== id)));
       toast.success('Testimonial deleted');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to delete testimonial');
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handleApprove = async (id) => {
-    setActionLoading(`approve-${id}`);
-    try {
-      // update via PUT with status APPROVED
-      await adminTestimonialApi.updateTestimonial(id, { status: 'APPROVED' });
-      setTestimonials(prev =>
-        prev.map(t => (t.id === id || t._id === id) ? { ...t, status: 'APPROVED' } : t)
-      );
-      toast.success('Testimonial approved');
-    } catch {
-      toast.error('Failed to approve testimonial');
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handleReject = async (id) => {
-    setActionLoading(`reject-${id}`);
-    try {
-      await adminTestimonialApi.updateTestimonial(id, { status: 'REJECTED' });
-      setTestimonials(prev =>
-        prev.map(t => (t.id === id || t._id === id) ? { ...t, status: 'REJECTED' } : t)
-      );
-      toast.success('Testimonial rejected');
-    } catch {
-      toast.error('Failed to reject testimonial');
+      console.error('Error deleting testimonial:', error);
+      toast.error('Failed to delete testimonial');
     } finally {
       setActionLoading(null);
     }
@@ -261,7 +285,7 @@ export default function TestimonialManagement() {
   ];
 
   return (
-    <div className="w-full max-w-7xl mx-auto">
+    <div className="max-w-6xl mx-auto w-full">
       {/* Page Header */}
       <div className="bg-white border-b-2 border-blue-900 rounded-xl p-4 md:p-6 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -269,14 +293,14 @@ export default function TestimonialManagement() {
           <p className="text-gray-500 text-xs md:text-sm mt-1">Review, approve, and manage student testimonials</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <button 
+          <button
             onClick={handleExport}
             className="flex items-center justify-center gap-2 px-3 md:px-4 py-2 md:py-3 border-2 border-blue-900 text-blue-900 rounded-xl font-bold hover:bg-blue-50 transition-all shadow-sm text-sm"
           >
             <Upload size={18} className="rotate-180" /> Export CSV
           </button>
           {!isAdding && (
-            <button 
+            <button
               onClick={() => { setEditingId(null); resetForm(); setIsAdding(true); }}
               className="flex items-center justify-center gap-2 px-4 md:px-6 py-2 md:py-3 bg-blue-900 text-white rounded-xl font-bold hover:bg-blue-800 transition-all shadow-lg shadow-blue-900/20 text-sm"
             >
@@ -301,7 +325,7 @@ export default function TestimonialManagement() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               <div>
                 <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">Reviewer Name *</label>
-                <input 
+                <input
                   name="name"
                   type="text"
                   required
@@ -340,17 +364,17 @@ export default function TestimonialManagement() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
               <div>
                 <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">Testimonial Text (Context) *</label>
-                <textarea 
-                  name="text" 
-                  rows="5" 
+                <textarea
+                  name="text"
+                  rows="5"
                   required
-                  value={formData.text} 
-                  onChange={handleInputChange} 
-                  className="w-full px-3 md:px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 outline-none resize-none text-sm" 
+                  value={formData.text}
+                  onChange={handleInputChange}
+                  className="w-full px-3 md:px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 outline-none resize-none text-sm"
                   placeholder="Enter the context of the feedback that will appear on the card..."
                 ></textarea>
               </div>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">Rating</label>
@@ -369,13 +393,13 @@ export default function TestimonialManagement() {
                 </div>
 
                 <div>
-                  <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">Actual Testimonial Media (Image/Video/Audio)</label>
+                  <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">Media (Image/Video/Audio)</label>
                   <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
                     {mediaPreview ? (
                       <div className="relative w-16 h-16 md:w-20 md:h-20 overflow-hidden border border-gray-200 bg-gray-900 shadow-sm shrink-0">
                         {renderMediaPreview(mediaPreview)}
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           onClick={() => {
                             setMediaFile(null);
                             setMediaPreview(null);
@@ -399,12 +423,12 @@ export default function TestimonialManagement() {
                           <ImageIcon size={18} className="md:size-20 text-blue-600 group-hover:scale-110 transition-transform" />
                         )}
                         <span className="text-xs text-blue-700 font-bold uppercase tracking-tight text-center">
-                          {uploading ? 'Preparing...' : 'Choose Actual Media'}
+                          {uploading ? 'Uploading...' : 'Choose Media'}
                         </span>
                       </div>
-                      <input 
-                        type="file" 
-                        className="hidden" 
+                      <input
+                        type="file"
+                        className="hidden"
                         accept="image/*,video/*,audio/*"
                         onChange={handleMediaChange}
                       />
@@ -412,35 +436,35 @@ export default function TestimonialManagement() {
                   </div>
                   {(mediaFile || mediaPreview) && (
                     <p className="mt-2 text-xs font-semibold text-green-700">
-                      {mediaFile ? `${mediaFile.name} selected as actual testimonial media.` : 'Actual testimonial media preview ready.'}
+                      {mediaFile ? `${mediaFile.name} selected.` : 'Media preview ready.'}
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">Or Paste Actual Media URL</label>
-                  <input 
+                  <label className="block text-xs md:text-sm font-semibold text-gray-700 mb-1">Or Paste Media URL</label>
+                  <input
                     name="mediaUrl"
                     type="url"
                     value={formData.mediaUrl}
                     onChange={handleInputChange}
                     className="w-full px-3 md:px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 outline-none text-sm"
-                    placeholder="https://example.com/actual-testimonial.jpg"
+                    placeholder="https://example.com/media.mp4"
                   />
                 </div>
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row justify-end gap-2 md:gap-3 pt-4 border-t border-gray-100">
-              <button 
-                type="button" 
-                onClick={() => { setIsAdding(false); setEditingId(null); resetForm(); }} 
+              <button
+                type="button"
+                onClick={() => { setIsAdding(false); setEditingId(null); resetForm(); }}
                 className="w-full sm:w-auto px-4 md:px-6 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition font-medium text-sm"
               >
                 Cancel
               </button>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={actionLoading === 'submitting' || uploading}
                 className="w-full sm:w-auto px-6 md:px-8 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition shadow-md flex items-center justify-center gap-2 disabled:opacity-70 text-sm"
               >
@@ -494,14 +518,14 @@ export default function TestimonialManagement() {
           </p>
         </div>
       ) : (
-        <div className="rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
+        <ScrollableCard className="rounded-xl border border-gray-200 shadow-sm">
           <table className="w-full text-xs md:text-sm">
             <thead>
               <tr className="bg-blue-900 text-white text-left">
                 <th className="px-2 md:px-4 py-2 md:py-3 font-semibold">#</th>
                 <th className="px-2 md:px-4 py-2 md:py-3 font-semibold">Content Preview</th>
                 <th className="px-2 md:px-4 py-2 md:py-3 font-semibold hidden sm:table-cell">Media</th>
-                <th className="px-2 md:px-4 py-2 md:py-3 font-semibold hidden md:table-cell">Status</th>
+                <th className="px-2 md:px-4 py-2 md:py-3 font-semibold hidden md:table-cell pr-10 md:pr-16">Status</th>
                 <th className="px-2 md:px-4 py-2 md:py-3 font-semibold text-center">Actions</th>
               </tr>
             </thead>
@@ -510,11 +534,11 @@ export default function TestimonialManagement() {
                 const id = t.id || t._id;
                 const mediaUrl = getMediaUrl(t);
                 const mediaType = getMediaType(mediaUrl);
-                
+
                 return (
                   <tr key={id} className="border-t border-gray-100 hover:bg-gray-50 transition-colors">
                     <td className="px-2 md:px-4 py-2 md:py-3 text-gray-500 text-xs">{idx + 1}</td>
-                    <td className="px-2 md:px-4 py-2 md:py-3 text-gray-800 font-medium max-w-37.5 md:max-w-75">
+                    <td className="px-2 md:px-4 py-2 md:py-3 text-gray-800 font-medium max-w-[200px] md:max-w-[300px]">
                       <span className="line-clamp-2 text-xs md:text-sm">{t.text || t.message || t.quote || t.content}</span>
                     </td>
                     <td className="px-2 md:px-4 py-2 md:py-3 hidden sm:table-cell">
@@ -529,7 +553,7 @@ export default function TestimonialManagement() {
                         <span className="text-gray-400 text-xs italic">Text Only</span>
                       )}
                     </td>
-                    <td className="px-2 md:px-4 py-2 md:py-3 hidden md:table-cell">
+                    <td className="px-2 md:px-4 py-2 md:py-3 hidden md:table-cell pr-10 md:pr-16">
                       <div className="flex flex-col gap-1">
                         {statusBadge(t.status)}
                         {t.primary && (
@@ -541,44 +565,26 @@ export default function TestimonialManagement() {
                     </td>
                     <td className="px-2 md:px-4 py-2 md:py-3">
                       <div className="flex flex-wrap gap-1 md:gap-2">
-                        {t.status && t.status.toUpperCase() === 'PENDING' && (
-                          <>
-                            <button
-                              onClick={() => handleApprove(id)}
-                              disabled={actionLoading === `approve-${id}`}
-                              className="flex items-center justify-center gap-0.5 md:gap-1 rounded-lg bg-green-600 px-2 md:px-3 py-1 md:py-2 text-[10px] md:text-xs font-semibold text-white transition-colors hover:bg-green-700 disabled:opacity-50"
-                            >
-                              <Star size={12} /> Approve
-                            </button>
-                            <button
-                              onClick={() => handleReject(id)}
-                              disabled={actionLoading === `reject-${id}`}
-                              className="flex items-center justify-center gap-0.5 md:gap-1 rounded-lg bg-red-600 px-2 md:px-3 py-1 md:py-2 text-[10px] md:text-xs font-semibold text-white transition-colors hover:bg-red-700 disabled:opacity-50"
-                            >
-                              <X size={12} /> Reject
-                            </button>
-                          </>
-                        )}
+
                         <button
-                          onClick={() => handleSetPrimary(id)}
+                          onClick={() => handleSetPrimary(id, t.primary, t)}
                           disabled={actionLoading === id}
-                          className="flex items-center justify-center gap-0.5 md:gap-1 rounded-lg bg-indigo-600 px-2 md:px-3 py-1 md:py-2 text-[10px] md:text-xs font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
+                          className={`flex items-center justify-center gap-0.5 md:gap-1 rounded-lg px-2 md:px-3 py-1 md:py-2 text-[10px] md:text-xs font-semibold text-white transition-colors disabled:opacity-50 ${t.primary ? 'bg-indigo-600' : 'bg-indigo-400'}`}
                         >
-                          <Star size={12} /> <span className="hidden sm:inline">Featured</span>
+                          <Star size={12} fill={t.primary ? "white" : "none"} /> {t.primary ? 'Unset Primary' : 'Set Primary'}
                         </button>
                         <button
                           onClick={() => handleEdit(t)}
                           className="flex items-center justify-center gap-0.5 md:gap-1 rounded-lg bg-amber-500 px-2 md:px-3 py-1 md:py-2 text-[10px] md:text-xs font-semibold text-white transition-colors hover:bg-amber-600"
-                          title="Edit details"
                         >
-                          <Edit size={12} /> <span className="hidden sm:inline">Edit</span>
+                          <Edit size={12} /> Edit
                         </button>
                         <button
                           onClick={() => handleDelete(id)}
                           disabled={actionLoading === id}
                           className="flex items-center justify-center gap-0.5 md:gap-1 rounded-lg bg-red-700 px-2 md:px-3 py-1 md:py-2 text-[10px] md:text-xs font-semibold text-white transition-colors hover:bg-red-800 disabled:opacity-50"
                         >
-                          <Trash2 size={12} /> <span className="hidden sm:inline">Delete</span>
+                          <Trash2 size={12} /> Delete
                         </button>
                       </div>
                     </td>
@@ -587,6 +593,90 @@ export default function TestimonialManagement() {
               })}
             </tbody>
           </table>
+        </ScrollableCard>
+      )}
+
+      {/* View Modal */}
+      {viewModal && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          onClick={() => setViewModal(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl p-6 max-w-lg w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-4">
+              <div>
+                <h3 className="text-xl font-black text-blue-900 uppercase tracking-tight">
+                  {viewModal.name || viewModal.reviewerName || 'Anonymous'}
+                </h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-xs font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded uppercase tracking-tighter">
+                    {viewModal.role || viewModal.category || 'Student'}
+                  </span>
+                  {viewModal.subject && (
+                    <span className="text-xs font-bold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded uppercase tracking-tighter">
+                      {viewModal.subject}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="text-right">
+                {statusBadge(viewModal.status)}
+                {viewModal.primary && <div className="text-[9px] font-black text-indigo-600 mt-1 uppercase">Featured</div>}
+              </div>
+            </div>
+
+            <div className="flex gap-1 mb-6 bg-yellow-50 w-fit px-3 py-1.5 rounded-full border border-yellow-100">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  size={14}
+                  className={i < (viewModal.rating || 5) ? 'fill-[#eab308] text-[#eab308]' : 'text-gray-300'}
+                />
+              ))}
+              <span className="ml-2 text-xs font-bold text-yellow-700">{viewModal.rating || 5}/5 Rating</span>
+            </div>
+
+            <p className="text-gray-700 leading-relaxed mb-4">{viewModal.message || viewModal.content || viewModal.text}</p>
+
+            {(() => {
+              const vmUrl = getMediaUrl(viewModal);
+              const vmType = getMediaType(vmUrl);
+              if (vmType === 'video') {
+                return (
+                  <div className="rounded-xl overflow-hidden bg-black aspect-video mb-4">
+                    <iframe src={vmUrl} className="w-full h-full" allowFullScreen></iframe>
+                  </div>
+                );
+              }
+              if (vmType === 'image') {
+                return (
+                  <div className="rounded-xl overflow-hidden bg-gray-100 border border-gray-200 mb-4">
+                    <img src={vmUrl} className="w-full h-auto max-h-[400px] object-contain mx-auto" alt="Testimonial" />
+                  </div>
+                );
+              }
+              if (vmType === 'audio') {
+                return (
+                  <div className="bg-purple-50 p-4 rounded-xl mb-4">
+                    <audio src={vmUrl} controls className="w-full" />
+                  </div>
+                );
+              }
+              return null;
+            })()}
+
+            <div className="flex justify-end pt-4 border-t border-gray-100">
+              <button
+                onClick={() => setViewModal(null)}
+                className="px-6 py-2 bg-blue-900 text-white rounded-lg font-bold hover:bg-blue-800 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
